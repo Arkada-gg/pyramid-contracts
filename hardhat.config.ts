@@ -47,7 +47,7 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    main: getNetworkConfig('soneium', []),
+    soneium: getNetworkConfig('soneium', []),
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hardhat: FORKING_NETWORK

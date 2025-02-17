@@ -31,8 +31,8 @@
     "codestyle": "run-s lint:* format:*",
     "codestyle:fix": "run-s lint:*:* format:*:*",
     "hh:run": "hardhat run",
-    "hh:run:main": "hardhat run --network main",
-    "verify:main": "hardhat verify --network main",
+    "hh:run:main": "hardhat run --network soneium",
+    "verify:main": "hardhat verify --network soneium",
     "deploy:dc": "yarn hh:run scripts/deploy/deploy_DailyCheck.ts"
   },
   "devDependencies": {
