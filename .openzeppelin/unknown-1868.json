@@ -1,0 +1,102 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x9428d23F3451Cf4FE0C3bB2Feaf4E7EEBfa9C454",
+    "txHash": "0x81fc9f906b8afd88e8beb897b650db2d4953c67e965359c22677a014d16ceb0e"
+  },
+  "proxies": [
+    {
+      "address": "0x15F81C35F43d482b76BCBf0940AA29a27C3187A3",
+      "txHash": "0x5bda2fc509c112e9895b34e00fd2d4deac78949a7d3456113ae1a733bce0d9ca",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "9fa1444467b06e20f8b9715b3d0fab5cb72242809d6dbaf58898a69fcf8cff45": {
+      "address": "0x4d507FADe0e5A6630082559227B0bCbD969DEe0f",
+      "txHash": "0xe43b1c630fe18f6bcb0e29b755e595d77c25ec0a6fab24181b8d103a5d728082",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "checkDatas",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_struct(CheckData)619_storage)",
+            "contract": "DailyCheck",
+            "src": "contracts/DailyCheck.sol:17"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "DailyCheck",
+            "src": "contracts/DailyCheck.sol:22"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_struct(CheckData)619_storage)": {
+            "label": "mapping(address => struct CheckData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(CheckData)619_storage": {
+            "label": "struct CheckData",
+            "members": [
+              {
+                "label": "streak",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "timestamp",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

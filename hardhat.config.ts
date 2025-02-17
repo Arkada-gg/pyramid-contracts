@@ -70,6 +70,16 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+    customChains: [
+      {
+        network: 'soneium',
+        chainId: 1868,
+        urls: {
+          apiURL: 'https://soneium.blockscout.com/api/',
+          browserURL: 'https://soneium.blockscout.com',
+        },
+      },
+    ],
   },
   paths: {
     deploy: 'deploy/',
