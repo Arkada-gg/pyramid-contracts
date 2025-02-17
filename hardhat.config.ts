@@ -15,7 +15,8 @@ import {
   Network,
 } from './config';
 
-const { OPTIMIZER, REPORT_GAS, FORKING_NETWORK, ETHERSCAN_API_KEY } = ENV;
+const { OPTIMIZER, REPORT_GAS, FORKING_NETWORK, ETHERSCAN_API_KEY, DEPLOYER } =
+  ENV;
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -33,11 +34,11 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      1: '0xa0819ae43115420beb161193b8D8Ba64C9f9faCC',
-      hardhat: '0xa0819ae43115420beb161193b8D8Ba64C9f9faCC',
-      localhost: '0xa0819ae43115420beb161193b8D8Ba64C9f9faCC',
-      sepolia: '0xa0819ae43115420beb161193b8D8Ba64C9f9faCC',
-      etherlink: '0xa0819ae43115420beb161193b8D8Ba64C9f9faCC',
+      1: DEPLOYER,
+      hardhat: DEPLOYER,
+      localhost: DEPLOYER,
+      sepolia: DEPLOYER,
+      soneium: DEPLOYER,
     },
   },
   verify: {

@@ -10,6 +10,7 @@ export const ENV: Environment = {
   REPORT_GAS: process.env.REPORT_GAS === 'true',
   MNEMONIC_DEV: process.env.MNEMONIC_DEV,
   MNEMONIC_PROD: process.env.MNEMONIC_PROD ?? '',
+  DEPLOYER: process.env.DEPLOYER ?? '',
   FORKING_NETWORK: process.env.FORKING_NETWORK
     ? (process.env.FORKING_NETWORK as Network)
     : undefined,

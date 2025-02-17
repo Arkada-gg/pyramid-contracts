@@ -18,5 +18,6 @@ export interface Environment {
   readonly REPORT_GAS: boolean;
   readonly MNEMONIC_DEV?: string;
   readonly MNEMONIC_PROD: string;
+  readonly DEPLOYER: string;
   readonly FORKING_NETWORK?: Network;
 }
