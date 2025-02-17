@@ -37,16 +37,14 @@ contract DailyCheck is Initializable, IDailyCheck {
 
         require(currentDay > lastCheckDay, "checked today");
 
-        checkData.streak = currentDay - lastCheckDay == 1 ? checkData.streak + 1 : 1;
+        checkData.streak = currentDay - lastCheckDay == 1
+            ? checkData.streak + 1
+            : 1;
         checkData.timestamp = block.timestamp;
 
         checkDatas[msg.sender] = checkData;
 
-        emit DailyCheck(
-            msg.sender,
-            checkData.streak,
-            block.timestamp
-        );
+        emit DailyCheck(msg.sender, checkData.streak, block.timestamp);
     }
 
     /**
@@ -55,7 +53,11 @@ contract DailyCheck is Initializable, IDailyCheck {
      *
      * @return day number from 1970
      */
-    function getDaysCountByTs(uint256 _timespamp) public pure returns(uint256) {
+    function getDaysCountByTs(uint256 _timespamp)
+        public
+        pure
+        returns (uint256)
+    {
         return _timespamp / 1 days;
     }
 }

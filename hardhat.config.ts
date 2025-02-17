@@ -12,6 +12,7 @@ import {
   getForkNetworkConfig,
   getHardhatNetworkConfig,
   getNetworkConfig,
+  Network,
 } from './config';
 
 const { OPTIMIZER, REPORT_GAS, FORKING_NETWORK, ETHERSCAN_API_KEY } = ENV;
@@ -54,7 +55,11 @@ const config: HardhatUserConfig = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     localhost: FORKING_NETWORK
       ? getForkNetworkConfig(FORKING_NETWORK)
-      : getNetworkConfig('localhost', [], FORKING_NETWORK as any),
+      : getNetworkConfig(
+          'localhost',
+          [],
+          FORKING_NETWORK as unknown as Network,
+        ),
   },
   gasReporter: {
     enabled: REPORT_GAS,

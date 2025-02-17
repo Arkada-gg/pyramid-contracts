@@ -1,10 +1,6 @@
 type NetworkBase = 'sepolia';
 type RpcNetwork = NetworkBase | 'mainnet';
-export type Network =
-  | NetworkBase
-  | 'soneium'
-  | 'hardhat'
-  | 'localhost'
+export type Network = NetworkBase | 'soneium' | 'hardhat' | 'localhost';
 export type RpcUrl =
   | `https://eth-${RpcNetwork}.g.alchemy.com/v2/${string}`
   | `https://${RpcNetwork}.infura.io/v3/${string}`

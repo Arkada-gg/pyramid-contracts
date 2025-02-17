@@ -17,7 +17,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log('Deploying DailyCheck...');
 
   const deployment = await hre.upgrades.deployProxy(
-    await hre.ethers.getContractFactory(ARKADA_DAILY_CHECK_CONTRACT_NAME, owner),
+    await hre.ethers.getContractFactory(
+      ARKADA_DAILY_CHECK_CONTRACT_NAME,
+      owner,
+    ),
     [],
     {
       unsafeAllow: ['constructor'],
@@ -30,7 +33,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log('Waited.');
   }
 
-  await logDeployProxy(hre, ARKADA_DAILY_CHECK_CONTRACT_NAME, deployment.address);
+  await logDeployProxy(
+    hre,
+    ARKADA_DAILY_CHECK_CONTRACT_NAME,
+    deployment.address,
+  );
   await tryEtherscanVerifyImplementation(hre, deployment.address);
 };
 

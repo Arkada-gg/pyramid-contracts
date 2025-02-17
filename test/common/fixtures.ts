@@ -6,20 +6,15 @@ import {
 } from '../../typechain-types';
 
 export const defaultDeploy = async () => {
-  const [
-    owner,
-    ...regularAccounts
-  ] = await ethers.getSigners();
+  const [owner, ...regularAccounts] = await ethers.getSigners();
 
   // main contracts
-  const dailyCheck = await new DailyCheck__factory(
-    owner,
-  ).deploy();
+  const dailyCheck = await new DailyCheck__factory(owner).deploy();
   await dailyCheck.initialize();
 
   return {
     owner,
     regularAccounts,
-    dailyCheck
+    dailyCheck,
   };
 };

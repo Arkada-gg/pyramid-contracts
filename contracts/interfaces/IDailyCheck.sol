@@ -21,14 +21,10 @@ interface IDailyCheck {
      * @param streak streak of daily checks
      * @param timestamp timespamp
      */
-    event DailyCheck(
-        address indexed caller,
-        uint256 streak,
-        uint256 timestamp
-    );
+    event DailyCheck(address indexed caller, uint256 streak, uint256 timestamp);
 
     /**
-     * @notice daily checking process 
+     * @notice daily checking process
      * reverted if already executed today by address
      */
     function check() external;

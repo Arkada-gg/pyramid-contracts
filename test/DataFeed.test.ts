@@ -1,9 +1,11 @@
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 
-import { defaultDeploy } from './common/fixtures';
-import { DailyCheck__factory } from '../typechain-types';
 import { checkTest } from './common/daily-check.helpers';
+import { defaultDeploy } from './common/fixtures';
+
+// eslint-disable-next-line camelcase
+import { DailyCheck__factory } from '../typechain-types';
 
 describe('DailyCheck', function () {
   it('deployment', async () => {
@@ -34,20 +36,23 @@ describe('DailyCheck', function () {
         },
       });
 
-      await checkTest({
-        dailyCheckContract: dailyCheck,
-        owner: regularAccounts[0],
-        expected: {
-          streak: 2,
+      await checkTest(
+        {
+          dailyCheckContract: dailyCheck,
+          owner: regularAccounts[0],
+          expected: {
+            streak: 2,
+          },
         },
-      }, {
-        revertMessage: "checked today"
-      });
+        {
+          revertMessage: 'checked today',
+        },
+      );
     });
 
     it('check single time', async () => {
       const { dailyCheck, regularAccounts } = await loadFixture(defaultDeploy);
-      
+
       await checkTest({
         dailyCheckContract: dailyCheck,
         owner: regularAccounts[0],
@@ -60,7 +65,7 @@ describe('DailyCheck', function () {
     it('streak count should be 2 when next check in next day', async () => {
       const { dailyCheck, regularAccounts } = await loadFixture(defaultDeploy);
 
-      console.log("User A: first check");
+      console.log('User A: first check');
       await checkTest({
         dailyCheckContract: dailyCheck,
         owner: regularAccounts[0],
@@ -69,10 +74,10 @@ describe('DailyCheck', function () {
         },
       });
 
-      console.log("waiting for 1 day...");
+      console.log('waiting for 1 day...');
       await time.increase(86400);
 
-      console.log("User A: second check");
+      console.log('User A: second check');
       await checkTest({
         dailyCheckContract: dailyCheck,
         owner: regularAccounts[0],
@@ -85,7 +90,7 @@ describe('DailyCheck', function () {
     it('streak count should be 1 again when next check in 2 days', async () => {
       const { dailyCheck, regularAccounts } = await loadFixture(defaultDeploy);
 
-      console.log("User A: first check");
+      console.log('User A: first check');
       await checkTest({
         dailyCheckContract: dailyCheck,
         owner: regularAccounts[0],
@@ -94,10 +99,10 @@ describe('DailyCheck', function () {
         },
       });
 
-      console.log("waiting for 2 day...");
+      console.log('waiting for 2 day...');
       await time.increase(86400 * 2);
 
-      console.log("User A: second check");
+      console.log('User A: second check');
       await checkTest({
         dailyCheckContract: dailyCheck,
         owner: regularAccounts[0],
@@ -112,8 +117,8 @@ describe('DailyCheck', function () {
     it('check calculations', async () => {
       const { dailyCheck } = await loadFixture(defaultDeploy);
       const timestamp = 1739786145;
-      const expectedDaysNum = Math.floor(timestamp / 86400)
-      expect(await dailyCheck.getDaysCountByTs(timestamp)).eq(expectedDaysNum)
+      const expectedDaysNum = Math.floor(timestamp / 86400);
+      expect(await dailyCheck.getDaysCountByTs(timestamp)).eq(expectedDaysNum);
     });
   });
 });

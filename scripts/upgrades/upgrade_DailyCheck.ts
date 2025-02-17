@@ -15,20 +15,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployer } = await hre.getNamedAccounts();
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log(
-    'Upgrading DailyCheck at address:',
-    addresses?.accessControl,
-  );
+  console.log('Upgrading DailyCheck at address:', addresses?.accessControl);
   const deployment = await hre.upgrades.upgradeProxy(
     addresses?.accessControl ?? '',
-    await hre.ethers.getContractFactory(ARKADA_DAILY_CHECK_CONTRACT_NAME, owner),
+    await hre.ethers.getContractFactory(
+      ARKADA_DAILY_CHECK_CONTRACT_NAME,
+      owner,
+    ),
     {
       unsafeAllow: ['constructor'],
     },
   );
   console.log('Upgraded DailyCheck:', deployment.address);
 
-  await logDeployProxy(hre, ARKADA_DAILY_CHECK_CONTRACT_NAME, deployment.address);
+  await logDeployProxy(
+    hre,
+    ARKADA_DAILY_CHECK_CONTRACT_NAME,
+    deployment.address,
+  );
   console.log('Waiting 5 blocks to verify...');
   if (deployment.deployTransaction) {
     await deployment.deployTransaction.wait(5);
