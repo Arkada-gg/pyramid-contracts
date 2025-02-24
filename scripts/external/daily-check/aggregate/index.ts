@@ -25,6 +25,8 @@ const func = async (hre: HardhatRuntimeEnvironment) => {
   );
   writeUsersComputedData(sortedEvents);
   console.log('Points recorded!');
+
+  process.exit(1)
 };
 
 func(hre).then(console.log).catch(console.error);
