@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { DailyCheckEvent } from '../../../../typechain-types/contracts/DailyCheck';
+import { DailyCheckEvent } from '../../../../../typechain-types/contracts/DailyCheck';
 
 interface ITxData {
   hash: string;
@@ -19,7 +19,7 @@ export const writeTxs = (events: DailyCheckEvent[]) => {
     args: JSON.stringify(event.args),
     created_at: new Date(event.args.timestamp.toNumber() * 1000).toISOString(),
   }));
-  console.log("txs count: ", txs.length)
+  console.log('txs count: ', txs.length);
 
   const dir = 'scripts-data';
   const filePath = path.join(dir, 'tx.json');
