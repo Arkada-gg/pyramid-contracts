@@ -1,9 +1,11 @@
+import { BigNumber } from 'ethers';
+import { Client } from 'pg';
+
 import fs from 'fs';
 import path from 'path';
-import { Client } from 'pg';
-import { ITxData } from './sync-txs';
-import { BigNumber } from 'ethers';
+
 import { sleep } from './sleep';
+import { ITxData } from './sync-txs';
 
 interface IUserData {
   points: number;
@@ -21,17 +23,16 @@ const getDailyPointsUserAddresses = async (client: Client) => {
     WHERE point_type = 'daily';
   `);
 
-  return result.rows.map((row) => row.user_address);
+  return result.rows.map((row) => row.user_address.toLowerCase());
 };
 
 export const syncUsersPoints = async () => {
-
   const client = new Client({
     connectionString: process.env.POSTGRES_CONNECTION_URL,
   });
-  console.log("--------> Connecting to postgres...")
-  await client.connect()
-  console.log("--------> Postgres client connected.\n")
+  console.log('--------> Connecting to postgres...');
+  await client.connect();
+  console.log('--------> Postgres client connected.\n');
 
   const dir = 'scripts-data';
   const filePathPoints = path.join(dir, 'users-points.json');
@@ -117,11 +118,14 @@ export const syncUsersPoints = async () => {
 
       const currentPointsResult = await client.query(
         `SELECT address, points FROM users WHERE address = ANY($1)`,
-        [batch.map((u) => u.address)],
+        [batch.map((u) => u.address.toLowerCase())],
       );
 
       const currentPointsMap = new Map(
-        currentPointsResult.rows.map((row) => [row.address, row.points]),
+        currentPointsResult.rows.map((row) => [
+          row.address.toLowerCase(),
+          row.points,
+        ]),
       );
 
       const query = `
@@ -134,7 +138,7 @@ export const syncUsersPoints = async () => {
       await client.query(query, [
         JSON.stringify(
           batch.map((i) => ({
-            user_address: i.address,
+            user_address: i.address.toLowerCase(),
             new_points: i.points,
           })),
         ),
@@ -142,18 +146,20 @@ export const syncUsersPoints = async () => {
 
       const updatedPointsResult = await client.query(
         `SELECT address, points FROM users WHERE address = ANY($1)`,
-        [batch.map((u) => u.address)],
+        [batch.map((u) => u.address.toLowerCase())],
       );
 
       // Check if points were correctly updated
       const failedUpdates = [];
       for (const row of updatedPointsResult.rows) {
         const expectedPoints =
-          currentPointsMap.get(row.address) +
-          batch.find((u) => u.address?.toLowerCase() === row.address)?.points;
+          currentPointsMap.get(row.address.toLowerCase()) +
+          batch.find(
+            (u) => u.address?.toLowerCase() === row.address.toLowerCase(),
+          )?.points;
         if (row.points !== expectedPoints) {
           failedUpdates.push({
-            address: row.address,
+            address: row.address.toLowerCase(),
             expected: expectedPoints,
             actual: row.points,
           });
@@ -189,7 +195,7 @@ export const syncUsersPoints = async () => {
 
       const values = batch.flatMap((item) => {
         const args = JSON.parse(item.args);
-        const caller = args[0];
+        const caller = args[0].toLowerCase();
         const streakNumber = +BigNumber.from(args[1]);
         const points = streakNumber < 30 ? streakNumber : 30;
         return [caller, points, 'daily'];

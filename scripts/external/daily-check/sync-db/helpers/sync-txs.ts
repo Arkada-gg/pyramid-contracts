@@ -1,6 +1,8 @@
+import { Client } from 'pg';
+
 import fs from 'fs';
 import path from 'path';
-import { Client } from 'pg';
+
 import { sleep } from './sleep';
 
 export interface ITxData {
@@ -17,9 +19,9 @@ export const syncTxs = async () => {
   const client = new Client({
     connectionString: process.env.POSTGRES_CONNECTION_URL,
   });
-  console.log("--------> Connecting to postgres...")
-  await client.connect()
-  console.log("--------> Postgres client connected.\n")
+  console.log('--------> Connecting to postgres...');
+  await client.connect();
+  console.log('--------> Postgres client connected.\n');
 
   const dir = 'scripts-data';
   const filePath = path.join(dir, 'tx.json');

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+
 import { DailyCheckEvent } from '../../../../../typechain-types/contracts/DailyCheck';
 
 interface IUserData {
