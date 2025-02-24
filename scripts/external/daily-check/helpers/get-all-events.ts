@@ -19,7 +19,7 @@ export const getAllDailyCheckEvents = async (
   const events = await dailyCheckContract.queryFilter(filter);
 
   const sortedByBlockNumber = events.sort(
-    (a, b) => b.blockNumber - a.blockNumber,
+    (a, b) => a.blockNumber - b.blockNumber,
   );
 
   return sortedByBlockNumber;
