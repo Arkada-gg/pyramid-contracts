@@ -1,4 +1,7 @@
 export const ARKADA_DAILY_CHECK_DEPLOY_TAG = 'DailyCheck';
 export const ARKADA_DAILY_CHECK_CONTRACT_NAME = 'DailyCheck';
 
+export const ARKADA_ERC721_ROYALTY_DEPLOY_TAG = 'ArkadaERC721Royalty';
+export const ARKADA_ERC721_ROYALTY_CONTRACT_NAME = 'ArkadaERC721Royalty';
+
 export const POST_DEPLOY_TAG = 'POST_DEPLOY';
