@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { DailyCheckEvent } from '../../../../typechain-types/contracts/DailyCheck';
+import { DailyCheckEvent } from '../../../../../typechain-types/contracts/DailyCheck';
 
 interface ITxData {
   hash: string;
