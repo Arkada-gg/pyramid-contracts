@@ -4,7 +4,13 @@ import { GWEI, MOCK_AGGREGATOR_NETWORK_TAG } from '../constants';
 import { ENV } from '../env';
 import { ConfigPerNetwork, Network, RpcUrl } from '../types';
 
-const { ALCHEMY_KEY, INFURA_KEY, MNEMONIC_DEV, MNEMONIC_PROD } = ENV;
+const {
+  ALCHEMY_KEY,
+  INFURA_KEY,
+  MNEMONIC_DEV,
+  MNEMONIC_PROD,
+  PRIVATE_KEY_DEPLOYER,
+} = ENV;
 
 export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   soneium: ALCHEMY_KEY
@@ -74,7 +80,7 @@ export const getBaseNetworkConfig = (
     ? {
         mnemonic: mnemonics[network],
       }
-    : undefined,
+    : [PRIVATE_KEY_DEPLOYER],
   chainId: chainIds[network],
   gas: gases[network],
   gasPrice: gasPrices[network],
