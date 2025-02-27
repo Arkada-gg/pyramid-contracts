@@ -61,7 +61,8 @@ contract ArkadaERC721Royalty is
         string memory baseURI_,
         uint256 _mintPrice,
         uint256 _mintDeadline,
-        address _paymentRecipient
+        address _paymentRecipient,
+        address _owner
     ) public initializer {
         __ERC721_init(_name, _symbol);
         __ERC721Royalty_init();
@@ -69,6 +70,7 @@ contract ArkadaERC721Royalty is
 
         require(_mintPrice > 0, "invalid price");
         require(_paymentRecipient != address(0), "invalid recipient");
+        require(_owner != address(0), "invalid owner");
 
         _baseTokenURI = baseURI_;
         mintPrice = _mintPrice;
@@ -78,6 +80,9 @@ contract ArkadaERC721Royalty is
 
         // Set default royalty to 5%
         _setDefaultRoyalty(msg.sender, 500); // 500 = 5% (10000 = 100%)
+
+        // Setting owner
+        _transferOwnership(_owner);
     }
 
     /**

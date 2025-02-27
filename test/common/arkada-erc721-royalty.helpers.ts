@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 
 import { OptionalCommonParams } from './common.helpers';
 
@@ -136,9 +136,16 @@ export const setOperatorTest = async (
 interface ISetRoyaltyTest extends CommonParams {
   receiver: string;
   royalty: number; // percent like 1=1%, 5, 7
+  priceToCheck: BigNumber;
 }
 export const setRoyaltyTest = async (
-  { arkadaErc721RoyaltyContract, owner, receiver, royalty }: ISetRoyaltyTest,
+  {
+    arkadaErc721RoyaltyContract,
+    owner,
+    receiver,
+    royalty,
+    priceToCheck,
+  }: ISetRoyaltyTest,
   opt?: OptionalCommonParams,
 ) => {
   const sender = opt?.from ?? owner;
@@ -164,6 +171,11 @@ export const setRoyaltyTest = async (
       'RoyaltyUpdated(address,address,uint96)'
     ].name,
   ).to.not.reverted;
+
+  const [receiverOnchain, royaltyToTransfer] =
+    await arkadaErc721RoyaltyContract.royaltyInfo(0, priceToCheck);
+  expect(receiverOnchain).eq(receiver);
+  expect(royaltyToTransfer).eq(priceToCheck.mul(percentToSubmit).div(10000));
 };
 
 interface ISetBaseURITest extends CommonParams {

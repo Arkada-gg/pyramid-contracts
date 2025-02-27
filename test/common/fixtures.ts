@@ -30,6 +30,7 @@ export const defaultDeploy = async () => {
       0,
       mintDeadline,
       paymentsRecipient.address,
+      owner.address,
     ),
   ).to.be.revertedWith('invalid price');
   await expect(
@@ -40,8 +41,20 @@ export const defaultDeploy = async () => {
       mintPrice,
       mintDeadline,
       ethers.constants.AddressZero,
+      owner.address,
     ),
   ).to.be.revertedWith('invalid recipient');
+  await expect(
+    arkadaERC721Royalty.initialize(
+      'ArkadaNFT',
+      'ARK',
+      'ipfs://base_uri/',
+      mintPrice,
+      mintDeadline,
+      paymentsRecipient.address,
+      ethers.constants.AddressZero,
+    ),
+  ).to.be.revertedWith('invalid owner');
 
   await arkadaERC721Royalty.initialize(
     'ArkadaNFT',
@@ -50,6 +63,7 @@ export const defaultDeploy = async () => {
     mintPrice,
     mintDeadline,
     paymentsRecipient.address,
+    owner.address,
   );
 
   await arkadaERC721Royalty.setOperator(operator.address);

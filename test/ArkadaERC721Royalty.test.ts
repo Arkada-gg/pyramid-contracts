@@ -42,6 +42,7 @@ describe('ArkadaERC721Royalty', function () {
         mintPrice,
         mintDeadline,
         paymentsRecipient.address,
+        owner.address,
       ),
     ).revertedWith('Initializable: contract is already initialized');
 
@@ -56,6 +57,7 @@ describe('ArkadaERC721Royalty', function () {
         0,
         mintDeadline,
         paymentsRecipient.address,
+        owner.address,
       ),
     ).to.be.revertedWith('invalid price');
     await expect(
@@ -66,8 +68,20 @@ describe('ArkadaERC721Royalty', function () {
         mintPrice,
         mintDeadline,
         ZeroAddress,
+        owner.address,
       ),
     ).to.be.revertedWith('invalid recipient');
+    await expect(
+      arkadaERC721RoyaltyNew.initialize(
+        'ArkadaNFT',
+        'ARK',
+        'ipfs://base_uri/',
+        mintPrice,
+        mintDeadline,
+        paymentsRecipient.address,
+        ZeroAddress,
+      ),
+    ).to.be.revertedWith('invalid owner');
 
     await arkadaERC721RoyaltyNew.initialize(
       'ArkadaNFT',
@@ -76,6 +90,7 @@ describe('ArkadaERC721Royalty', function () {
       mintPrice,
       mintDeadline,
       paymentsRecipient.address,
+      owner.address,
     );
   });
 
@@ -111,9 +126,8 @@ describe('ArkadaERC721Royalty', function () {
 
   describe('setRoyalty()', () => {
     it('should be reverted if fee too high', async () => {
-      const { arkadaERC721Royalty, owner, regularAccounts } = await loadFixture(
-        defaultDeploy,
-      );
+      const { arkadaERC721Royalty, owner, regularAccounts, mintPrice } =
+        await loadFixture(defaultDeploy);
 
       await setRoyaltyTest(
         {
@@ -121,6 +135,7 @@ describe('ArkadaERC721Royalty', function () {
           owner,
           receiver: regularAccounts[0].address,
           royalty: 50,
+          priceToCheck: mintPrice,
         },
         {
           revertMessage: 'Fee too high',
@@ -129,7 +144,9 @@ describe('ArkadaERC721Royalty', function () {
     });
 
     it('should be reverted if receiver address invalid', async () => {
-      const { arkadaERC721Royalty, owner } = await loadFixture(defaultDeploy);
+      const { arkadaERC721Royalty, owner, mintPrice } = await loadFixture(
+        defaultDeploy,
+      );
 
       await setRoyaltyTest(
         {
@@ -137,6 +154,7 @@ describe('ArkadaERC721Royalty', function () {
           owner,
           receiver: ZeroAddress,
           royalty: 2,
+          priceToCheck: mintPrice,
         },
         {
           revertMessage: 'Invalid receiver',
@@ -145,22 +163,21 @@ describe('ArkadaERC721Royalty', function () {
     });
 
     it('royalty should be updated', async () => {
-      const { arkadaERC721Royalty, owner, regularAccounts } = await loadFixture(
-        defaultDeploy,
-      );
+      const { arkadaERC721Royalty, owner, regularAccounts, mintPrice } =
+        await loadFixture(defaultDeploy);
 
       await setRoyaltyTest({
         arkadaErc721RoyaltyContract: arkadaERC721Royalty,
         owner,
         receiver: regularAccounts[0].address,
         royalty: 2,
+        priceToCheck: mintPrice,
       });
     });
 
     it('should be reverted if sender is not owner', async () => {
-      const { arkadaERC721Royalty, owner, regularAccounts } = await loadFixture(
-        defaultDeploy,
-      );
+      const { arkadaERC721Royalty, owner, regularAccounts, mintPrice } =
+        await loadFixture(defaultDeploy);
 
       await setRoyaltyTest(
         {
@@ -168,6 +185,7 @@ describe('ArkadaERC721Royalty', function () {
           owner,
           receiver: regularAccounts[0].address,
           royalty: 2,
+          priceToCheck: mintPrice,
         },
         {
           from: regularAccounts[0],

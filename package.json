@@ -33,7 +33,8 @@
     "hh:run": "hardhat run",
     "hh:run:main": "hardhat run --network soneium",
     "verify:main": "hardhat verify --network soneium",
-    "deploy:dc": "yarn hh:run scripts/deploy/deploy_DailyCheck.ts"
+    "deploy:dc": "yarn hh:run scripts/deploy/deploy_DailyCheck.ts",
+    "deploy:erc721": "yarn hh:run scripts/deploy/deploy_ArkadaERC721Royalty.ts"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",

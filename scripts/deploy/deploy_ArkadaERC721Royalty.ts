@@ -23,6 +23,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const MINT_PRICE = hre.ethers.utils.parseEther('1');
   const MINT_DEADLINE = Math.floor(Date.now() / 1000) + 86400 * 30; // 30 days from now
   const PAYMENT_RECIPIENT = '';
+  const OWNER = '';
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(
@@ -30,7 +31,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       ARKADA_ERC721_ROYALTY_CONTRACT_NAME,
       owner,
     ),
-    [NAME, SYMBOL, BASE_URI, MINT_PRICE, MINT_DEADLINE, PAYMENT_RECIPIENT],
+    [
+      NAME,
+      SYMBOL,
+      BASE_URI,
+      MINT_PRICE,
+      MINT_DEADLINE,
+      PAYMENT_RECIPIENT,
+      OWNER,
+    ],
     {
       unsafeAllow: ['constructor'],
     },
