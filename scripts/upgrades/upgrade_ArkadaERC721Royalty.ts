@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { ARKADA_ERC721_ROYALTY_CONTRACT_NAME } from '../../config';
+import { ARKADA_DAILY_CHECK_CONTRACT_NAME } from '../../config';
 import { getCurrentAddresses } from '../../config/constants/addresses';
 import {
   logDeployProxy,
@@ -16,24 +16,24 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const owner = await hre.ethers.getSigner(deployer);
 
   console.log(
-    'Upgrading DailyCheck at address:',
-    addresses?.arkadaErc721Royalty,
+    'Upgrading ArkadaERC721Royalty at address:',
+    addresses?.dailyCheck,
   );
   const deployment = await hre.upgrades.upgradeProxy(
-    addresses?.arkadaErc721Royalty ?? '',
+    addresses?.dailyCheck ?? '',
     await hre.ethers.getContractFactory(
-      ARKADA_ERC721_ROYALTY_CONTRACT_NAME,
+      ARKADA_DAILY_CHECK_CONTRACT_NAME,
       owner,
     ),
     {
       unsafeAllow: ['constructor'],
     },
   );
-  console.log('Upgraded DailyCheck:', deployment.address);
+  console.log('Upgraded ArkadaERC721Royalty:', deployment.address);
 
   await logDeployProxy(
     hre,
-    ARKADA_ERC721_ROYALTY_CONTRACT_NAME,
+    ARKADA_DAILY_CHECK_CONTRACT_NAME,
     deployment.address,
   );
   console.log('Waiting 5 blocks to verify...');
