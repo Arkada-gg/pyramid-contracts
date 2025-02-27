@@ -222,10 +222,7 @@ contract ArkadaERC721Royalty is
             _exists(tokenId),
             "ERC721Metadata: URI query for nonexistent token"
         );
-        return
-            string(
-                abi.encodePacked(_baseURI(), "/", tokenId, "/metadata.json")
-            );
+        return string(abi.encodePacked(_baseURI(), "/metadata.json"));
     }
 
     /**
