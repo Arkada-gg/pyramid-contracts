@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { ARKADA_DAILY_CHECK_CONTRACT_NAME } from '../../config';
+import { ARKADA_ERC721_ROYALTY_CONTRACT_NAME } from '../../config';
 import { getCurrentAddresses } from '../../config/constants/addresses';
 import {
   logDeployProxy,
@@ -17,12 +17,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   console.log(
     'Upgrading ArkadaERC721Royalty at address:',
-    addresses?.dailyCheck,
+    addresses?.arkadaErc721Royalty,
   );
   const deployment = await hre.upgrades.upgradeProxy(
-    addresses?.dailyCheck ?? '',
+    addresses?.arkadaErc721Royalty ?? '',
     await hre.ethers.getContractFactory(
-      ARKADA_DAILY_CHECK_CONTRACT_NAME,
+      ARKADA_ERC721_ROYALTY_CONTRACT_NAME,
       owner,
     ),
     {
@@ -33,7 +33,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   await logDeployProxy(
     hre,
-    ARKADA_DAILY_CHECK_CONTRACT_NAME,
+    ARKADA_ERC721_ROYALTY_CONTRACT_NAME,
     deployment.address,
   );
   console.log('Waiting 5 blocks to verify...');
