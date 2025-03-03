@@ -5,6 +5,8 @@ import {
   // eslint-disable-next-line camelcase
   ArkadaERC721Royalty__factory,
   // eslint-disable-next-line camelcase
+  ArkadaRewarder__factory,
+  // eslint-disable-next-line camelcase
   DailyCheck__factory,
 } from '../../typechain-types';
 
@@ -68,6 +70,9 @@ export const defaultDeploy = async () => {
 
   await arkadaERC721Royalty.setOperator(operator.address);
 
+  const arkadaRewarder = await new ArkadaRewarder__factory(owner).deploy();
+  await arkadaRewarder.initialize(operator.address);
+
   return {
     owner,
     regularAccounts,
@@ -77,5 +82,6 @@ export const defaultDeploy = async () => {
     paymentsRecipient,
     operator,
     arkadaERC721Royalty,
+    arkadaRewarder,
   };
 };
