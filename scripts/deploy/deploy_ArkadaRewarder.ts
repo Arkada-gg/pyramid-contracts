@@ -17,7 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log('Deploying ArkadaRewarder...');
 
   // initialise params <=========
-  const OPERATOR = ''; // Set operator address here
+  const OPERATOR = hre.ethers.constants.AddressZero; // Set operator address here
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(
