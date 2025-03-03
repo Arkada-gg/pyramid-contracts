@@ -4,6 +4,7 @@ import { ConfigPerNetwork } from '../types/index';
 export interface ArkadaAddresses {
   dailyCheck?: string;
   arkadaErc721Royalty?: string;
+  arkadaRewarder?: string;
 }
 
 export const arkadaAddressesPerNetwork: ConfigPerNetwork<
@@ -11,6 +12,8 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
 > = {
   soneium: {
     dailyCheck: '0x98826e728977B25279ad7629134FD0e96bd5A7b2',
+    // arkadaErc721Royalty: '0x98826e728977B25279ad7629134FD0e96bd5A7b2',
+    // arkadaRewarder: '0x98826e728977B25279ad7629134FD0e96bd5A7b2',
   },
   sepolia: undefined,
   hardhat: undefined,
