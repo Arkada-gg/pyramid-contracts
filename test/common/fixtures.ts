@@ -1,87 +1,24 @@
-import { expect } from 'chai';
 import { ethers } from 'hardhat';
+import { Pyramid__factory } from '../../typechain-types';
 
-import {
-  // eslint-disable-next-line camelcase
-  ArkadaERC721Royalty__factory,
-  // eslint-disable-next-line camelcase
-  ArkadaRewarder__factory,
-  // eslint-disable-next-line camelcase
-  DailyCheck__factory,
-} from '../../typechain-types';
-
-export const defaultDeploy = async () => {
+export async function defaultDeploy() {
   const [owner, paymentsRecipient, operator, ...regularAccounts] =
     await ethers.getSigners();
 
-  // main contracts
-  const dailyCheck = await new DailyCheck__factory(owner).deploy();
-  await dailyCheck.initialize();
+  const pyramid = await new Pyramid__factory(owner).deploy();
+  await pyramid.initialize('Pyramid', 'PYR', 'pyramid', '1.0', owner.address, {
+    gasLimit: 1000000,
+  });
 
-  const mintPrice = ethers.utils.parseEther('0.1');
-  const mintDeadline = Math.floor(Date.now() / 1000) + 86400 * 5;
-
-  const arkadaERC721Royalty = await new ArkadaERC721Royalty__factory(
-    owner,
-  ).deploy();
-  await expect(
-    arkadaERC721Royalty.initialize(
-      'ArkadaNFT',
-      'ARK',
-      'ipfs://base_uri/',
-      0,
-      mintDeadline,
-      paymentsRecipient.address,
-      owner.address,
-    ),
-  ).to.be.revertedWith('invalid price');
-  await expect(
-    arkadaERC721Royalty.initialize(
-      'ArkadaNFT',
-      'ARK',
-      'ipfs://base_uri/',
-      mintPrice,
-      mintDeadline,
-      ethers.constants.AddressZero,
-      owner.address,
-    ),
-  ).to.be.revertedWith('invalid recipient');
-  await expect(
-    arkadaERC721Royalty.initialize(
-      'ArkadaNFT',
-      'ARK',
-      'ipfs://base_uri/',
-      mintPrice,
-      mintDeadline,
-      paymentsRecipient.address,
-      ethers.constants.AddressZero,
-    ),
-  ).to.be.revertedWith('invalid owner');
-
-  await arkadaERC721Royalty.initialize(
-    'ArkadaNFT',
-    'ARK',
-    'ipfs://base_uri/',
-    mintPrice,
-    mintDeadline,
-    paymentsRecipient.address,
-    owner.address,
-  );
-
-  await arkadaERC721Royalty.setOperator(operator.address);
-
-  const arkadaRewarder = await new ArkadaRewarder__factory(owner).deploy();
-  await arkadaRewarder.initialize(operator.address);
+  await pyramid.grantRole(await pyramid.SIGNER_ROLE(), operator.address);
+  await pyramid.grantRole(await pyramid.UPGRADER_ROLE(), owner.address);
 
   return {
     owner,
     regularAccounts,
-    dailyCheck,
-    mintPrice,
-    mintDeadline,
+    pyramid,
+    signer: operator,
     paymentsRecipient,
     operator,
-    arkadaERC721Royalty,
-    arkadaRewarder,
   };
-};
+}
