@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { Escrow } from '../typechain-types';
 import {
   addTokenToWhitelistTest,
   removeTokenFromWhitelistTest,
@@ -13,30 +12,32 @@ import {
   withdrawNativeTest,
 } from './common/escrow.helpers';
 
+import { ERC1155Mock, ERC20Mock, ERC721Mock, Escrow } from '../typechain-types';
+
 describe('Escrow', () => {
   let escrowContract: Escrow;
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
   let treasury: SignerWithAddress;
   let token: SignerWithAddress;
-  let erc20Token: any;
-  let erc721Token: any;
-  let erc1155Token: any;
+  let erc20Token: ERC20Mock;
+  let erc721Token: ERC721Mock;
+  let erc1155Token: ERC1155Mock;
 
   beforeEach(async () => {
     [owner, user, treasury, token] = await ethers.getSigners();
 
     // Deploy mock tokens
     const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
-    erc20Token = await ERC20Mock.deploy('Test Token', 'TEST');
+    erc20Token = (await ERC20Mock.deploy('Test Token', 'TEST')) as ERC20Mock;
     await erc20Token.deployed();
 
     const ERC721Mock = await ethers.getContractFactory('ERC721Mock');
-    erc721Token = await ERC721Mock.deploy('Test NFT', 'TNFT');
+    erc721Token = (await ERC721Mock.deploy('Test NFT', 'TNFT')) as ERC721Mock;
     await erc721Token.deployed();
 
     const ERC1155Mock = await ethers.getContractFactory('ERC1155Mock');
-    erc1155Token = await ERC1155Mock.deploy();
+    erc1155Token = (await ERC1155Mock.deploy()) as ERC1155Mock;
     await erc1155Token.deployed();
 
     // Deploy Escrow contract

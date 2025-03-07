@@ -26,7 +26,7 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
 export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   soneium: 'auto',
   sepolia: 'auto',
-  hardhat: 'auto',
+  hardhat: 0,
   localhost: 70 * GWEI,
 };
 

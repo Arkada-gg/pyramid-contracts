@@ -60,10 +60,10 @@ contract TaskEscrow is EIP712, ITokenType, Escrow {
         address treasury
     ) Escrow(_owner, tokenAddr, treasury) EIP712("LAYER3", "1") {}
 
-    function claimReward(
-        ClaimData calldata data,
-        bytes calldata signature
-    ) external payable {
+    function claimReward(ClaimData calldata data, bytes calldata signature)
+        external
+        payable
+    {
         _validateSignature(data, signature);
 
         if (msg.value < data.claimFee) {
@@ -120,15 +120,19 @@ contract TaskEscrow is EIP712, ITokenType, Escrow {
         s_sigNonces[data.nonce] = true;
     }
 
-    function _computeDigest(
-        ClaimData calldata data
-    ) internal view returns (bytes32) {
+    function _computeDigest(ClaimData calldata data)
+        internal
+        view
+        returns (bytes32)
+    {
         return _hashTypedDataV4(keccak256(_getStructHash(data)));
     }
 
-    function _getStructHash(
-        ClaimData calldata data
-    ) internal pure returns (bytes memory) {
+    function _getStructHash(ClaimData calldata data)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return
             abi.encode(
                 CLAIM_HASH,
@@ -146,10 +150,11 @@ contract TaskEscrow is EIP712, ITokenType, Escrow {
             );
     }
 
-    function _getSigner(
-        ClaimData calldata data,
-        bytes calldata sig
-    ) internal view returns (address) {
+    function _getSigner(ClaimData calldata data, bytes calldata sig)
+        internal
+        view
+        returns (address)
+    {
         bytes32 digest = _computeDigest(data);
         return digest.recover(sig);
     }

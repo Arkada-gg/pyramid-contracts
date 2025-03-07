@@ -2,8 +2,9 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
+import { IMintPyramidData, OptionalCommonParams } from './common.helpers';
+
 import { Pyramid } from '../../typechain-types';
-import { OptionalCommonParams } from './common.helpers';
 
 type CommonParams = {
   pyramidContract: Pyramid;
@@ -60,19 +61,16 @@ export const setTreasuryTest = async (
   expect(await pyramidContract.s_treasury()).eq(treasury);
 };
 
-interface IWithdrawTest extends CommonParams {
-  value: BigNumber;
-}
 export const withdrawTest = async (
-  { pyramidContract, owner, value }: IWithdrawTest,
+  { pyramidContract, owner }: CommonParams,
   opt?: OptionalCommonParams,
 ) => {
   const sender = opt?.from ?? owner;
 
   if (opt?.revertMessage) {
-    await expect(pyramidContract.connect(sender).withdraw()).revertedWith(
-      opt?.revertMessage,
-    );
+    await expect(
+      pyramidContract.connect(sender).withdraw(),
+    ).revertedWithCustomError(pyramidContract, opt?.revertMessage);
     return;
   }
 
@@ -176,7 +174,7 @@ export const unpublishQuestTest = async (
 };
 
 interface IMintPyramidTest extends CommonParams {
-  data: any;
+  data: IMintPyramidData;
   signature: string;
   value?: BigNumber;
 }

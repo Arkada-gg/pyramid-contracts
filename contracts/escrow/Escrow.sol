@@ -47,7 +47,7 @@ contract Escrow is IEscrow, ERC721Holder, ERC1155Holder, Ownable2Step {
     event TokenWhitelisted(address indexed token);
     event TokenRemovedFromWhitelist(address indexed token);
 
-    bytes4 private constant TRANSFER_ERC20 =
+    bytes4 private constant _TRANSFER_ERC20 =
         bytes4(keccak256(bytes("transfer(address,uint256)")));
 
     address public immutable i_treasury;
@@ -88,9 +88,11 @@ contract Escrow is IEscrow, ERC721Holder, ERC1155Holder, Ownable2Step {
 
     /// @notice Removes a token from the whitelist.
     /// @param token The address of the token to remove from the whitelist.
-    function removeTokenFromWhitelist(
-        address token
-    ) external override onlyOwner {
+    function removeTokenFromWhitelist(address token)
+        external
+        override
+        onlyOwner
+    {
         s_whitelistedTokens[token] = false;
         emit TokenRemovedFromWhitelist(token);
     }
@@ -98,9 +100,12 @@ contract Escrow is IEscrow, ERC721Holder, ERC1155Holder, Ownable2Step {
     /// @notice Returns the ERC20 token balance held in escrow.
     /// @param token The address of the token.
     /// @return The balance of the specified token held in escrow.
-    function escrowERC20Reserves(
-        address token
-    ) public view override returns (uint256) {
+    function escrowERC20Reserves(address token)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return IERC20(token).balanceOf(address(this));
     }
 
@@ -108,10 +113,12 @@ contract Escrow is IEscrow, ERC721Holder, ERC1155Holder, Ownable2Step {
     /// @param token The address of the token.
     /// @param tokenId The ID of the token.
     /// @return The balance of the specified token ID held in escrow.
-    function escrowERC1155Reserves(
-        address token,
-        uint256 tokenId
-    ) external view override returns (uint256) {
+    function escrowERC1155Reserves(address token, uint256 tokenId)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return IERC1155(token).balanceOf(address(this), tokenId);
     }
 
@@ -121,9 +128,12 @@ contract Escrow is IEscrow, ERC721Holder, ERC1155Holder, Ownable2Step {
     }
 
     /// @notice Returns the ERC721 token balance held in escrow.
-    function escrowERC721BalanceOf(
-        address token
-    ) external view override returns (uint256) {
+    function escrowERC721BalanceOf(address token)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return IERC721(token).balanceOf(address(this));
     }
 
@@ -172,7 +182,7 @@ contract Escrow is IEscrow, ERC721Holder, ERC1155Holder, Ownable2Step {
             revert Escrow__IsNotAContract();
         }
         (bool success, bytes memory data) = token.call(
-            abi.encodeWithSelector(TRANSFER_ERC20, to, value)
+            abi.encodeWithSelector(_TRANSFER_ERC20, to, value)
         );
         if (!success || (data.length > 0 && !abi.decode(data, (bool)))) {
             revert Escrow__ERC20TransferFailed();
@@ -262,14 +272,18 @@ contract Escrow is IEscrow, ERC721Holder, ERC1155Holder, Ownable2Step {
         emit EscrowNativeTransfer(to, amount, rake, i_treasury);
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC1155Holder) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155Holder)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 
     function renounceOwnership() public override onlyOwner {}
 
     fallback() external payable {}
+
     receive() external payable {}
 }

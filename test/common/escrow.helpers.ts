@@ -2,8 +2,9 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-import { Escrow } from '../../typechain-types';
 import { OptionalCommonParams } from './common.helpers';
+
+import { Escrow } from '../../typechain-types';
 
 type CommonParams = {
   escrowContract: Escrow;
@@ -76,7 +77,6 @@ export const withdrawERC20Test = async (
   }
 
   const rake = amount.mul(rakeBps).div(10000);
-  const rewardAmount = amount.sub(rake);
 
   await expect(
     escrowContract.connect(sender).withdrawERC20(token, to, amount, rakeBps),
@@ -158,7 +158,6 @@ export const withdrawNativeTest = async (
   }
 
   const rake = amount.mul(rakeBps).div(10000);
-  const rewardAmount = amount.sub(rake);
 
   await expect(
     escrowContract.connect(sender).withdrawNative(to, amount, rakeBps),

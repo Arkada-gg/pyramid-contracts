@@ -1,13 +1,9 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
+import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 
-import { parseEther } from 'ethers/lib/utils';
-import {
-  IMintPyramidData,
-  signMintData,
-  signMintDataTyped,
-} from './common/common.helpers';
+import { IMintPyramidData, signMintDataTyped } from './common/common.helpers';
 import { defaultDeploy } from './common/fixtures';
 import {
   initializeQuestTest,
@@ -240,8 +236,14 @@ describe('Pyramid', () => {
 
   describe('Minting', () => {
     it('Should not allow minting when inactive', async () => {
-      const { pyramidContract, owner, user, QUEST_ID, factoryContract } =
-        await loadFixture(defaultDeploy);
+      const {
+        pyramidContract,
+        owner,
+        user,
+        QUEST_ID,
+        factoryContract,
+        domain,
+      } = await loadFixture(defaultDeploy);
       await setIsMintingActiveTest({ pyramidContract, owner, isActive: false });
 
       const data: IMintPyramidData = {
@@ -275,7 +277,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintData(data, user);
+      const signature = await signMintDataTyped(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -290,8 +292,14 @@ describe('Pyramid', () => {
     });
 
     it('Should not allow minting with invalid signature', async () => {
-      const { pyramidContract, owner, user, QUEST_ID, factoryContract } =
-        await loadFixture(defaultDeploy);
+      const {
+        pyramidContract,
+        owner,
+        user,
+        QUEST_ID,
+        factoryContract,
+        domain,
+      } = await loadFixture(defaultDeploy);
 
       const data: IMintPyramidData = {
         questId: QUEST_ID,
@@ -324,7 +332,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintData(data, user);
+      const signature = await signMintDataTyped(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -390,19 +398,19 @@ describe('Pyramid', () => {
           signature,
           value: parseEther('0.1'),
         },
-        { from: user, revertMessage: 'Factory__NoQuestEscrowFound' },
+        { from: user },
       );
 
-      // await mintPyramidTest(
-      //   {
-      //     pyramidContract,
-      //     owner,
-      //     data,
-      //     signature,
-      //     value: parseEther('0.1'),
-      //   },
-      //   { from: user, revertMessage: 'Pyramid__NonceAlreadyUsed' },
-      // );
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user, revertMessage: 'Pyramid__NonceAlreadyUsed' },
+      );
     });
 
     it('Should allow successful minting', async () => {
@@ -412,71 +420,445 @@ describe('Pyramid', () => {
         user,
         questSigner,
         QUEST_ID,
-        COMMUNITIES,
+        factoryContract,
+        domain,
+        treasury,
       } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({ pyramidContract, owner, isActive: true });
-      await setTreasuryTest({
-        pyramidContract,
-        owner,
-        treasury: ethers.constants.AddressZero,
-      });
 
-      const data = {
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = parseEther('0.01');
+
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
-        communityId: COMMUNITIES[0],
-        userId: user.address,
-        timestamp: Math.floor(Date.now() / 1000),
         nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
       };
 
-      const signature = await questSigner.signMessage(
-        ethers.utils.arrayify(
-          ethers.utils.keccak256(
-            ethers.utils.defaultAbiCoder.encode(
-              ['uint256', 'string', 'address', 'uint256', 'uint256'],
-              [
-                data.questId,
-                data.communityId,
-                data.userId,
-                data.timestamp,
-                data.nonce,
-              ],
-            ),
-          ),
-        ),
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
       );
 
-      await mintPyramidTest({
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+
+      expect(recipientBalanceAfter).to.equal(
+        recipientBalanceBefore.add(expectedRecipientPayout),
+      );
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(
+        userBalanceBefore.sub(price).add(rewards),
+      );
+    });
+
+    it('Should allow successful minting with erc20 token rewards', async () => {
+      const {
         pyramidContract,
         owner,
-        data,
-        signature,
-        value: ethers.utils.parseEther('0.1'),
-      });
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+        treasury,
+        tokens,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = parseEther('0.01');
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: tokens.erc20Token.address,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 0,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const erc20BalanceBefore = await tokens.erc20Token.balanceOf(
+        user.address,
+      );
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const erc20BalanceAfter = await tokens.erc20Token.balanceOf(user.address);
+      expect(recipientBalanceAfter).to.equal(
+        recipientBalanceBefore.add(expectedRecipientPayout),
+      );
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
+      expect(erc20BalanceAfter).to.equal(erc20BalanceBefore.add(rewards));
+    });
+
+    it('Should allow successful minting with erc721 token rewards', async () => {
+      const {
+        pyramidContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+        treasury,
+        tokens,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = 1;
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: tokens.erc721Token.address,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 1,
+          tokenType: 1,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+
+      expect(recipientBalanceAfter).to.equal(
+        recipientBalanceBefore.add(expectedRecipientPayout),
+      );
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
+      expect(await tokens.erc721Token.ownerOf(1)).eq(user.address);
+    });
+
+    it('Should allow successful minting with erc1155 token rewards', async () => {
+      const {
+        pyramidContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+        treasury,
+        tokens,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = 1;
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: tokens.erc1155Token.address,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 1,
+          tokenType: 2,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const recipientBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+
+      expect(recipientBalanceAfter).to.equal(
+        recipientBalanceBefore.add(expectedRecipientPayout),
+      );
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
+      expect(await tokens.erc1155Token.balanceOf(user.address, 1)).eq(rewards);
     });
   });
 
   describe('Withdrawal', () => {
     it('Should allow owner to withdraw funds', async () => {
-      const { pyramidContract, owner } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({ pyramidContract, owner, isActive: true });
-      await setTreasuryTest({
+      const {
         pyramidContract,
         owner,
-        treasury: ethers.constants.AddressZero,
-      });
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+      } = await loadFixture(defaultDeploy);
 
-      // First send some ETH to the contract
-      await owner.sendTransaction({
-        to: pyramidContract.address,
-        value: ethers.utils.parseEther('1'),
-      });
+      const price = parseEther('0.1');
+      const BPS = 100;
+
+      const rewards = parseEther('0.01');
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.4'),
+        },
+        { from: user },
+      );
+
+      const balanceBefore = await ethers.provider.getBalance(owner.address);
 
       await withdrawTest({
         pyramidContract,
         owner,
-        value: ethers.utils.parseEther('1'),
       });
+
+      const balanceAfter = await ethers.provider.getBalance(owner.address);
+      expect(balanceAfter).to.equal(balanceBefore.add(parseEther('0.3')));
     });
 
     it('Should not allow non-owner to withdraw funds', async () => {
@@ -485,9 +867,8 @@ describe('Pyramid', () => {
         {
           pyramidContract,
           owner,
-          value: ethers.utils.parseEther('1'),
         },
-        { from: user, revertMessage: 'Ownable: caller is not the owner' },
+        { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
       );
     });
   });

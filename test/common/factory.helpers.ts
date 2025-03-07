@@ -2,8 +2,9 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-import { Factory } from '../../typechain-types';
 import { OptionalCommonParams } from './common.helpers';
+
+import { Factory } from '../../typechain-types';
 
 type CommonParams = {
   factoryContract: Factory;

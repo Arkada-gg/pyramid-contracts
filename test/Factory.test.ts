@@ -4,13 +4,6 @@ import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 
 import {
-  ERC1155Mock,
-  ERC20Mock,
-  ERC721Mock,
-  Factory,
-  Pyramid,
-} from '../typechain-types';
-import {
   addTokenToWhitelistTest,
   createEscrowTest,
   distributeRewardsTest,
@@ -19,6 +12,14 @@ import {
   withdrawFundsTest,
 } from './common/factory.helpers';
 import { initializeQuestTest } from './common/pyramid.helpers';
+
+import {
+  ERC1155Mock,
+  ERC20Mock,
+  ERC721Mock,
+  Factory,
+  Pyramid,
+} from '../typechain-types';
 
 describe('Factory', () => {
   let factoryContract: Factory;

@@ -15,7 +15,11 @@ contract ERC1155Mock is ERC1155 {
         _mint(to, id, amount, data);
     }
 
-    function burn(address from, uint256 id, uint256 amount) external {
+    function burn(
+        address from,
+        uint256 id,
+        uint256 amount
+    ) external {
         _burn(from, id, amount);
     }
 }
