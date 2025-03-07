@@ -3,18 +3,12 @@ pragma solidity 0.8.22;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Escrow} from "./Escrow.sol";
 import {Pyramid} from "../Pyramid.sol";
 import {IEscrow} from "./interfaces/IEscrow.sol";
 import {IFactory} from "./interfaces/IFactory.sol";
 
-contract Factory is
-    IFactory,
-    Initializable,
-    AccessControlUpgradeable,
-    UUPSUpgradeable
-{
+contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     error Factory__OnlyCallableByPYRAMID();
     error Factory__PYRAMIDQuestIsActive();
     error Factory__NoQuestEscrowFound();
@@ -22,8 +16,7 @@ contract Factory is
     error Factory__EscrowAlreadyExists();
     error Factory__ZeroAddress();
 
-    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
-    Pyramid public immutable i_pyramid;
+    Pyramid public i_pyramid;
     mapping(uint256 => address) public s_escrows;
     mapping(uint256 => address) public s_escrow_admin;
 
@@ -65,18 +58,14 @@ contract Factory is
         _;
     }
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(Pyramid pyramid) {
-        i_pyramid = pyramid;
-        _disableInitializers();
-    }
-
     /// @notice Initializes the contract by setting up roles and linking to the Pyramid contract.
     /// @param admin Address to be granted the default admin role.
-    function initialize(address admin) external override initializer {
+    /// @param pyramid Address of the Pyramid contract.
+    function initialize(address admin, address pyramid) external initializer {
+        if (admin == address(0)) revert Factory__ZeroAddress();
         __AccessControl_init();
-        __UUPSUpgradeable_init();
 
+        i_pyramid = Pyramid(pyramid);
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
@@ -298,8 +287,4 @@ contract Factory is
     ) public view override(AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
-
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal virtual override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }

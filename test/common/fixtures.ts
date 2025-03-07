@@ -1,24 +1,76 @@
+import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Pyramid__factory } from '../../typechain-types';
+import { Factory__factory, Pyramid__factory } from '../../typechain-types';
+import { encodeString } from './common.helpers';
 
 export async function defaultDeploy() {
-  const [owner, paymentsRecipient, operator, ...regularAccounts] =
-    await ethers.getSigners();
+  const [owner, user, treasury, questSigner] = await ethers.getSigners();
 
-  const pyramid = await new Pyramid__factory(owner).deploy();
-  await pyramid.initialize('Pyramid', 'PYR', 'pyramid', '1.0', owner.address, {
-    gasLimit: 1000000,
-  });
+  const domain = {
+    name: 'pyramid',
+    version: '1',
+  };
 
-  await pyramid.grantRole(await pyramid.SIGNER_ROLE(), operator.address);
-  await pyramid.grantRole(await pyramid.UPGRADER_ROLE(), owner.address);
+  const pyramidContract = await new Pyramid__factory(owner).deploy();
+  await expect(
+    pyramidContract.initialize(
+      'Pyramid',
+      'PYR',
+      domain.name,
+      domain.version,
+      ethers.constants.AddressZero,
+    ),
+  ).to.be.revertedWithCustomError(
+    pyramidContract,
+    'Pyramid__InvalidAdminAddress',
+  );
+  await pyramidContract.initialize(
+    'Pyramid',
+    'PYR',
+    domain.name,
+    domain.version,
+    owner.address,
+  );
+
+  await pyramidContract.grantRole(
+    await pyramidContract.SIGNER_ROLE(),
+    questSigner.address,
+  );
+
+  await pyramidContract.setTreasury(treasury.address);
+
+  const TYPE_HASH = encodeString(
+    'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)',
+  );
+
+  const { chainId } = await ethers.provider.getNetwork();
+
+  const factoryContract = await new Factory__factory(owner).deploy();
+  await expect(
+    factoryContract.initialize(
+      ethers.constants.AddressZero,
+      pyramidContract.address,
+    ),
+  ).to.be.revertedWithCustomError(factoryContract, 'Factory__ZeroAddress');
+  await factoryContract.initialize(owner.address, pyramidContract.address);
 
   return {
     owner,
-    regularAccounts,
-    pyramid,
-    signer: operator,
-    paymentsRecipient,
-    operator,
+    user,
+    treasury,
+    questSigner,
+    pyramidContract,
+    factoryContract,
+    domain: {
+      ...domain,
+      chainId,
+      verifyingContract: pyramidContract.address,
+    },
+    QUEST_ID: 1,
+    COMMUNITIES: ['community1', 'community2'],
+    TITLE: 'Test Quest',
+    DIFFICULTY: 1,
+    QUEST_TYPE: 1,
+    TAGS: ['tag1', 'tag2'],
   };
 }

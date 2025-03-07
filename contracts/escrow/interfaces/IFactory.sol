@@ -33,6 +33,4 @@ interface IFactory is ITokenType {
 
     function addTokenToWhitelist(uint256 questId, address token) external;
     function removeTokenFromWhitelist(uint256 questId, address token) external;
-
-    function initialize(address admin) external;
 }

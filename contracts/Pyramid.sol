@@ -7,21 +7,20 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
 import {ITokenType} from "./escrow/interfaces/ITokenType.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "hardhat/console.sol";
+
 /// @title Pyramid
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
-/// The contract is upgradeable using OpenZeppelin's UUPSUpgradeable pattern.
-/// @custom:oz-upgrades-from Pyramid
+/// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
 contract Pyramid is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
-    UUPSUpgradeable,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
     ITokenType
@@ -44,12 +43,12 @@ contract Pyramid is
     error Pyramid__ExceedsContractAllowance();
     error Pyramid__TreasuryNotSet();
     error Pyramid__InvalidAdminAddress();
+    error Pyramid__ZeroAddress();
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER");
 
     bytes32 internal constant TX_DATA_HASH =
         keccak256("TransactionData(string txHash,string networkChainId)");
@@ -206,8 +205,8 @@ contract Pyramid is
     /// @param tokenAddress The token address of the reward
     /// @param chainId The blockchain chain ID where the transaction occurred
     /// @param amount The amount of the reward
-    /// @param tokenId The token ID
-    /// @param tokenType The token type
+    /// @param tokenId The token ID of the reward (only applicable for ERC721 and ERC1155)
+    /// @param tokenType The token type (ERC20, ERC721, ERC1155, NATIVE)
     /// @param rakeBps The rake basis points
     /// @param factoryAddress The escrow factory address
     struct RewardData {
@@ -227,11 +226,6 @@ contract Pyramid is
     struct TransactionData {
         string txHash;
         string networkChainId;
-    }
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
     }
 
     /// @notice Returns the version of the Pyramid smart contract
@@ -257,19 +251,11 @@ contract Pyramid is
         __ERC721_init(_tokenName, _tokenSymbol);
         __EIP712_init(_signingDomain, _signatureVersion);
         __AccessControl_init();
-        __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         s_isMintingActive = true;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
     }
-
-    /// @notice Authorizes an upgrade to a new contract implementation
-    /// @dev Overrides the UUPSUpgradeable internal function with access control.
-    /// @param newImplementation Address of the new contract implementation
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyRole(UPGRADER_ROLE) {}
 
     /// @notice Checks whether a quest is active or not
     /// @param questId Unique identifier for the quest
@@ -396,6 +382,7 @@ contract Pyramid is
         bytes calldata signature
     ) internal {
         address signer = _getSigner(data, signature);
+
         if (!hasRole(SIGNER_ROLE, signer)) {
             revert Pyramid__IsNotSigner();
         }
@@ -506,7 +493,7 @@ contract Pyramid is
         return digest.recover(sig);
     }
 
-    /// @notice Internal function to compute the EIP712 digest for CubeData
+    /// @notice Internal function to compute the EIP712 digest for PyramidData
     /// @dev Generates the digest that must be signed by the signer.
     /// @param data The PyramidData to generate a digest for
     /// @return The computed EIP712 digest
@@ -647,6 +634,7 @@ contract Pyramid is
     function setTreasury(
         address _treasury
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_treasury == address(0)) revert Pyramid__ZeroAddress();
         s_treasury = _treasury;
         emit UpdatedTreasury(_treasury);
     }
