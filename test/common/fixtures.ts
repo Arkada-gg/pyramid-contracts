@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { Factory__factory, Pyramid__factory } from '../../typechain-types';
-import { encodeString } from './common.helpers';
 
 export async function defaultDeploy() {
   const [owner, user, treasury, questSigner] = await ethers.getSigners();
@@ -38,10 +37,6 @@ export async function defaultDeploy() {
   );
 
   await pyramidContract.setTreasury(treasury.address);
-
-  const TYPE_HASH = encodeString(
-    'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)',
-  );
 
   const { chainId } = await ethers.provider.getNetwork();
 

@@ -3,7 +3,13 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { Factory, Pyramid } from '../typechain-types';
+import {
+  ERC1155Mock,
+  ERC20Mock,
+  ERC721Mock,
+  Factory,
+  Pyramid,
+} from '../typechain-types';
 import {
   addTokenToWhitelistTest,
   createEscrowTest,
@@ -12,40 +18,56 @@ import {
   updateEscrowAdminTest,
   withdrawFundsTest,
 } from './common/factory.helpers';
+import { initializeQuestTest } from './common/pyramid.helpers';
 
-describe.only('Factory', () => {
+describe('Factory', () => {
   let factoryContract: Factory;
+  let factoryContractDisributeTester: Factory;
   let pyramidContract: Pyramid;
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
   let admin: SignerWithAddress;
   let treasury: SignerWithAddress;
-  let erc20Token: any;
-  let erc721Token: any;
-  let erc1155Token: any;
+  let signer: SignerWithAddress;
+  let erc20Token: ERC20Mock;
+  let erc721Token: ERC721Mock;
+  let erc1155Token: ERC1155Mock;
   let questId: number;
+  let whitelistedTokens: string[];
 
   beforeEach(async () => {
-    [owner, user, admin, treasury] = await ethers.getSigners();
+    [owner, user, admin, treasury, signer] = await ethers.getSigners();
     questId = 1;
 
     // Deploy mock tokens
     const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
-    erc20Token = await ERC20Mock.deploy('Test Token', 'TEST');
+    erc20Token = (await ERC20Mock.deploy('Test Token', 'TEST')) as ERC20Mock;
     await erc20Token.deployed();
 
     const ERC721Mock = await ethers.getContractFactory('ERC721Mock');
-    erc721Token = await ERC721Mock.deploy('Test NFT', 'TNFT');
+    erc721Token = (await ERC721Mock.deploy('Test NFT', 'TNFT')) as ERC721Mock;
     await erc721Token.deployed();
 
     const ERC1155Mock = await ethers.getContractFactory('ERC1155Mock');
-    erc1155Token = await ERC1155Mock.deploy();
+    erc1155Token = (await ERC1155Mock.deploy()) as ERC1155Mock;
     await erc1155Token.deployed();
 
     // Deploy Pyramid contract
     const Pyramid = await ethers.getContractFactory('Pyramid');
     pyramidContract = (await Pyramid.deploy()) as Pyramid;
     await pyramidContract.deployed();
+
+    await pyramidContract.initialize(
+      'Pyramid',
+      'PYR',
+      'test',
+      '1',
+      owner.address,
+    );
+    await pyramidContract.grantRole(
+      await pyramidContract.SIGNER_ROLE(),
+      signer.address,
+    );
 
     // Deploy Factory contract
     const Factory = await ethers.getContractFactory('Factory');
@@ -54,15 +76,24 @@ describe.only('Factory', () => {
 
     // Initialize Factory
     await factoryContract.initialize(owner.address, pyramidContract.address);
-  });
 
-  describe('createEscrow', () => {
-    const whitelistedTokens = [
+    factoryContractDisributeTester = (await Factory.deploy()) as Factory;
+    await factoryContractDisributeTester.deployed();
+
+    // Initialize Factory
+    await factoryContractDisributeTester.initialize(
+      owner.address,
+      owner.address, // owner like pyramid contract
+    );
+
+    whitelistedTokens = [
       erc20Token.address,
       erc721Token.address,
       erc1155Token.address,
     ];
+  });
 
+  describe('createEscrow', () => {
     it('should create escrow', async () => {
       await createEscrowTest({
         factoryContract,
@@ -90,7 +121,7 @@ describe.only('Factory', () => {
         },
         {
           from: user,
-          revertMessage: 'AccessControl: account',
+          revertMessage: 'AccessControlUnauthorizedAccount',
         },
       );
     });
@@ -134,12 +165,17 @@ describe.only('Factory', () => {
     });
 
     it('should update escrow admin', async () => {
-      await updateEscrowAdminTest({
-        factoryContract,
-        owner,
-        questId,
-        newAdmin: user.address,
-      });
+      await updateEscrowAdminTest(
+        {
+          factoryContract,
+          owner,
+          questId,
+          newAdmin: user.address,
+        },
+        {
+          from: admin,
+        },
+      );
 
       expect(await factoryContract.s_escrow_admin(questId)).eq(user.address);
     });
@@ -168,6 +204,7 @@ describe.only('Factory', () => {
           newAdmin: ethers.constants.AddressZero,
         },
         {
+          from: admin,
           revertMessage: 'Factory__ZeroAddress',
         },
       );
@@ -290,92 +327,116 @@ describe.only('Factory', () => {
         ],
         treasury: treasury.address,
       });
-
+      const escrowAddress = await factoryContract.s_escrows(questId);
       // Setup initial balances
-      await erc20Token.mint(
-        await factoryContract.s_escrows(questId),
-        ethers.utils.parseEther('1000'),
-      );
-      await erc721Token.mint(await factoryContract.s_escrows(questId), 1);
-      await erc1155Token.mint(
-        await factoryContract.s_escrows(questId),
-        1,
-        100,
-        '0x',
-      );
+      await erc20Token.mint(escrowAddress, ethers.utils.parseEther('1000'));
+      await erc721Token.mint(escrowAddress, 1);
+      await erc1155Token.mint(escrowAddress, 1, 100, '0x');
 
       // Send native tokens
       await user.sendTransaction({
-        to: await factoryContract.s_escrows(questId),
+        to: escrowAddress,
         value: ethers.utils.parseEther('1'),
       });
     });
 
     it('should withdraw native tokens', async () => {
-      await withdrawFundsTest({
-        factoryContract,
-        owner,
-        questId,
-        to: user.address,
-        token: ethers.constants.AddressZero,
-        tokenId: 0,
-        tokenType: 0, // NATIVE
-      });
+      await withdrawFundsTest(
+        {
+          factoryContract,
+          owner,
+          questId,
+          to: user.address,
+          token: ethers.constants.AddressZero,
+          tokenId: 0,
+          tokenType: 3, // NATIVE
+        },
+        {
+          from: admin,
+        },
+      );
 
       const balance = await user.getBalance();
       expect(balance).gt(0);
     });
 
     it('should withdraw ERC20 tokens', async () => {
-      await withdrawFundsTest({
-        factoryContract,
-        owner,
-        questId,
-        to: user.address,
-        token: erc20Token.address,
-        tokenId: 0,
-        tokenType: 1, // ERC20
-      });
+      await withdrawFundsTest(
+        {
+          factoryContract,
+          owner,
+          questId,
+          to: user.address,
+          token: erc20Token.address,
+          tokenId: 0,
+          tokenType: 0, // ERC20
+        },
+        {
+          from: admin,
+        },
+      );
 
       expect(await erc20Token.balanceOf(user.address)).gt(0);
     });
 
     it('should withdraw ERC721 tokens', async () => {
-      await withdrawFundsTest({
-        factoryContract,
-        owner,
-        questId,
-        to: user.address,
-        token: erc721Token.address,
-        tokenId: 1,
-        tokenType: 2, // ERC721
-      });
+      await withdrawFundsTest(
+        {
+          factoryContract,
+          owner,
+          questId,
+          to: user.address,
+          token: erc721Token.address,
+          tokenId: 1,
+          tokenType: 1, // ERC721
+        },
+        {
+          from: admin,
+        },
+      );
 
       expect(await erc721Token.ownerOf(1)).eq(user.address);
     });
 
     it('should withdraw ERC1155 tokens', async () => {
-      await withdrawFundsTest({
-        factoryContract,
-        owner,
-        questId,
-        to: user.address,
-        token: erc1155Token.address,
-        tokenId: 1,
-        tokenType: 3, // ERC1155
-      });
+      const escrowAddress = await factoryContract.s_escrows(questId);
+      const balanceBefore = await erc1155Token.balanceOf(escrowAddress, 1);
+      expect(balanceBefore).eq(100);
 
-      expect(await erc1155Token.balanceOf(user.address, 1)).gt(0);
+      await withdrawFundsTest(
+        {
+          factoryContract,
+          owner,
+          questId,
+          to: user.address,
+          token: erc1155Token.address,
+          tokenId: 1,
+          tokenType: 2, // ERC1155
+        },
+        {
+          from: admin,
+        },
+      );
+
+      const balanceAfter = await erc1155Token.balanceOf(user.address, 1);
+      expect(balanceAfter).eq(100);
     });
 
     it('should revert if quest is active', async () => {
-      await pyramidContract.connect(owner).initializeQuest(
-        questId,
-        ['test'],
-        'Test Quest',
-        0, // BEGINNER
-        0, // QUEST
-        ['test'],
+      await initializeQuestTest(
+        {
+          pyramidContract,
+          owner,
+          questId,
+          communities: ['test'],
+          title: 'Test Quest',
+          difficulty: 0, // BEGINNER
+          questType: 0, // QUEST
+          tags: ['test'],
+        },
+        {
+          from: signer,
+        },
       );
 
       await withdrawFundsTest(
@@ -433,7 +494,7 @@ describe.only('Factory', () => {
   describe('distributeRewards', () => {
     beforeEach(async () => {
       await createEscrowTest({
-        factoryContract,
+        factoryContract: factoryContractDisributeTester,
         owner,
         questId,
         admin: admin.address,
@@ -445,36 +506,32 @@ describe.only('Factory', () => {
         treasury: treasury.address,
       });
 
+      const escrowAddress = await factoryContractDisributeTester.s_escrows(
+        questId,
+      );
+
       // Setup initial balances
-      await erc20Token.mint(
-        await factoryContract.s_escrows(questId),
-        ethers.utils.parseEther('1000'),
-      );
-      await erc721Token.mint(await factoryContract.s_escrows(questId), 1);
-      await erc1155Token.mint(
-        await factoryContract.s_escrows(questId),
-        1,
-        100,
-        '0x',
-      );
+      await erc20Token.mint(escrowAddress, ethers.utils.parseEther('1000'));
+      await erc721Token.mint(escrowAddress, 1);
+      await erc1155Token.mint(escrowAddress, 1, 100, '0x');
 
       // Send native tokens
       await user.sendTransaction({
-        to: await factoryContract.s_escrows(questId),
+        to: escrowAddress,
         value: ethers.utils.parseEther('1'),
       });
     });
 
     it('should distribute native tokens', async () => {
       await distributeRewardsTest({
-        factoryContract,
+        factoryContract: factoryContractDisributeTester,
         owner,
         questId,
         token: ethers.constants.AddressZero,
         to: user.address,
         amount: ethers.utils.parseEther('0.5'),
         rewardTokenId: 0,
-        tokenType: 0,
+        tokenType: 3, // NATIVE
         rakeBps: 1000,
       });
 
@@ -484,14 +541,14 @@ describe.only('Factory', () => {
 
     it('should distribute ERC20 tokens', async () => {
       await distributeRewardsTest({
-        factoryContract,
+        factoryContract: factoryContractDisributeTester,
         owner,
         questId,
         token: erc20Token.address,
         to: user.address,
         amount: ethers.utils.parseEther('100'),
         rewardTokenId: 0,
-        tokenType: 1,
+        tokenType: 0, // ERC20
         rakeBps: 1000,
       });
 
@@ -500,14 +557,14 @@ describe.only('Factory', () => {
 
     it('should distribute ERC721 tokens', async () => {
       await distributeRewardsTest({
-        factoryContract,
+        factoryContract: factoryContractDisributeTester,
         owner,
         questId,
         token: erc721Token.address,
         to: user.address,
         amount: BigNumber.from(1),
         rewardTokenId: 1,
-        tokenType: 2,
+        tokenType: 1, // ERC721
         rakeBps: 0,
       });
 
@@ -516,14 +573,14 @@ describe.only('Factory', () => {
 
     it('should distribute ERC1155 tokens', async () => {
       await distributeRewardsTest({
-        factoryContract,
+        factoryContract: factoryContractDisributeTester,
         owner,
         questId,
         token: erc1155Token.address,
         to: user.address,
         amount: BigNumber.from(50),
         rewardTokenId: 1,
-        tokenType: 3,
+        tokenType: 2, // ERC1155
         rakeBps: 1000,
       });
 
@@ -533,14 +590,14 @@ describe.only('Factory', () => {
     it('should revert if not called by Pyramid', async () => {
       await distributeRewardsTest(
         {
-          factoryContract,
+          factoryContract: factoryContractDisributeTester,
           owner,
           questId,
           token: erc20Token.address,
           to: user.address,
           amount: ethers.utils.parseEther('100'),
           rewardTokenId: 0,
-          tokenType: 1,
+          tokenType: 0, // ERC20
           rakeBps: 1000,
         },
         {
@@ -553,14 +610,14 @@ describe.only('Factory', () => {
     it('should revert if escrow not found', async () => {
       await distributeRewardsTest(
         {
-          factoryContract,
+          factoryContract: factoryContractDisributeTester,
           owner,
           questId: 2,
           token: erc20Token.address,
           to: user.address,
           amount: ethers.utils.parseEther('100'),
           rewardTokenId: 0,
-          tokenType: 1,
+          tokenType: 0, // ERC20
           rakeBps: 1000,
         },
         {

@@ -207,7 +207,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
                 token,
                 tokenId
             );
-            IEscrow(escrow).withdrawERC1155(token, to, tokenId, erc1155Amount);
+            IEscrow(escrow).withdrawERC1155(token, to, erc1155Amount, tokenId);
             emit EscrowWithdrawal(
                 msg.sender,
                 to,
