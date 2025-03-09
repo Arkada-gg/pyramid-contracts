@@ -4,7 +4,7 @@ pragma solidity 0.8.22;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Escrow} from "./Escrow.sol";
-import {Pyramid} from "../Pyramid.sol";
+import {PyramidEscrow} from "../PyramidEscrow.sol";
 import {IEscrow} from "./interfaces/IEscrow.sol";
 import {IFactory} from "./interfaces/IFactory.sol";
 
@@ -16,7 +16,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     error Factory__EscrowAlreadyExists();
     error Factory__ZeroAddress();
 
-    Pyramid public i_pyramid;
+    PyramidEscrow public i_pyramid;
     mapping(uint256 => address) public s_escrows;
     mapping(uint256 => address) public s_escrow_admin;
 
@@ -65,7 +65,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         if (admin == address(0)) revert Factory__ZeroAddress();
         __AccessControl_init();
 
-        i_pyramid = Pyramid(pyramid);
+        i_pyramid = PyramidEscrow(pyramid);
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
@@ -73,10 +73,10 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     /// @dev Can only be called by the current escrow admin.
     /// @param questId Identifier of the quest associated with the escrow.
     /// @param newAdmin Address of the new admin.
-    function updateEscrowAdmin(uint256 questId, address newAdmin)
-        external
-        override
-    {
+    function updateEscrowAdmin(
+        uint256 questId,
+        address newAdmin
+    ) external override {
         if (s_escrow_admin[questId] != msg.sender) {
             revert Factory__OnlyCallableByAdmin();
         }
@@ -118,11 +118,10 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
 
     /// @notice Adds a token to the whitelist, allowing it to be used in the escrow.
     /// @param token The address of the token to whitelist.
-    function addTokenToWhitelist(uint256 questId, address token)
-        external
-        override
-        onlyAdmin(questId)
-    {
+    function addTokenToWhitelist(
+        uint256 questId,
+        address token
+    ) external override onlyAdmin(questId) {
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
@@ -133,11 +132,10 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
 
     /// @notice Removes a token from the whitelist.
     /// @param token The address of the token to remove from the whitelist.
-    function removeTokenFromWhitelist(uint256 questId, address token)
-        external
-        override
-        onlyAdmin(questId)
-    {
+    function removeTokenFromWhitelist(
+        uint256 questId,
+        address token
+    ) external override onlyAdmin(questId) {
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
@@ -284,12 +282,9 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         }
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(AccessControlUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

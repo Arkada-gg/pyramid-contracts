@@ -11,6 +11,7 @@ import {
   Factory__factory,
   // eslint-disable-next-line
   Pyramid__factory,
+  PyramidEscrow__factory,
 } from '../../typechain-types';
 
 export async function defaultDeploy() {
@@ -26,7 +27,7 @@ export async function defaultDeploy() {
     pyramidContract.initialize(
       'Pyramid',
       'PYR',
-      domain.name,
+      domain.name + '1',
       domain.version,
       ethers.constants.AddressZero,
     ),
@@ -49,16 +50,49 @@ export async function defaultDeploy() {
 
   await pyramidContract.setTreasury(treasury.address);
 
+  const pyramidEscrowContract = await new PyramidEscrow__factory(
+    owner,
+  ).deploy();
+  await expect(
+    pyramidEscrowContract.initialize(
+      'Pyramid',
+      'PYR',
+      domain.name,
+      domain.version,
+      ethers.constants.AddressZero,
+    ),
+  ).to.be.revertedWithCustomError(
+    pyramidEscrowContract,
+    'Pyramid__InvalidAdminAddress',
+  );
+  await pyramidEscrowContract.initialize(
+    'Pyramid',
+    'PYR',
+    domain.name,
+    domain.version,
+    owner.address,
+  );
+
+  await pyramidEscrowContract.grantRole(
+    await pyramidEscrowContract.SIGNER_ROLE(),
+    questSigner.address,
+  );
+
+  await pyramidEscrowContract.setTreasury(treasury.address);
+
   const { chainId } = await ethers.provider.getNetwork();
 
   const factoryContract = await new Factory__factory(owner).deploy();
   await expect(
     factoryContract.initialize(
       ethers.constants.AddressZero,
-      pyramidContract.address,
+      pyramidEscrowContract.address,
     ),
   ).to.be.revertedWithCustomError(factoryContract, 'Factory__ZeroAddress');
-  await factoryContract.initialize(owner.address, pyramidContract.address);
+  await factoryContract.initialize(
+    owner.address,
+    pyramidEscrowContract.address,
+  );
 
   // Deploy mock tokens
   const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
@@ -135,5 +169,6 @@ export async function defaultDeploy() {
       erc721Token,
       erc1155Token,
     },
+    pyramidEscrowContract,
   };
 }

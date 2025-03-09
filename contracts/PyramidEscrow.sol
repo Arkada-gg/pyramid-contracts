@@ -12,10 +12,10 @@ import {IFactory} from "./escrow/interfaces/IFactory.sol";
 import {ITokenType} from "./escrow/interfaces/ITokenType.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/// @title Pyramid
+/// @title PyramidEscrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
-contract Pyramid is
+contract PyramidEscrow is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
@@ -30,7 +30,6 @@ contract Pyramid is
     error Pyramid__FeeNotEnough();
     error Pyramid__SignatureAndCubesInputMismatch();
     error Pyramid__WithdrawFailed();
-    error Pyramid__ClaimRewardsFailed();
     error Pyramid__NonceAlreadyUsed();
     error Pyramid__TransferFailed();
     error Pyramid__BPSTooHigh();
@@ -66,8 +65,6 @@ contract Pyramid is
     mapping(uint256 => string) internal s_tokenURIs;
     mapping(uint256 => bool) internal s_nonces;
     mapping(uint256 => bool) internal s_quests;
-
-    mapping(address => uint256) public u_rewards;
 
     address public s_treasury;
     bytes4 private constant TRANSFER_ERC20 =
@@ -158,11 +155,6 @@ contract Pyramid is
     /// @param amount The contract's balance that was withdrawn
     event ContractWithdrawal(uint256 amount);
 
-    /// @notice Emitted when a user claims their rewards
-    /// @param user The address of the user who claimed their rewards
-    /// @param amount The amount of rewards claimed
-    event ClaimRewards(address indexed user, uint256 amount);
-
     /// @notice Emitted when a quest is disabled
     /// @param questId The ID of the quest that was disabled
     event QuestDisabled(uint256 indexed questId);
@@ -210,7 +202,7 @@ contract Pyramid is
     /// @dev Contains data about the token rewards associated with a Pyramid.
     /// @param tokenAddress The token address of the reward
     /// @param chainId The blockchain chain ID where the transaction occurred
-    /// @param amount The amount of the reward (in ETH for this implementation)
+    /// @param amount The amount of the reward
     /// @param tokenId The token ID of the reward (only applicable for ERC721 and ERC1155)
     /// @param tokenType The token type (ERC20, ERC721, ERC1155, NATIVE)
     /// @param rakeBps The rake basis points which will go to the treasury
@@ -344,8 +336,6 @@ contract Pyramid is
         // Perform the actual minting of the Pyramid
         _safeMint(data.toAddress, tokenId);
 
-        u_rewards[data.toAddress] += data.reward.amount;
-
         // Emit an event indicating a Pyramid has been claimed
         emit PyramidClaim(
             data.questId,
@@ -356,6 +346,29 @@ contract Pyramid is
             data.walletProvider,
             data.embedOrigin
         );
+
+        if (data.reward.chainId != 0) {
+            if (data.reward.factoryAddress != address(0)) {
+                IFactory(data.reward.factoryAddress).distributeRewards(
+                    data.questId,
+                    data.reward.tokenAddress,
+                    data.toAddress,
+                    data.reward.amount,
+                    data.reward.tokenId,
+                    data.reward.tokenType,
+                    data.reward.rakeBps
+                );
+            }
+
+            emit TokenReward(
+                tokenId,
+                data.reward.tokenAddress,
+                data.reward.chainId,
+                data.reward.amount,
+                data.reward.tokenId,
+                data.reward.tokenType
+            );
+        }
     }
 
     /// @notice Validates the signature for a Pyramid minting request
@@ -635,17 +648,6 @@ contract Pyramid is
         emit ContractWithdrawal(withdrawAmount);
     }
 
-    /// @notice Claim accrued user rewards
-    function claimRewards() external {
-        uint256 claimAmount = u_rewards[msg.sender];
-        u_rewards[msg.sender] = 0;
-        (bool success, ) = msg.sender.call{value: claimAmount}("");
-        if (!success) {
-            revert Pyramid__ClaimRewardsFailed();
-        }
-        emit ClaimRewards(msg.sender, claimAmount);
-    }
-
     /// @notice Initializes a new quest with given parameters
     /// @dev Can only be called by an account with the signer role.
     /// @param questId Unique identifier for the quest
@@ -694,6 +696,4 @@ contract Pyramid is
     {
         return super.supportsInterface(interfaceId);
     }
-
-    receive() external payable {}
 }
