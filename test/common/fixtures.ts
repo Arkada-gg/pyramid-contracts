@@ -27,7 +27,7 @@ export async function defaultDeploy() {
     pyramidContract.initialize(
       'Pyramid',
       'PYR',
-      domain.name + '1',
+      domain.name,
       domain.version,
       ethers.constants.AddressZero,
     ),
@@ -157,6 +157,11 @@ export async function defaultDeploy() {
       ...domain,
       chainId,
       verifyingContract: pyramidContract.address,
+    },
+    domainEscrow: {
+      ...domain,
+      chainId,
+      verifyingContract: pyramidEscrowContract.address,
     },
     QUEST_ID,
     COMMUNITIES,

@@ -383,7 +383,7 @@ describe.only('PyramidEscrow', () => {
         questSigner,
         QUEST_ID,
         factoryContract,
-        domain,
+        domainEscrow,
       } = await loadFixture(defaultDeploy);
 
       const data: IMintPyramidData = {
@@ -417,7 +417,11 @@ describe.only('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
 
       await mintPyramidTest(
         {
@@ -450,7 +454,7 @@ describe.only('PyramidEscrow', () => {
         questSigner,
         QUEST_ID,
         factoryContract,
-        domain,
+        domainEscrow,
         treasury,
       } = await loadFixture(defaultDeploy);
 
@@ -491,7 +495,11 @@ describe.only('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -543,7 +551,7 @@ describe.only('PyramidEscrow', () => {
         questSigner,
         QUEST_ID,
         factoryContract,
-        domain,
+        domainEscrow,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -585,7 +593,11 @@ describe.only('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -639,7 +651,7 @@ describe.only('PyramidEscrow', () => {
         questSigner,
         QUEST_ID,
         factoryContract,
-        domain,
+        domainEscrow,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -681,7 +693,11 @@ describe.only('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -732,7 +748,7 @@ describe.only('PyramidEscrow', () => {
         questSigner,
         QUEST_ID,
         factoryContract,
-        domain,
+        domainEscrow,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -774,7 +790,11 @@ describe.only('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -827,7 +847,7 @@ describe.only('PyramidEscrow', () => {
         questSigner,
         QUEST_ID,
         factoryContract,
-        domain,
+        domainEscrow,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -866,7 +886,11 @@ describe.only('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
 
       await mintPyramidTest(
         {
