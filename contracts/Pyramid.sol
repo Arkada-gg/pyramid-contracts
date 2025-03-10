@@ -9,8 +9,8 @@ import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC72
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
-import {ITokenType} from "./escrow/interfaces/ITokenType.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IPyramid} from "./interfaces/IPyramid.sol";
 
 /// @title Pyramid
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
@@ -21,28 +21,9 @@ contract Pyramid is
     AccessControlUpgradeable,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
-    ITokenType
+    IPyramid
 {
     using ECDSA for bytes32;
-
-    error Pyramid__IsNotSigner();
-    error Pyramid__MintingIsNotActive();
-    error Pyramid__FeeNotEnough();
-    error Pyramid__SignatureAndCubesInputMismatch();
-    error Pyramid__WithdrawFailed();
-    error Pyramid__ClaimRewardsFailed();
-    error Pyramid__NonceAlreadyUsed();
-    error Pyramid__TransferFailed();
-    error Pyramid__BPSTooHigh();
-    error Pyramid__ExcessiveFeePayout();
-    error Pyramid__ExceedsContractBalance();
-    error Pyramid__QuestNotActive();
-    error Pyramid__NativePaymentFailed();
-    error Pyramid__ERC20TransferFailed();
-    error Pyramid__ExceedsContractAllowance();
-    error Pyramid__TreasuryNotSet();
-    error Pyramid__InvalidAdminAddress();
-    error Pyramid__ZeroAddress();
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
@@ -67,172 +48,14 @@ contract Pyramid is
     mapping(uint256 => bool) internal s_nonces;
     mapping(uint256 => bool) internal s_quests;
 
-    mapping(address => uint256) public u_rewards;
-
     address public s_treasury;
     bytes4 private constant TRANSFER_ERC20 =
         bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
 
-    enum QuestType {
-        QUEST,
-        STREAK
-    }
-
-    enum Difficulty {
-        BEGINNER,
-        INTERMEDIATE,
-        ADVANCED
-    }
-
-    /// @notice Emitted when a new quest is initialized
-    /// @param questId The unique identifier of the quest
-    /// @param questType The type of the quest (QUEST, STREAK)
-    /// @param difficulty The difficulty level of the quest (BEGINNER, INTERMEDIATE, ADVANCED)
-    /// @param title The title of the quest
-    /// @param tags An array of tags associated with the quest
-    /// @param communities An array of communities associated with the quest
-    event QuestMetadata(
-        uint256 indexed questId,
-        QuestType questType,
-        Difficulty difficulty,
-        string title,
-        string[] tags,
-        string[] communities
-    );
-
-    /// @notice Emitted when a Pyramid is claimed
-    /// @param questId The quest ID associated with the Pyramid
-    /// @param tokenId The token ID of the minted Pyramid
-    /// @param claimer Address of the Pyramid claimer
-    /// @param price The price paid for the Pyramid
-    /// @param issueNumber The issue number of the Pyramid
-    /// @param walletProvider The name of the wallet provider used for claiming
-    /// @param embedOrigin The origin of the embed associated with the Pyramid
-    event PyramidClaim(
-        uint256 indexed questId,
-        uint256 indexed tokenId,
-        address indexed claimer,
-        uint256 price,
-        uint256 issueNumber,
-        string walletProvider,
-        string embedOrigin
-    );
-
-    /// @notice Emitted for each transaction associated with a Pyramid claim
-    /// This event is designed to support both EVM and non-EVM blockchains
-    /// @param pyramidTokenId The token ID of the Pyramid
-    /// @param txHash The hash of the transaction
-    /// @param networkChainId The network and chain ID of the transaction in the format <network>:<chain-id>
-    event PyramidTransaction(
-        uint256 indexed pyramidTokenId,
-        string txHash,
-        string networkChainId
-    );
-
-    /// @notice Emitted when there is a reward associated with a Pyramid
-    /// @param pyramidTokenId The token ID of the Pyramid giving the reward
-    /// @param tokenAddress The token address of the reward
-    /// @param chainId The blockchain chain ID where the transaction occurred
-    /// @param amount The amount of the reward
-    /// @param tokenId Token ID of the reward (only applicable for ERC721 and ERC1155)
-    /// @param tokenType The type of reward token
-    event TokenReward(
-        uint256 indexed pyramidTokenId,
-        address indexed tokenAddress,
-        uint256 indexed chainId,
-        uint256 amount,
-        uint256 tokenId,
-        TokenType tokenType
-    );
-
-    /// @notice Emitted when a fee payout is made
-    /// @param recipient The address of the payout recipient
-    /// @param amount The amount of the payout
-    event FeePayout(address indexed recipient, uint256 amount);
-
-    /// @notice Emitted when the minting switch is turned on/off
-    /// @param isActive The boolean showing if the minting is active or not
-    event MintingSwitch(bool isActive);
-
-    /// @notice Emitted when the contract balance is withdrawn by an admin
-    /// @param amount The contract's balance that was withdrawn
-    event ContractWithdrawal(uint256 amount);
-
-    /// @notice Emitted when a user claims their rewards
-    /// @param user The address of the user who claimed their rewards
-    /// @param amount The amount of rewards claimed
-    event ClaimRewards(address indexed user, uint256 amount);
-
-    /// @notice Emitted when a quest is disabled
-    /// @param questId The ID of the quest that was disabled
-    event QuestDisabled(uint256 indexed questId);
-
-    /// @notice Emitted when the treasury address is updated
-    /// @param newTreasury The new treasury address
-    event UpdatedTreasury(address indexed newTreasury);
-
-    /// @notice Emitted when the L3 token address is updated
-    /// @param token The L3 token address
-    event UpdatedL3Address(address indexed token);
-
-    /// @dev Represents the data needed for minting a Pyramid.
-    /// @param questId The ID of the quest associated with the Pyramid
-    /// @param nonce A unique number to prevent replay attacks
-    /// @param price The price paid for minting the Pyramid
-    /// @param toAddress The address where the Pyramid will be minted
-    /// @param walletProvider The wallet provider used for the transaction
-    /// @param tokenURI The URI pointing to the Pyramid's metadata
-    /// @param embedOrigin The origin source of the Pyramid's embed content
-    /// @param transactions An array of transactions related to the Pyramid
-    /// @param recipients An array of recipients for fee payouts
-    /// @param reward Data about the reward associated with the Pyramid
-    struct PyramidData {
-        uint256 questId;
-        uint256 nonce;
-        uint256 price;
-        address toAddress;
-        string walletProvider;
-        string tokenURI;
-        string embedOrigin;
-        TransactionData[] transactions;
-        FeeRecipient[] recipients;
-        RewardData reward;
-    }
-
-    /// @dev Represents a recipient for fee distribution.
-    /// @param recipient The address of the fee recipient
-    /// @param BPS The basis points representing the fee percentage for the recipient
-    struct FeeRecipient {
-        address recipient;
-        uint16 BPS;
-    }
-
-    /// @dev Contains data about the token rewards associated with a Pyramid.
-    /// @param tokenAddress The token address of the reward
-    /// @param chainId The blockchain chain ID where the transaction occurred
-    /// @param amount The amount of the reward (in ETH for this implementation)
-    /// @param tokenId The token ID of the reward (only applicable for ERC721 and ERC1155)
-    /// @param tokenType The token type (ERC20, ERC721, ERC1155, NATIVE)
-    /// @param rakeBps The rake basis points which will go to the treasury
-    /// @param factoryAddress The escrow factory address
-    struct RewardData {
-        address tokenAddress;
-        uint256 chainId;
-        uint256 amount;
-        uint256 tokenId;
-        TokenType tokenType;
-        uint256 rakeBps;
-        address factoryAddress;
-    }
-
-    /// @dev Contains data about a specific transaction related to a Pyramid
-    /// and is designed to support both EVM and non-EVM data.
-    /// @param txHash The hash of the transaction
-    /// @param networkChainId The network and chain ID of the transaction in the format <network>:<chain-id>
-    struct TransactionData {
-        string txHash;
-        string networkChainId;
-    }
+    /**
+     * @dev leaving a storage gap for futures updates
+     */
+    uint256[50] private __gap;
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
@@ -279,9 +102,9 @@ contract Pyramid is
         return s_tokenURIs[_tokenId];
     }
 
-    /// @notice Mints a Pyramid based on the provided data
-    /// @param pyramidData PyramidData struct containing minting information
-    /// @param signature Signature of the PyramidData struct
+    /**
+     * @inheritdoc IPyramid
+     */
     function mintPyramid(
         PyramidData calldata pyramidData,
         bytes calldata signature
@@ -343,8 +166,6 @@ contract Pyramid is
 
         // Perform the actual minting of the Pyramid
         _safeMint(data.toAddress, tokenId);
-
-        u_rewards[data.toAddress] += data.reward.amount;
 
         // Emit an event indicating a Pyramid has been claimed
         emit PyramidClaim(
@@ -603,9 +424,9 @@ contract Pyramid is
             );
     }
 
-    /// @notice Enables or disables the minting process
-    /// @dev Can only be called by an account with the default admin role.
-    /// @param _isMintingActive Boolean indicating whether minting should be active
+    /**
+     * @inheritdoc IPyramid
+     */
     function setIsMintingActive(
         bool _isMintingActive
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -613,9 +434,9 @@ contract Pyramid is
         emit MintingSwitch(_isMintingActive);
     }
 
-    /// @notice Sets a new treasury address
-    /// @dev Can only be called by an account with the default admin role.
-    /// @param _treasury Address of the new treasury to receive fees
+    /**
+     * @inheritdoc IPyramid
+     */
     function setTreasury(
         address _treasury
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -624,8 +445,9 @@ contract Pyramid is
         emit UpdatedTreasury(_treasury);
     }
 
-    /// @notice Withdraws the contract's balance to the message sender
-    /// @dev Can only be called by an account with the default admin role.
+    /**
+     * @inheritdoc IPyramid
+     */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 withdrawAmount = address(this).balance;
         (bool success, ) = msg.sender.call{value: withdrawAmount}("");
@@ -635,24 +457,9 @@ contract Pyramid is
         emit ContractWithdrawal(withdrawAmount);
     }
 
-    /// @notice Claim accrued user rewards
-    function claimRewards() external {
-        uint256 claimAmount = u_rewards[msg.sender];
-        u_rewards[msg.sender] = 0;
-        (bool success, ) = msg.sender.call{value: claimAmount}("");
-        if (!success) {
-            revert Pyramid__ClaimRewardsFailed();
-        }
-        emit ClaimRewards(msg.sender, claimAmount);
-    }
-
-    /// @notice Initializes a new quest with given parameters
-    /// @dev Can only be called by an account with the signer role.
-    /// @param questId Unique identifier for the quest
-    /// @param communities Array of community names associated with the quest
-    /// @param title Title of the quest
-    /// @param difficulty Difficulty level of the quest
-    /// @param questType Type of the quest
+    /**
+     * @inheritdoc IPyramid
+     */
     function initializeQuest(
         uint256 questId,
         string[] memory communities,
@@ -672,9 +479,9 @@ contract Pyramid is
         );
     }
 
-    /// @notice Unpublishes and disables a quest
-    /// @dev Can only be called by an account with the signer role
-    /// @param questId Unique identifier for the quest
+    /**
+     * @inheritdoc IPyramid
+     */
     function unpublishQuest(uint256 questId) external onlyRole(SIGNER_ROLE) {
         s_quests[questId] = false;
         emit QuestDisabled(questId);

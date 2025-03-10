@@ -14,7 +14,7 @@ import {
   withdrawTest,
 } from './common/pyramid-escrow.helpers';
 
-describe.only('PyramidEscrow', () => {
+describe('PyramidEscrow', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
