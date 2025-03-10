@@ -11,6 +11,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IPyramid} from "./interfaces/IPyramid.sol";
+import {IArkadaRewarder} from "./interfaces/IArkadaRewarder.sol";
 
 /// @title Pyramid
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
@@ -27,6 +28,7 @@ contract Pyramid is
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
+    address public s_arkadaRewarder;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
 
@@ -74,14 +76,18 @@ contract Pyramid is
         string memory _tokenSymbol,
         string memory _signingDomain,
         string memory _signatureVersion,
-        address _admin
+        address _admin,
+        address _arkadaRewarder
     ) external initializer {
         if (_admin == address(0)) revert Pyramid__InvalidAdminAddress();
+        if (_arkadaRewarder == address(0))
+            revert Pyramid__InvalidAdminAddress();
         __ERC721_init(_tokenName, _tokenSymbol);
         __EIP712_init(_signingDomain, _signatureVersion);
         __AccessControl_init();
         __ReentrancyGuard_init();
         s_isMintingActive = true;
+        s_arkadaRewarder = _arkadaRewarder;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
     }
@@ -96,9 +102,12 @@ contract Pyramid is
     /// @dev Overrides the ERC721Upgradeable's tokenURI method.
     /// @param _tokenId The ID of the token
     /// @return _tokenURI The URI of the specified token
-    function tokenURI(
-        uint256 _tokenId
-    ) public view override returns (string memory _tokenURI) {
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        override
+        returns (string memory _tokenURI)
+    {
         return s_tokenURIs[_tokenId];
     }
 
@@ -130,10 +139,9 @@ contract Pyramid is
     /// @dev Verifies the signer, handles nonce, transactions, referral payments, and minting.
     /// @param data The PyramidData containing details of the minting
     /// @param signature The signature for verification
-    function _mintPyramid(
-        PyramidData calldata data,
-        bytes calldata signature
-    ) internal {
+    function _mintPyramid(PyramidData calldata data, bytes calldata signature)
+        internal
+    {
         // Cache the tokenId
         uint256 tokenId = s_nextTokenId;
 
@@ -166,6 +174,12 @@ contract Pyramid is
 
         // Perform the actual minting of the Pyramid
         _safeMint(data.toAddress, tokenId);
+
+        // Add rewards to the ArkadaRewarder
+        IArkadaRewarder(s_arkadaRewarder).addRewards(
+            data.toAddress,
+            data.reward.amount
+        );
 
         // Emit an event indicating a Pyramid has been claimed
         emit PyramidClaim(
@@ -202,9 +216,7 @@ contract Pyramid is
     /// @param data The PyramidData containing recipient information
     /// @return payoutAmounts Array of amounts to pay each recipient
     /// @return totalAmount Total amount to be paid to recipients
-    function _calculatePayouts(
-        PyramidData calldata data
-    )
+    function _calculatePayouts(PyramidData calldata data)
         internal
         pure
         returns (uint256[] memory payoutAmounts, uint256 totalAmount)
@@ -291,10 +303,11 @@ contract Pyramid is
     /// @param data The PyramidData struct containing the details of the minting request
     /// @param sig The signature associated with the PyramidData
     /// @return The address of the signer who signed the PyramidData
-    function _getSigner(
-        PyramidData calldata data,
-        bytes calldata sig
-    ) internal view returns (address) {
+    function _getSigner(PyramidData calldata data, bytes calldata sig)
+        internal
+        view
+        returns (address)
+    {
         bytes32 digest = _computeDigest(data);
         return digest.recover(sig);
     }
@@ -303,9 +316,11 @@ contract Pyramid is
     /// @dev Generates the digest that must be signed by the signer.
     /// @param data The PyramidData to generate a digest for
     /// @return The computed EIP712 digest
-    function _computeDigest(
-        PyramidData calldata data
-    ) internal view returns (bytes32) {
+    function _computeDigest(PyramidData calldata data)
+        internal
+        view
+        returns (bytes32)
+    {
         return _hashTypedDataV4(keccak256(_getStructHash(data)));
     }
 
@@ -313,9 +328,11 @@ contract Pyramid is
     /// @dev Encodes the PyramidData struct into a hash as per EIP712 standard.
     /// @param data The PyramidData struct to hash
     /// @return A hash representing the encoded PyramidData
-    function _getStructHash(
-        PyramidData calldata data
-    ) internal pure returns (bytes memory) {
+    function _getStructHash(PyramidData calldata data)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return
             abi.encode(
                 _PYRAMID_DATA_HASH,
@@ -336,9 +353,11 @@ contract Pyramid is
     /// @dev Used for converting strings into a consistent format for EIP712 encoding
     /// @param _string The string to be encoded
     /// @return The keccak256 hash of the encoded string
-    function _encodeString(
-        string calldata _string
-    ) internal pure returns (bytes32) {
+    function _encodeString(string calldata _string)
+        internal
+        pure
+        returns (bytes32)
+    {
         return keccak256(bytes(_string));
     }
 
@@ -346,9 +365,11 @@ contract Pyramid is
     /// @dev Used for converting transaction data into a consistent format for EIP712 encoding
     /// @param transaction The TransactionData struct to be encoded
     /// @return A byte array representing the encoded transaction data
-    function _encodeTx(
-        TransactionData calldata transaction
-    ) internal pure returns (bytes memory) {
+    function _encodeTx(TransactionData calldata transaction)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return
             abi.encode(
                 TX_DATA_HASH,
@@ -361,9 +382,11 @@ contract Pyramid is
     /// @dev Used to aggregate multiple transactions into a single hash for EIP712 encoding
     /// @param txData An array of TransactionData structs to be encoded
     /// @return A bytes32 hash representing the aggregated and encoded transaction data
-    function _encodeCompletedTxs(
-        TransactionData[] calldata txData
-    ) internal pure returns (bytes32) {
+    function _encodeCompletedTxs(TransactionData[] calldata txData)
+        internal
+        pure
+        returns (bytes32)
+    {
         bytes32[] memory encodedTxs = new bytes32[](txData.length);
         for (uint256 i = 0; i < txData.length; ) {
             encodedTxs[i] = keccak256(_encodeTx(txData[i]));
@@ -379,9 +402,11 @@ contract Pyramid is
     /// @dev Used for converting fee recipient information into a consistent format for EIP712 encoding
     /// @param data The FeeRecipient struct to be encoded
     /// @return A byte array representing the encoded fee recipient data
-    function _encodeRecipient(
-        FeeRecipient calldata data
-    ) internal pure returns (bytes memory) {
+    function _encodeRecipient(FeeRecipient calldata data)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return abi.encode(RECIPIENT_DATA_HASH, data.recipient, data.BPS);
     }
 
@@ -389,9 +414,11 @@ contract Pyramid is
     /// @dev Used to aggregate multiple fee recipient entries into a single hash for EIP712 encoding
     /// @param data An array of FeeRecipient structs to be encoded
     /// @return A bytes32 hash representing the aggregated and encoded fee recipient data
-    function _encodeRecipients(
-        FeeRecipient[] calldata data
-    ) internal pure returns (bytes32) {
+    function _encodeRecipients(FeeRecipient[] calldata data)
+        internal
+        pure
+        returns (bytes32)
+    {
         bytes32[] memory encodedRecipients = new bytes32[](data.length);
         for (uint256 i = 0; i < data.length; ) {
             encodedRecipients[i] = keccak256(_encodeRecipient(data[i]));
@@ -406,9 +433,11 @@ contract Pyramid is
     /// @notice Encodes the reward data for a Pyramid mint
     /// @param data An array of FeeRecipient structs to be encoded
     /// @return A bytes32 hash representing the encoded reward data
-    function _encodeReward(
-        RewardData calldata data
-    ) internal pure returns (bytes32) {
+    function _encodeReward(RewardData calldata data)
+        internal
+        pure
+        returns (bytes32)
+    {
         return
             keccak256(
                 abi.encode(
@@ -427,9 +456,10 @@ contract Pyramid is
     /**
      * @inheritdoc IPyramid
      */
-    function setIsMintingActive(
-        bool _isMintingActive
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setIsMintingActive(bool _isMintingActive)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         s_isMintingActive = _isMintingActive;
         emit MintingSwitch(_isMintingActive);
     }
@@ -437,9 +467,10 @@ contract Pyramid is
     /**
      * @inheritdoc IPyramid
      */
-    function setTreasury(
-        address _treasury
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setTreasury(address _treasury)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         if (_treasury == address(0)) revert Pyramid__ZeroAddress();
         s_treasury = _treasury;
         emit UpdatedTreasury(_treasury);
@@ -491,9 +522,7 @@ contract Pyramid is
     /// @dev Overrides the supportsInterface function of ERC721Upgradeable and AccessControlUpgradeable.
     /// @param interfaceId The interface identifier, as specified in ERC-165
     /// @return True if the contract implements the interface, false otherwise
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         override(ERC721Upgradeable, AccessControlUpgradeable)

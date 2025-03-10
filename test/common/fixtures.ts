@@ -4,6 +4,8 @@ import { ethers } from 'hardhat';
 import { createEscrowTest } from './factory.helpers';
 
 import {
+  // eslint-disable-next-line
+  ArkadaRewarder__factory,
   ERC1155Mock,
   ERC20Mock,
   ERC721Mock,
@@ -11,6 +13,7 @@ import {
   Factory__factory,
   // eslint-disable-next-line
   Pyramid__factory,
+  // eslint-disable-next-line
   PyramidEscrow__factory,
 } from '../../typechain-types';
 
@@ -22,6 +25,17 @@ export async function defaultDeploy() {
     version: '1',
   };
 
+  const arkadaRewarderContract = await new ArkadaRewarder__factory(
+    owner,
+  ).deploy();
+  await expect(
+    arkadaRewarderContract.initialize(ethers.constants.AddressZero),
+  ).to.be.revertedWithCustomError(
+    arkadaRewarderContract,
+    'ArkadaRewarder__InvalidAddress',
+  );
+  await arkadaRewarderContract.initialize(owner.address);
+
   const pyramidContract = await new Pyramid__factory(owner).deploy();
   await expect(
     pyramidContract.initialize(
@@ -29,6 +43,20 @@ export async function defaultDeploy() {
       'PYR',
       domain.name,
       domain.version,
+      ethers.constants.AddressZero,
+      arkadaRewarderContract.address,
+    ),
+  ).to.be.revertedWithCustomError(
+    pyramidContract,
+    'Pyramid__InvalidAdminAddress',
+  );
+  await expect(
+    pyramidContract.initialize(
+      'Pyramid',
+      'PYR',
+      domain.name,
+      domain.version,
+      owner.address,
       ethers.constants.AddressZero,
     ),
   ).to.be.revertedWithCustomError(
@@ -41,6 +69,7 @@ export async function defaultDeploy() {
     domain.name,
     domain.version,
     owner.address,
+    arkadaRewarderContract.address,
   );
 
   await pyramidContract.grantRole(
@@ -49,6 +78,11 @@ export async function defaultDeploy() {
   );
 
   await pyramidContract.setTreasury(treasury.address);
+
+  await arkadaRewarderContract.grantRole(
+    await arkadaRewarderContract.OPERATOR_ROLE(),
+    pyramidContract.address,
+  );
 
   const pyramidEscrowContract = await new PyramidEscrow__factory(
     owner,
@@ -175,5 +209,6 @@ export async function defaultDeploy() {
       erc1155Token,
     },
     pyramidEscrowContract,
+    arkadaRewarderContract,
   };
 }

@@ -5,6 +5,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IArkadaRewarder} from "./interfaces/IArkadaRewarder.sol";
+
 /**
  * @title ArkadaRewarder
  * @notice Smart contract for paying rewards to Arkada users
@@ -45,10 +46,10 @@ contract ArkadaRewarder is
     /**
      * @inheritdoc IArkadaRewarder
      */
-    function setRewards(
-        address[] calldata users,
-        uint256[] calldata amounts
-    ) external onlyOperatorOrOwner {
+    function setRewards(address[] calldata users, uint256[] calldata amounts)
+        external
+        onlyOperatorOrOwner
+    {
         if (users.length != amounts.length)
             revert ArkadaRewarder__ArrayLengthMismatch();
 
@@ -62,10 +63,10 @@ contract ArkadaRewarder is
     /**
      * @inheritdoc IArkadaRewarder
      */
-    function addRewards(
-        address user,
-        uint256 amount
-    ) external onlyOperatorOrOwner {
+    function addRewards(address user, uint256 amount)
+        external
+        onlyOperatorOrOwner
+    {
         if (user == address(0)) revert ArkadaRewarder__InvalidAddress();
         if (amount == 0) revert ArkadaRewarder__InvalidAmount();
 
