@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { ARKADA_ERC721_ROYALTY_CONTRACT_NAME } from '../../config';
+import { PYRAMID_CONTRACT_NAME } from '../../config';
 import { getCurrentAddresses } from '../../config/constants/addresses';
 import {
   logDeployProxy,
@@ -11,35 +11,28 @@ import {
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const addresses = getCurrentAddresses(hre);
-
   const { deployer } = await hre.getNamedAccounts();
+  console.log('deployer', { deployer });
+
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log(
-    'Upgrading ArkadaERC721Royalty at address:',
-    addresses?.arkadaErc721Royalty,
-  );
+  console.log('Upgrading Pyramid...');
+
   const deployment = await hre.upgrades.upgradeProxy(
-    addresses?.arkadaErc721Royalty ?? '',
-    await hre.ethers.getContractFactory(
-      ARKADA_ERC721_ROYALTY_CONTRACT_NAME,
-      owner,
-    ),
+    addresses?.pyramid ?? '',
+    await hre.ethers.getContractFactory(PYRAMID_CONTRACT_NAME, owner),
     {
       unsafeAllow: ['constructor'],
     },
   );
-  console.log('Upgraded ArkadaERC721Royalty:', deployment.address);
 
-  await logDeployProxy(
-    hre,
-    ARKADA_ERC721_ROYALTY_CONTRACT_NAME,
-    deployment.address,
-  );
-  console.log('Waiting 5 blocks to verify...');
   if (deployment.deployTransaction) {
+    console.log('Waiting 5 blocks...');
     await deployment.deployTransaction.wait(5);
+    console.log('Waited.');
   }
+
+  await logDeployProxy(hre, PYRAMID_CONTRACT_NAME, deployment.address);
   await tryEtherscanVerifyImplementation(hre, deployment.address);
 };
 

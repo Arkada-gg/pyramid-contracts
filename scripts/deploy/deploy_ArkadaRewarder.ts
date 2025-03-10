@@ -17,12 +17,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log('Deploying ArkadaRewarder...');
 
   // initialise params <=========
-  const OPERATOR = hre.ethers.constants.AddressZero; // Set operator address here
+  const ADMIN = hre.ethers.constants.AddressZero; // Set admin address here
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(
     await hre.ethers.getContractFactory(ARKADA_REWARDER_CONTRACT_NAME, owner),
-    [OPERATOR],
+    [ADMIN],
     {
       unsafeAllow: ['constructor'],
     },

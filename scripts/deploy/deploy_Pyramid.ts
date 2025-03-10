@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { ARKADA_DAILY_CHECK_CONTRACT_NAME } from '../../config';
+import { PYRAMID_CONTRACT_NAME } from '../../config';
 import {
   logDeployProxy,
   tryEtherscanVerifyImplementation,
@@ -14,14 +14,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log('Deploying DailyCheck...');
+  console.log('Deploying Pyramid...');
+
+  // initialise params <=========
+  const TOKEN_NAME = 'Pyramid';
+  const TOKEN_SYMBOL = 'PYR';
+  const SIGNING_DOMAIN = 'Pyramid';
+  const SIGNATURE_VERSION = '1';
+  const ADMIN = owner.address; // Set admin address here
+  const ARKADA_REWARDER = hre.ethers.constants.AddressZero; // Set arkada rewarder address here
+  // =====================
 
   const deployment = await hre.upgrades.deployProxy(
-    await hre.ethers.getContractFactory(
-      ARKADA_DAILY_CHECK_CONTRACT_NAME,
-      owner,
-    ),
-    [],
+    await hre.ethers.getContractFactory(PYRAMID_CONTRACT_NAME, owner),
+    [
+      TOKEN_NAME,
+      TOKEN_SYMBOL,
+      SIGNING_DOMAIN,
+      SIGNATURE_VERSION,
+      ADMIN,
+      ARKADA_REWARDER,
+    ],
     {
       unsafeAllow: ['constructor'],
     },
@@ -33,11 +46,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log('Waited.');
   }
 
-  await logDeployProxy(
-    hre,
-    ARKADA_DAILY_CHECK_CONTRACT_NAME,
-    deployment.address,
-  );
+  await logDeployProxy(hre, PYRAMID_CONTRACT_NAME, deployment.address);
   await tryEtherscanVerifyImplementation(hre, deployment.address);
 };
 
