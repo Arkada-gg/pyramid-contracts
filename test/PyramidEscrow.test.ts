@@ -3,7 +3,10 @@ import { expect } from 'chai';
 import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 
-import { IMintPyramidData, signMintDataTyped } from './common/common.helpers';
+import {
+  IMintPyramidEscrowData,
+  signMintDataEscrowTyped,
+} from './common/common.helpers';
 import { defaultDeploy } from './common/fixtures';
 import {
   initializeQuestTest,
@@ -275,7 +278,7 @@ describe('PyramidEscrow', () => {
         isActive: false,
       });
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -306,7 +309,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, user, domain);
+      const signature = await signMintDataEscrowTyped(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -330,7 +333,7 @@ describe('PyramidEscrow', () => {
         domain,
       } = await loadFixture(defaultDeploy);
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -361,7 +364,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, user, domain);
+      const signature = await signMintDataEscrowTyped(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -386,7 +389,7 @@ describe('PyramidEscrow', () => {
         domainEscrow,
       } = await loadFixture(defaultDeploy);
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -417,7 +420,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(
+      const signature = await signMintDataEscrowTyped(
         data,
         questSigner,
         domainEscrow,
@@ -464,7 +467,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -495,7 +498,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(
+      const signature = await signMintDataEscrowTyped(
         data,
         questSigner,
         domainEscrow,
@@ -562,7 +565,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -593,7 +596,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(
+      const signature = await signMintDataEscrowTyped(
         data,
         questSigner,
         domainEscrow,
@@ -662,7 +665,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = 1;
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -693,7 +696,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(
+      const signature = await signMintDataEscrowTyped(
         data,
         questSigner,
         domainEscrow,
@@ -759,7 +762,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = 1;
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -790,7 +793,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(
+      const signature = await signMintDataEscrowTyped(
         data,
         questSigner,
         domainEscrow,
@@ -855,7 +858,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidData = {
+      const data: IMintPyramidEscrowData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -886,7 +889,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(
+      const signature = await signMintDataEscrowTyped(
         data,
         questSigner,
         domainEscrow,
