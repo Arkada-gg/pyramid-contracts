@@ -6,11 +6,9 @@ import { ethers } from 'hardhat';
 import { IMintPyramidData, signMintDataTyped } from './common/common.helpers';
 import { defaultDeploy } from './common/fixtures';
 import {
-  initializeQuestTest,
   mintPyramidTest,
   setIsMintingActiveTest,
   setTreasuryTest,
-  unpublishQuestTest,
   withdrawTest,
 } from './common/pyramid.helpers';
 
@@ -97,143 +95,6 @@ describe('Pyramid', () => {
     });
   });
 
-  describe('Quest Management', () => {
-    it('Should allow signer role to initialize quest', async () => {
-      const {
-        pyramidContract,
-        owner,
-        questSigner,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({ pyramidContract, owner, isActive: true });
-
-      await initializeQuestTest(
-        {
-          pyramidContract,
-          owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: questSigner },
-      );
-    });
-
-    it('Should not allow non-signer role to initialize quest', async () => {
-      const {
-        pyramidContract,
-        owner,
-        user,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({ pyramidContract, owner, isActive: true });
-
-      await initializeQuestTest(
-        {
-          pyramidContract,
-          owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
-      );
-    });
-
-    it('Should allow signer role to unpublish quest', async () => {
-      const {
-        pyramidContract,
-        owner,
-        questSigner,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({ pyramidContract, owner, isActive: true });
-
-      await initializeQuestTest(
-        {
-          pyramidContract,
-          owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: questSigner },
-      );
-
-      await unpublishQuestTest(
-        {
-          pyramidContract,
-          owner,
-          questId: QUEST_ID,
-        },
-        { from: questSigner },
-      );
-    });
-
-    it('Should not allow non-owner to unpublish quest', async () => {
-      const {
-        pyramidContract,
-        owner,
-        user,
-        questSigner,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({ pyramidContract, owner, isActive: true });
-
-      await initializeQuestTest(
-        {
-          pyramidContract,
-          owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: questSigner },
-      );
-
-      await unpublishQuestTest(
-        {
-          pyramidContract,
-          owner,
-          questId: QUEST_ID,
-        },
-        { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
-      );
-    });
-  });
-
   describe('Minting', () => {
     it('Should not allow minting when inactive', async () => {
       const {
@@ -247,7 +108,7 @@ describe('Pyramid', () => {
       await setIsMintingActiveTest({ pyramidContract, owner, isActive: false });
 
       const data: IMintPyramidData = {
-        questId: QUEST_ID,
+        questId: QUEST_ID.toString(),
         nonce: 1,
         price: parseEther('0.1'),
         toAddress: user.address,
@@ -302,7 +163,7 @@ describe('Pyramid', () => {
       } = await loadFixture(defaultDeploy);
 
       const data: IMintPyramidData = {
-        questId: QUEST_ID,
+        questId: QUEST_ID.toString(),
         nonce: 1,
         price: parseEther('0.1'),
         toAddress: user.address,
@@ -358,7 +219,7 @@ describe('Pyramid', () => {
       } = await loadFixture(defaultDeploy);
 
       const data: IMintPyramidData = {
-        questId: QUEST_ID,
+        questId: QUEST_ID.toString(),
         nonce: 1,
         price: parseEther('0.1'),
         toAddress: user.address,
@@ -433,7 +294,7 @@ describe('Pyramid', () => {
       const rewards = parseEther('0.01');
 
       const data: IMintPyramidData = {
-        questId: QUEST_ID,
+        questId: QUEST_ID.toString(),
         nonce: 1,
         price,
         toAddress: user.address,
@@ -533,7 +394,7 @@ describe('Pyramid', () => {
       const rewards = parseEther('0.01');
 
       const data: IMintPyramidData = {
-        questId: QUEST_ID,
+        questId: QUEST_ID.toString(),
         nonce: 1,
         price,
         toAddress: user.address,
@@ -631,7 +492,7 @@ describe('Pyramid', () => {
       const rewards = parseEther('0.01');
 
       const data: IMintPyramidData = {
-        questId: QUEST_ID,
+        questId: QUEST_ID.toString(),
         nonce: 1,
         price,
         toAddress: user.address,

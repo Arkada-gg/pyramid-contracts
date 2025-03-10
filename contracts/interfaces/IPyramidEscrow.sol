@@ -3,9 +3,9 @@ pragma solidity 0.8.22;
 
 import {ITokenType} from "../escrow/interfaces/ITokenType.sol";
 
-/// @title IPyramid
-/// @dev Interface of the Pyramid contract.
-interface IPyramid is ITokenType {
+/// @title IPyramidEscrow
+/// @dev Interface of the PyramidEscrow contract.
+interface IPyramidEscrow is ITokenType {
     error Pyramid__IsNotSigner();
     error Pyramid__MintingIsNotActive();
     error Pyramid__FeeNotEnough();
@@ -61,7 +61,7 @@ interface IPyramid is ITokenType {
     /// @param walletProvider The name of the wallet provider used for claiming
     /// @param embedOrigin The origin of the embed associated with the Pyramid
     event PyramidClaim(
-        string indexed questId,
+        uint256 indexed questId,
         uint256 indexed tokenId,
         address indexed claimer,
         uint256 price,
@@ -139,7 +139,7 @@ interface IPyramid is ITokenType {
     /// @param recipients An array of recipients for fee payouts
     /// @param reward Data about the reward associated with the Pyramid
     struct PyramidData {
-        string questId;
+        uint256 questId;
         uint256 nonce;
         uint256 price;
         address toAddress;
@@ -207,4 +207,25 @@ interface IPyramid is ITokenType {
     /// @notice Withdraws the contract's balance to the message sender
     /// @dev Can only be called by an account with the default admin role.
     function withdraw() external;
+
+    /// @notice Initializes a new quest with given parameters
+    /// @dev Can only be called by an account with the signer role.
+    /// @param questId Unique identifier for the quest
+    /// @param communities Array of community names associated with the quest
+    /// @param title Title of the quest
+    /// @param difficulty Difficulty level of the quest
+    /// @param questType Type of the quest
+    function initializeQuest(
+        uint256 questId,
+        string[] memory communities,
+        string memory title,
+        Difficulty difficulty,
+        QuestType questType,
+        string[] memory tags
+    ) external;
+
+    /// @notice Unpublishes and disables a quest
+    /// @dev Can only be called by an account with the signer role
+    /// @param questId Unique identifier for the quest
+    function unpublishQuest(uint256 questId) external;
 }

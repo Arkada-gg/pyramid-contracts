@@ -23,6 +23,11 @@ contract ArkadaRewarder is
     mapping(address => uint256) public userRewards;
 
     /**
+     * @dev leaving a storage gap for futures updates
+     */
+    uint256[50] private __gap;
+
+    /**
      * @dev Modifier to restrict access to owner or operator
      */
     modifier onlyOperatorOrOwner() {
@@ -46,10 +51,10 @@ contract ArkadaRewarder is
     /**
      * @inheritdoc IArkadaRewarder
      */
-    function setRewards(address[] calldata users, uint256[] calldata amounts)
-        external
-        onlyOperatorOrOwner
-    {
+    function setRewards(
+        address[] calldata users,
+        uint256[] calldata amounts
+    ) external onlyOperatorOrOwner {
         if (users.length != amounts.length)
             revert ArkadaRewarder__ArrayLengthMismatch();
 
@@ -63,16 +68,34 @@ contract ArkadaRewarder is
     /**
      * @inheritdoc IArkadaRewarder
      */
-    function addRewards(address user, uint256 amount)
-        external
-        onlyOperatorOrOwner
-    {
+    function addRewards(
+        address user,
+        uint256 amount
+    ) external onlyOperatorOrOwner {
         if (user == address(0)) revert ArkadaRewarder__InvalidAddress();
         if (amount == 0) revert ArkadaRewarder__InvalidAmount();
 
         userRewards[user] += amount;
 
         emit RewardsAdded(msg.sender, user, amount);
+    }
+
+    /**
+     * @inheritdoc IArkadaRewarder
+     */
+    function addRewards(
+        address[] calldata users,
+        uint256[] calldata amounts
+    ) external onlyOperatorOrOwner {
+        if (users.length != amounts.length)
+            revert ArkadaRewarder__ArrayLengthMismatch();
+
+        for (uint256 i = 0; i < users.length; i++) {
+            if (users[i] == address(0)) revert ArkadaRewarder__InvalidAddress();
+            if (amounts[i] == 0) revert ArkadaRewarder__InvalidAmount();
+            userRewards[users[i]] += amounts[i];
+            emit RewardsAdded(msg.sender, users[i], amounts[i]);
+        }
     }
 
     /**

@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-import { IMintPyramidData, OptionalCommonParams } from './common.helpers';
+import { IMintPyramidEscrowData, OptionalCommonParams } from './common.helpers';
 
 import { PyramidEscrow } from '../../typechain-types';
 
@@ -182,7 +182,7 @@ export const unpublishQuestTest = async (
 };
 
 interface IMintPyramidTest extends CommonParams {
-  data: IMintPyramidData;
+  data: IMintPyramidEscrowData;
   signature: string;
   value?: BigNumber;
 }
