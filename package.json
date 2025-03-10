@@ -34,7 +34,7 @@
     "hh:run:main": "hardhat run --network soneium",
     "verify:main": "hardhat verify --network soneium",
     "deploy:dc": "yarn hh:run scripts/deploy/deploy_DailyCheck.ts",
-    "deploy:rewarder": "yarn hh:run scripts/deploy/deploy_ArkadaRewarder.ts --network soneium",
+    "deploy:rewarder": "yarn hh:run scripts/deploy/deploy_ArkadaRewarder.ts",
     "deploy:erc721": "yarn hh:run scripts/deploy/deploy_ArkadaERC721Royalty.ts"
   },
   "devDependencies": {
