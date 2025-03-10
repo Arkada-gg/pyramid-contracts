@@ -7,6 +7,7 @@ import { IMintPyramidData, signMintDataTyped } from './common/common.helpers';
 import { defaultDeploy } from './common/fixtures';
 import {
   mintPyramidTest,
+  setArkadaRewarderTest,
   setIsMintingActiveTest,
   setTreasuryTest,
   withdrawTest,
@@ -89,6 +90,43 @@ describe('Pyramid', () => {
           pyramidContract,
           owner,
           treasury: ethers.constants.AddressZero,
+        },
+        { revertMessage: 'Pyramid__ZeroAddress' },
+      );
+    });
+  });
+
+  describe('Arkada Rewarder Management', () => {
+    it('Should allow owner to set arkada rewarder', async () => {
+      const { pyramidContract, owner, arkadaRewarderContract } =
+        await loadFixture(defaultDeploy);
+      await setArkadaRewarderTest({
+        pyramidContract,
+        owner,
+        arkadaRewarder: arkadaRewarderContract.address,
+      });
+    });
+
+    it('Should not allow non-owner to set arkada rewarder', async () => {
+      const { pyramidContract, owner, user, arkadaRewarderContract } =
+        await loadFixture(defaultDeploy);
+      await setArkadaRewarderTest(
+        {
+          pyramidContract,
+          owner,
+          arkadaRewarder: arkadaRewarderContract.address,
+        },
+        { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
+      );
+    });
+
+    it('Should not allow setting arkada rewarder to zero address', async () => {
+      const { pyramidContract, owner } = await loadFixture(defaultDeploy);
+      await setArkadaRewarderTest(
+        {
+          pyramidContract,
+          owner,
+          arkadaRewarder: ethers.constants.AddressZero,
         },
         { revertMessage: 'Pyramid__ZeroAddress' },
       );

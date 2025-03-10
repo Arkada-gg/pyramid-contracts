@@ -70,6 +70,10 @@ interface IPyramid is ITokenType {
         string embedOrigin
     );
 
+    /// @notice Emitted when the Arkada rewarder address is updated
+    /// @param newArkadaRewarder The new Arkada rewarder address
+    event UpdatedArkadaRewarder(address indexed newArkadaRewarder);
+
     /// @notice Emitted for each transaction associated with a Pyramid claim
     /// This event is designed to support both EVM and non-EVM blockchains
     /// @param pyramidTokenId The token ID of the Pyramid
@@ -203,6 +207,11 @@ interface IPyramid is ITokenType {
     /// @dev Can only be called by an account with the default admin role.
     /// @param _treasury Address of the new treasury to receive fees
     function setTreasury(address _treasury) external;
+
+    /// @notice Sets a new Arkada rewarder address
+    /// @dev Can only be called by an account with the default admin role.
+    /// @param _arkadaRewarder Address of the new Arkada rewarder
+    function setArkadaRewarder(address _arkadaRewarder) external;
 
     /// @notice Withdraws the contract's balance to the message sender
     /// @dev Can only be called by an account with the default admin role.

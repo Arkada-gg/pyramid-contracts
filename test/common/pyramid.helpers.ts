@@ -116,3 +116,29 @@ export const mintPyramidTest = async (
     ].name,
   ).to.not.reverted;
 };
+
+interface ISetArkadaRewarderTest extends CommonParams {
+  arkadaRewarder: string;
+}
+export const setArkadaRewarderTest = async (
+  { pyramidContract, owner, arkadaRewarder }: ISetArkadaRewarderTest,
+  opt?: OptionalCommonParams,
+) => {
+  const sender = opt?.from ?? owner;
+
+  if (opt?.revertMessage) {
+    await expect(
+      pyramidContract.connect(sender).setArkadaRewarder(arkadaRewarder),
+    ).revertedWithCustomError(pyramidContract, opt?.revertMessage);
+    return;
+  }
+
+  await expect(
+    pyramidContract.connect(sender).setArkadaRewarder(arkadaRewarder),
+  ).to.emit(
+    pyramidContract,
+    pyramidContract.interface.events['UpdatedArkadaRewarder(address)'].name,
+  ).to.not.reverted;
+
+  expect(await pyramidContract.s_arkadaRewarder()).eq(arkadaRewarder);
+};
