@@ -4,7 +4,7 @@ pragma solidity 0.8.22;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Escrow} from "./Escrow.sol";
-import {Pyramid} from "../Pyramid.sol";
+import {PyramidEscrow} from "../PyramidEscrow.sol";
 import {IEscrow} from "./interfaces/IEscrow.sol";
 import {IFactory} from "./interfaces/IFactory.sol";
 
@@ -16,7 +16,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     error Factory__EscrowAlreadyExists();
     error Factory__ZeroAddress();
 
-    Pyramid public i_pyramid;
+    PyramidEscrow public i_pyramid;
     mapping(uint256 => address) public s_escrows;
     mapping(uint256 => address) public s_escrow_admin;
 
@@ -65,7 +65,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         if (admin == address(0)) revert Factory__ZeroAddress();
         __AccessControl_init();
 
-        i_pyramid = Pyramid(pyramid);
+        i_pyramid = PyramidEscrow(pyramid);
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 

@@ -11,12 +11,11 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IPyramid} from "./interfaces/IPyramid.sol";
-import {IArkadaRewarder} from "./interfaces/IArkadaRewarder.sol";
 
-/// @title Pyramid
+/// @title PyramidEscrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
-contract Pyramid is
+contract PyramidEscrow is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
@@ -28,7 +27,6 @@ contract Pyramid is
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
-    address public s_arkadaRewarder;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
 
@@ -54,11 +52,6 @@ contract Pyramid is
     bytes4 private constant TRANSFER_ERC20 =
         bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
 
-    /**
-     * @dev leaving a storage gap for futures updates
-     */
-    uint256[50] private __gap;
-
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
         return "1";
@@ -76,18 +69,14 @@ contract Pyramid is
         string memory _tokenSymbol,
         string memory _signingDomain,
         string memory _signatureVersion,
-        address _admin,
-        address _arkadaRewarder
+        address _admin
     ) external initializer {
         if (_admin == address(0)) revert Pyramid__InvalidAdminAddress();
-        if (_arkadaRewarder == address(0))
-            revert Pyramid__InvalidAdminAddress();
         __ERC721_init(_tokenName, _tokenSymbol);
         __EIP712_init(_signingDomain, _signatureVersion);
         __AccessControl_init();
         __ReentrancyGuard_init();
         s_isMintingActive = true;
-        s_arkadaRewarder = _arkadaRewarder;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
     }
@@ -175,12 +164,6 @@ contract Pyramid is
         // Perform the actual minting of the Pyramid
         _safeMint(data.toAddress, tokenId);
 
-        // Add rewards to the ArkadaRewarder
-        IArkadaRewarder(s_arkadaRewarder).addRewards(
-            data.toAddress,
-            data.reward.amount
-        );
-
         // Emit an event indicating a Pyramid has been claimed
         emit PyramidClaim(
             data.questId,
@@ -191,6 +174,29 @@ contract Pyramid is
             data.walletProvider,
             data.embedOrigin
         );
+
+        if (data.reward.chainId != 0) {
+            if (data.reward.factoryAddress != address(0)) {
+                IFactory(data.reward.factoryAddress).distributeRewards(
+                    data.questId,
+                    data.reward.tokenAddress,
+                    data.toAddress,
+                    data.reward.amount,
+                    data.reward.tokenId,
+                    data.reward.tokenType,
+                    data.reward.rakeBps
+                );
+            }
+
+            emit TokenReward(
+                tokenId,
+                data.reward.tokenAddress,
+                data.reward.chainId,
+                data.reward.amount,
+                data.reward.tokenId,
+                data.reward.tokenType
+            );
+        }
     }
 
     /// @notice Validates the signature for a Pyramid minting request
@@ -530,6 +536,4 @@ contract Pyramid is
     {
         return super.supportsInterface(interfaceId);
     }
-
-    receive() external payable {}
 }

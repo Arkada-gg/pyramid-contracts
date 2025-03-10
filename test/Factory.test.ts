@@ -18,13 +18,13 @@ import {
   ERC20Mock,
   ERC721Mock,
   Factory,
-  Pyramid,
+  PyramidEscrow,
 } from '../typechain-types';
 
 describe('Factory', () => {
   let factoryContract: Factory;
   let factoryContractDisributeTester: Factory;
-  let pyramidContract: Pyramid;
+  let pyramidContract: PyramidEscrow;
   let owner: SignerWithAddress;
   let user: SignerWithAddress;
   let admin: SignerWithAddress;
@@ -54,8 +54,8 @@ describe('Factory', () => {
     await erc1155Token.deployed();
 
     // Deploy Pyramid contract
-    const Pyramid = await ethers.getContractFactory('Pyramid');
-    pyramidContract = (await Pyramid.deploy()) as Pyramid;
+    const PyramidEscrow = await ethers.getContractFactory('PyramidEscrow');
+    pyramidContract = (await PyramidEscrow.deploy()) as PyramidEscrow;
     await pyramidContract.deployed();
 
     await pyramidContract.initialize(
