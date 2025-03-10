@@ -3,12 +3,14 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { PYRAMID_CONTRACT_NAME } from '../../config';
+import { getCurrentAddresses } from '../../config/constants/addresses';
 import {
   logDeployProxy,
   tryEtherscanVerifyImplementation,
 } from '../../helpers/utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
+  const addresses = getCurrentAddresses(hre);
   const { deployer } = await hre.getNamedAccounts();
   console.log('deployer', { deployer });
 
@@ -22,7 +24,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const SIGNING_DOMAIN = 'Pyramid';
   const SIGNATURE_VERSION = '1';
   const ADMIN = owner.address; // Set admin address here
-  const ARKADA_REWARDER = hre.ethers.constants.AddressZero; // Set arkada rewarder address here
+  const ARKADA_REWARDER = addresses?.arkadaRewarder; // Set arkada rewarder address here
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(

@@ -10,7 +10,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   ArkadaAddresses | undefined
 > = {
   soneium: {
-    arkadaRewarder: '',
+    arkadaRewarder: '0x998F98F806F448cc1eAB301D10f95DE065EE2ABe',
     pyramid: '',
   },
   sepolia: undefined,
