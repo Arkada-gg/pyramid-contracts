@@ -11,7 +11,7 @@ import {
   updateEscrowAdminTest,
   withdrawFundsTest,
 } from './common/factory.helpers';
-import { initializeQuestTest } from './common/pyramid.helpers';
+import { initializeQuestTest } from './common/pyramid-escrow.helpers';
 
 import {
   ERC1155Mock,
@@ -426,7 +426,7 @@ describe('Factory', () => {
     it('should revert if quest is active', async () => {
       await initializeQuestTest(
         {
-          pyramidContract,
+          pyramidEscrowContract: pyramidContract,
           owner,
           questId,
           communities: ['test'],

@@ -83,6 +83,24 @@ contract ArkadaRewarder is
     /**
      * @inheritdoc IArkadaRewarder
      */
+    function addRewards(
+        address[] calldata users,
+        uint256[] calldata amounts
+    ) external onlyOperatorOrOwner {
+        if (users.length != amounts.length)
+            revert ArkadaRewarder__ArrayLengthMismatch();
+
+        for (uint256 i = 0; i < users.length; i++) {
+            if (users[i] == address(0)) revert ArkadaRewarder__InvalidAddress();
+            if (amounts[i] == 0) revert ArkadaRewarder__InvalidAmount();
+            userRewards[users[i]] += amounts[i];
+            emit RewardsAdded(msg.sender, users[i], amounts[i]);
+        }
+    }
+
+    /**
+     * @inheritdoc IArkadaRewarder
+     */
     function claimReward() external nonReentrant {
         uint256 reward = userRewards[msg.sender];
         if (reward == 0) revert ArkadaRewarder__NoRewardsToClaim();

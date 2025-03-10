@@ -4,6 +4,7 @@ import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 
 import {
+  addRewardsMultipleTest,
   addRewardsTest,
   claimRewardTest,
   setRewardsTest,
@@ -172,6 +173,65 @@ describe('ArkadaRewarder', () => {
           user: user.address,
           amount,
         },
+        { revertMessage: 'ArkadaRewarder__InvalidAmount' },
+      );
+    });
+
+    it('Should allow operator to add rewards for multiple users', async () => {
+      const { arkadaRewarderContract, owner, user } = await loadFixture(
+        defaultDeploy,
+      );
+      const users = [user.address, owner.address];
+      const amounts = [parseEther('0.1'), parseEther('0.2')];
+
+      await addRewardsMultipleTest({
+        arkadaRewarderContract,
+        owner,
+        users,
+        amounts,
+      });
+    });
+
+    it('Should not allow non-operator to add rewards for multiple users', async () => {
+      const { arkadaRewarderContract, owner, user } = await loadFixture(
+        defaultDeploy,
+      );
+      const users = [user.address, owner.address];
+      const amounts = [parseEther('0.1'), parseEther('0.2')];
+
+      await addRewardsMultipleTest(
+        {
+          arkadaRewarderContract,
+          owner,
+          users,
+          amounts,
+        },
+        { from: user, revertMessage: 'ArkadaRewarder__NotAuthorized' },
+      );
+    });
+
+    it('Should not allow adding rewards with zero address for multiple users', async () => {
+      const { arkadaRewarderContract, owner, user } = await loadFixture(
+        defaultDeploy,
+      );
+      const users = [user.address, ethers.constants.AddressZero];
+      const amounts = [parseEther('0.1'), parseEther('0.2')];
+
+      await addRewardsMultipleTest(
+        { arkadaRewarderContract, owner, users, amounts },
+        { revertMessage: 'ArkadaRewarder__InvalidAddress' },
+      );
+    });
+
+    it('Should not allow adding zero rewards for multiple users', async () => {
+      const { arkadaRewarderContract, owner, user } = await loadFixture(
+        defaultDeploy,
+      );
+      const users = [user.address, owner.address];
+      const amounts = [parseEther('0'), parseEther('0.2')];
+
+      await addRewardsMultipleTest(
+        { arkadaRewarderContract, owner, users, amounts },
         { revertMessage: 'ArkadaRewarder__InvalidAmount' },
       );
     });

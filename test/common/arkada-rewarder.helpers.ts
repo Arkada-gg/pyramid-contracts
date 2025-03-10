@@ -59,7 +59,9 @@ export const addRewardsTest = async (
 
   if (opt?.revertMessage) {
     await expect(
-      rewarderContract.connect(sender).addRewards(user, amount),
+      rewarderContract
+        .connect(sender)
+        ['addRewards(address,uint256)'](user, amount),
     ).revertedWithCustomError(rewarderContract, opt?.revertMessage);
     return;
   }
@@ -67,12 +69,53 @@ export const addRewardsTest = async (
   const rewardsBefore = await rewarderContract.userRewards(user);
 
   await expect(
-    rewarderContract.connect(sender).addRewards(user, amount),
+    rewarderContract
+      .connect(sender)
+      ['addRewards(address,uint256)'](user, amount),
   ).to.emit(rewarderContract, 'RewardsAdded').to.not.reverted;
 
   expect(await rewarderContract.userRewards(user)).eq(
     rewardsBefore.add(amount),
   );
+};
+
+interface IAddRewardsMultipleTest extends CommonParams {
+  users: string[];
+  amounts: BigNumber[];
+}
+export const addRewardsMultipleTest = async (
+  {
+    arkadaRewarderContract: rewarderContract,
+    owner,
+    users,
+    amounts,
+  }: IAddRewardsMultipleTest,
+  opt?: OptionalCommonParams,
+) => {
+  const sender = opt?.from ?? owner;
+
+  if (opt?.revertMessage) {
+    await expect(
+      rewarderContract
+        .connect(sender)
+        ['addRewards(address[],uint256[])'](users, amounts),
+    ).revertedWithCustomError(rewarderContract, opt?.revertMessage);
+    return;
+  }
+
+  for (let i = 0; i < users.length; i++) {
+    const rewardsBefore = await rewarderContract.userRewards(users[i]);
+
+    await expect(
+      rewarderContract
+        .connect(sender)
+        ['addRewards(address[],uint256[])'](users, amounts),
+    ).to.emit(rewarderContract, 'RewardsAdded').to.not.reverted;
+
+    expect(await rewarderContract.userRewards(users[i])).eq(
+      rewardsBefore.add(amounts[i]),
+    );
+  }
 };
 
 interface IClaimRewardTest extends CommonParams {
