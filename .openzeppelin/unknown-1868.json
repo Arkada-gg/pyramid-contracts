@@ -1,0 +1,52 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xC771F39448Bd042513a18c85E4420E8c59388ABb",
+    "txHash": "0xc8788cc0f38ae6d431b4e4746c0a1f337687020a9359db765672ecf77fbc7a62"
+  },
+  "proxies": [
+    {
+      "address": "0xef7ce3EA89085aCf80ba6e5069160feEfc64e5da",
+      "txHash": "0x26fde01725202c979a22e2cb3413758d643d2d4b3754b784239e32d1909299eb",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x84E5c76f4152E7b463BDa5Ded10559732Ac649C0",
+      "txHash": "0x5423016497944f9d514f7e4b4a44894714f7e4fd7f2f4d42b5a817144a144ed3",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "218758862fbc35458ce60d707586ff1e1371143942545af2c43a3c51dd2e9b42": {
+      "address": "0x27aDA86f1dC4EA0497CC01D9020308b3CadCf2d2",
+      "txHash": "0x6ec085b12bce1be8caac6f36256177b5f949137f737d91d225983f9110514841",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "userRewards",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ArkadaRewarder",
+            "src": "contracts/ArkadaRewarder.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    }
+  }
+}

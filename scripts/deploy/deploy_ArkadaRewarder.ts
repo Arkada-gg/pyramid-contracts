@@ -17,7 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log('Deploying ArkadaRewarder...');
 
   // initialise params <=========
-  const ADMIN = hre.ethers.constants.AddressZero; // Set admin address here
+  const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(
