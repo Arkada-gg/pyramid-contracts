@@ -14,6 +14,11 @@
       "address": "0x84E5c76f4152E7b463BDa5Ded10559732Ac649C0",
       "txHash": "0x5423016497944f9d514f7e4b4a44894714f7e4fd7f2f4d42b5a817144a144ed3",
       "kind": "transparent"
+    },
+    {
+      "address": "0x998F98F806F448cc1eAB301D10f95DE065EE2ABe",
+      "txHash": "0x49223dcad45cb457b954dac848dee9f37a134a1ae60677201748121691a1ab1c",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -36,6 +41,49 @@
           "t_address": {
             "label": "address",
             "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "c2e55c4b18b603483a2a964cde1182cf4bd740cdac14f2b6c1666454c34a1668": {
+      "address": "0x3db744585f892dc77750b2f4376B4Fc1Dd66d510",
+      "txHash": "0x2752f5ce7439a142e1c21f793f6569b2554733d98ea01c23075a61fcaf76b77a",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "userRewards",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ArkadaRewarder",
+            "src": "contracts/ArkadaRewarder.sol:23"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ArkadaRewarder",
+            "src": "contracts/ArkadaRewarder.sol:28"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
           },
           "t_mapping(t_address,t_uint256)": {
             "label": "mapping(address => uint256)",
