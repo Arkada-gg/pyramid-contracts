@@ -273,13 +273,13 @@ describe('Pyramid', () => {
         recipients: [
           {
             recipient: user.address,
-            BPS: 10000,
+            BPS: 100,
           },
         ],
         reward: {
           tokenAddress: ethers.constants.AddressZero,
           chainId: 1,
-          amount: parseEther('0.1'),
+          amount: parseEther('0.01'),
           tokenId: 0,
           tokenType: 3,
           rakeBps: 10000,
@@ -370,7 +370,7 @@ describe('Pyramid', () => {
       const treasuryBalanceBefore = await ethers.provider.getBalance(
         treasury.address,
       );
-      const recipientBalanceBefore = await ethers.provider.getBalance(
+      const recipientRewardsBefore = await arkadaRewarderContract.userRewards(
         questSigner.address,
       );
 
@@ -378,6 +378,9 @@ describe('Pyramid', () => {
 
       const rewardsBefore = await arkadaRewarderContract.userRewards(
         user.address,
+      );
+      const rewarderBalanceBefore = await ethers.provider.getBalance(
+        arkadaRewarderContract.address,
       );
 
       await mintPyramidTest(
@@ -394,25 +397,32 @@ describe('Pyramid', () => {
       const treasuryBalanceAfter = await ethers.provider.getBalance(
         treasury.address,
       );
-      const recipientBalanceAfter = await ethers.provider.getBalance(
+      const recipientRewardsAfter = await arkadaRewarderContract.userRewards(
         questSigner.address,
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
       const rewardsAfter = await arkadaRewarderContract.userRewards(
         user.address,
       );
+      const rewarderBalanceAfter = await ethers.provider.getBalance(
+        arkadaRewarderContract.address,
+      );
 
-      expect(recipientBalanceAfter).to.equal(
-        recipientBalanceBefore.add(expectedRecipientPayout),
+      expect(recipientRewardsAfter).to.equal(
+        recipientRewardsBefore.add(expectedRecipientPayout),
       );
       expect(treasuryBalanceAfter).to.equal(
-        treasuryBalanceBefore.add(expectedTreasuryPayout),
+        treasuryBalanceBefore.add(expectedTreasuryPayout).sub(rewards),
       );
       expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
       expect(rewardsAfter).to.equal(rewardsBefore.add(rewards));
+
+      expect(rewarderBalanceAfter).to.equal(
+        rewarderBalanceBefore.add(rewards).add(expectedRecipientPayout),
+      );
     });
 
-    it('Should allow successful minting with price 0', async () => {
+    it('Should not allow minting with too high BPS', async () => {
       const {
         pyramidContract,
         owner,
@@ -421,13 +431,10 @@ describe('Pyramid', () => {
         QUEST_ID,
         factoryContract,
         domain,
-        treasury,
-        arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
 
-      const price = ethers.constants.Zero;
-      const BPS = 100;
-      const MAX_BPS = 10000;
+      const price = parseEther('0.1');
+      const BPS = 10001;
 
       const rewards = parseEther('0.01');
 
@@ -464,21 +471,127 @@ describe('Pyramid', () => {
 
       const signature = await signMintDataTyped(data, questSigner, domain);
 
-      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
-      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
-
-      const treasuryBalanceBefore = await ethers.provider.getBalance(
-        treasury.address,
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user, revertMessage: 'Pyramid__BPSTooHigh' },
       );
-      const recipientBalanceBefore = await ethers.provider.getBalance(
-        questSigner.address,
-      );
+    });
 
-      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+    it('Should not allow minting if (rewards + referrals) > price', async () => {
+      const {
+        pyramidContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+      } = await loadFixture(defaultDeploy);
 
-      const rewardsBefore = await arkadaRewarderContract.userRewards(
-        user.address,
+      const price = parseEther('0.1');
+      const BPS = 100;
+
+      const rewards = parseEther('0.4');
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID.toString(),
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user, revertMessage: 'Pyramid__RewardTooHigh' },
       );
+    });
+
+    it('Should not allow successful minting with price 0', async () => {
+      const {
+        pyramidContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+      } = await loadFixture(defaultDeploy);
+
+      const price = ethers.constants.Zero;
+      const BPS = 100;
+
+      const rewards = parseEther('0.01');
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID.toString(),
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -487,28 +600,8 @@ describe('Pyramid', () => {
           data,
           signature,
         },
-        { from: user },
+        { from: user, revertMessage: 'Pyramid__RewardTooHigh' },
       );
-
-      const treasuryBalanceAfter = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      const recipientBalanceAfter = await ethers.provider.getBalance(
-        questSigner.address,
-      );
-      const userBalanceAfter = await ethers.provider.getBalance(user.address);
-      const rewardsAfter = await arkadaRewarderContract.userRewards(
-        user.address,
-      );
-
-      expect(recipientBalanceAfter).to.equal(
-        recipientBalanceBefore.add(expectedRecipientPayout),
-      );
-      expect(treasuryBalanceAfter).to.equal(
-        treasuryBalanceBefore.add(expectedTreasuryPayout),
-      );
-      expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
-      expect(rewardsAfter).to.equal(rewardsBefore.add(rewards));
     });
   });
 

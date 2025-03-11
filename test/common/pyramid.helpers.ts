@@ -112,7 +112,7 @@ export const mintPyramidTest = async (
   ).to.emit(
     pyramidContract,
     pyramidContract.interface.events[
-      'PyramidClaim(string,uint256,address,uint256,uint256,string,string)'
+      'PyramidClaim(string,uint256,address,uint256,uint256,uint256,string,string)'
     ].name,
   ).to.not.reverted;
 };

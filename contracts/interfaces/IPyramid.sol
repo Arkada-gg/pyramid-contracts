@@ -24,6 +24,7 @@ interface IPyramid is ITokenType {
     error Pyramid__TreasuryNotSet();
     error Pyramid__InvalidAdminAddress();
     error Pyramid__ZeroAddress();
+    error Pyramid__RewardTooHigh();
 
     enum QuestType {
         QUEST,
@@ -57,6 +58,7 @@ interface IPyramid is ITokenType {
     /// @param tokenId The token ID of the minted Pyramid
     /// @param claimer Address of the Pyramid claimer
     /// @param price The price paid for the Pyramid
+    /// @param rewards The rewards paid for the Pyramid
     /// @param issueNumber The issue number of the Pyramid
     /// @param walletProvider The name of the wallet provider used for claiming
     /// @param embedOrigin The origin of the embed associated with the Pyramid
@@ -65,6 +67,7 @@ interface IPyramid is ITokenType {
         uint256 indexed tokenId,
         address indexed claimer,
         uint256 price,
+        uint256 rewards,
         uint256 issueNumber,
         string walletProvider,
         string embedOrigin

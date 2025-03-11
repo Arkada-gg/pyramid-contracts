@@ -170,18 +170,13 @@ contract Pyramid is
         // Perform the actual minting of the Pyramid
         _safeMint(data.toAddress, tokenId);
 
-        // Add rewards to the ArkadaRewarder
-        IArkadaRewarder(s_arkadaRewarder).addRewards(
-            data.toAddress,
-            data.reward.amount
-        );
-
         // Emit an event indicating a Pyramid has been claimed
         emit PyramidClaim(
             data.questId,
             tokenId,
             data.toAddress,
             data.price,
+            data.reward.amount,
             s_questIssueNumbers[questIdHash],
             data.walletProvider,
             data.embedOrigin
@@ -245,6 +240,9 @@ contract Pyramid is
     function _processNativePayouts(PyramidData calldata data) internal {
         uint256 totalReferrals;
 
+        address[] memory recipients = new address[](data.recipients.length + 1);
+        uint256[] memory amounts = new uint256[](data.recipients.length + 1);
+
         if (data.recipients.length > 0) {
             // max basis points is 10k (100%)
             uint16 maxBps = 10_000;
@@ -270,13 +268,8 @@ contract Pyramid is
                 // Transfer the referral amount to the recipient
                 address recipient = data.recipients[i].recipient;
                 if (recipient != address(0)) {
-                    (bool payoutSuccess, ) = recipient.call{
-                        value: referralAmount
-                    }("");
-                    if (!payoutSuccess) {
-                        revert Pyramid__TransferFailed();
-                    }
-
+                    recipients[i] = recipient;
+                    amounts[i] = referralAmount;
                     emit FeePayout(recipient, referralAmount);
                 }
                 unchecked {
@@ -285,8 +278,29 @@ contract Pyramid is
             }
         }
 
-        (bool success, ) = payable(s_treasury).call{
-            value: data.price - totalReferrals
+        uint256 treasuryWithoutReferrals = data.price - totalReferrals;
+
+        if (data.reward.amount > treasuryWithoutReferrals) {
+            revert Pyramid__RewardTooHigh();
+        }
+
+        recipients[data.recipients.length] = data.toAddress;
+        amounts[data.recipients.length] = data.reward.amount;
+
+        // Add payouts of referrals and user rewards to the ArkadaRewarder
+        IArkadaRewarder(s_arkadaRewarder).addRewards(recipients, amounts);
+
+        // Transfer the referrals amount and user rewards to the ArkadaRewarder
+        (bool success, ) = payable(s_arkadaRewarder).call{
+            value: totalReferrals + data.reward.amount
+        }("");
+        if (!success) {
+            revert Pyramid__TransferFailed();
+        }
+
+        // Transfer the remaining amount to the treasury
+        (success, ) = payable(s_treasury).call{
+            value: treasuryWithoutReferrals - data.reward.amount
         }("");
         if (!success) {
             revert Pyramid__NativePaymentFailed();
