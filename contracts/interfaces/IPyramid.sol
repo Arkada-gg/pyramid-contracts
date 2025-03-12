@@ -47,7 +47,7 @@ interface IPyramid is ITokenType {
     /// @param walletProvider The name of the wallet provider used for claiming
     /// @param embedOrigin The origin of the embed associated with the Pyramid
     event PyramidClaim(
-        string indexed questId,
+        string questId,
         uint256 indexed tokenId,
         address indexed claimer,
         uint256 price,
