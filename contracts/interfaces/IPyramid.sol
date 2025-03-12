@@ -37,22 +37,6 @@ interface IPyramid is ITokenType {
         ADVANCED
     }
 
-    /// @notice Emitted when a new quest is initialized
-    /// @param questId The unique identifier of the quest
-    /// @param questType The type of the quest (QUEST, STREAK)
-    /// @param difficulty The difficulty level of the quest (BEGINNER, INTERMEDIATE, ADVANCED)
-    /// @param title The title of the quest
-    /// @param tags An array of tags associated with the quest
-    /// @param communities An array of communities associated with the quest
-    event QuestMetadata(
-        uint256 indexed questId,
-        QuestType questType,
-        Difficulty difficulty,
-        string title,
-        string[] tags,
-        string[] communities
-    );
-
     /// @notice Emitted when a Pyramid is claimed
     /// @param questId The quest ID associated with the Pyramid
     /// @param tokenId The token ID of the minted Pyramid
@@ -88,22 +72,6 @@ interface IPyramid is ITokenType {
         string networkChainId
     );
 
-    /// @notice Emitted when there is a reward associated with a Pyramid
-    /// @param pyramidTokenId The token ID of the Pyramid giving the reward
-    /// @param tokenAddress The token address of the reward
-    /// @param chainId The blockchain chain ID where the transaction occurred
-    /// @param amount The amount of the reward
-    /// @param tokenId Token ID of the reward (only applicable for ERC721 and ERC1155)
-    /// @param tokenType The type of reward token
-    event TokenReward(
-        uint256 indexed pyramidTokenId,
-        address indexed tokenAddress,
-        uint256 indexed chainId,
-        uint256 amount,
-        uint256 tokenId,
-        TokenType tokenType
-    );
-
     /// @notice Emitted when a fee payout is made
     /// @param recipient The address of the payout recipient
     /// @param amount The amount of the payout
@@ -122,17 +90,9 @@ interface IPyramid is ITokenType {
     /// @param amount The amount of rewards claimed
     event ClaimRewards(address indexed user, uint256 amount);
 
-    /// @notice Emitted when a quest is disabled
-    /// @param questId The ID of the quest that was disabled
-    event QuestDisabled(uint256 indexed questId);
-
     /// @notice Emitted when the treasury address is updated
     /// @param newTreasury The new treasury address
     event UpdatedTreasury(address indexed newTreasury);
-
-    /// @notice Emitted when the L3 token address is updated
-    /// @param token The L3 token address
-    event UpdatedL3Address(address indexed token);
 
     /// @dev Represents the data needed for minting a Pyramid.
     /// @param questId The ID of the quest associated with the Pyramid
