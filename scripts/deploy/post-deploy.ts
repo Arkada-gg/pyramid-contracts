@@ -21,12 +21,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const arkadaRewarder = await hre.ethers.getContractAt(
     ARKADA_REWARDER_CONTRACT_NAME,
-    addresses?.arkadaRewarder!,
+    addresses?.arkadaRewarder ?? '',
     owner,
   );
   const pyramid = await hre.ethers.getContractAt(
     PYRAMID_CONTRACT_NAME,
-    addresses?.pyramid!,
+    addresses?.pyramid ?? '',
     owner,
   );
 

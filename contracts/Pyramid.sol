@@ -298,13 +298,14 @@ contract Pyramid is
             revert Pyramid__TransferFailed();
         }
 
+        uint256 treasuryPayout = treasuryWithoutReferrals - data.reward.amount;
+
         // Transfer the remaining amount to the treasury
-        (success, ) = payable(s_treasury).call{
-            value: treasuryWithoutReferrals - data.reward.amount
-        }("");
+        (success, ) = payable(s_treasury).call{value: treasuryPayout}("");
         if (!success) {
             revert Pyramid__NativePaymentFailed();
         }
+        emit TreasuryPayout(msg.sender, treasuryPayout);
     }
 
     /// @notice Recovers the signer's address from the PyramidData and its associated signature

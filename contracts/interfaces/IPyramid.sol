@@ -94,6 +94,11 @@ interface IPyramid is ITokenType {
     /// @param newTreasury The new treasury address
     event UpdatedTreasury(address indexed newTreasury);
 
+    /// @notice Emitted when payout to treasury
+    /// @param caller caller address
+    /// @param amount ether amount
+    event TreasuryPayout(address indexed caller, uint256 amount);
+
     /// @dev Represents the data needed for minting a Pyramid.
     /// @param questId The ID of the quest associated with the Pyramid
     /// @param nonce A unique number to prevent replay attacks
