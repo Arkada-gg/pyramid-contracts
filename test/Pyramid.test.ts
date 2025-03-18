@@ -603,6 +603,64 @@ describe('Pyramid', () => {
         { from: user, revertMessage: 'Pyramid__RewardTooHigh' },
       );
     });
+
+    it('Should allow successful minting with rewards 0', async () => {
+      const {
+        pyramidContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.01');
+      const BPS = 100;
+
+      const rewards = ethers.constants.Zero;
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID.toString(),
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 0,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      await mintPyramidTest({
+        pyramidContract,
+        owner,
+        data,
+        signature,
+        value: price,
+      });
+    });
   });
 
   describe('Withdrawal', () => {
