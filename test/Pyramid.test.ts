@@ -312,6 +312,76 @@ describe('Pyramid', () => {
       );
     });
 
+    it('Should not allow minting if quest id for user already minted', async () => {
+      const {
+        pyramidContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domain,
+      } = await loadFixture(defaultDeploy);
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID.toString(),
+        nonce: 1,
+        price: parseEther('0.1'),
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: user.address,
+            BPS: 100,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: parseEther('0.01'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          factoryAddress: factoryContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(data, questSigner, domain);
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const data2 = { ...data, nonce: 2 };
+      const signature2 = await signMintDataTyped(data2, questSigner, domain);
+
+      await mintPyramidTest(
+        {
+          pyramidContract,
+          owner,
+          data: data2,
+          signature: signature2,
+          value: parseEther('0.1'),
+        },
+        { from: user, revertMessage: 'Pyramid__MintedForQuestId' },
+      );
+    });
+
     it('Should allow successful minting', async () => {
       const {
         pyramidContract,

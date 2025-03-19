@@ -13,6 +13,7 @@ interface IPyramid is ITokenType {
     error Pyramid__WithdrawFailed();
     error Pyramid__ClaimRewardsFailed();
     error Pyramid__NonceAlreadyUsed();
+    error Pyramid__MintedForQuestId();
     error Pyramid__TransferFailed();
     error Pyramid__BPSTooHigh();
     error Pyramid__ExcessiveFeePayout();
