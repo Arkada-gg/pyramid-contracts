@@ -19,6 +19,11 @@
       "address": "0x998F98F806F448cc1eAB301D10f95DE065EE2ABe",
       "txHash": "0x49223dcad45cb457b954dac848dee9f37a134a1ae60677201748121691a1ab1c",
       "kind": "transparent"
+    },
+    {
+      "address": "0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989",
+      "txHash": "0x7e21e1a451b756c0a44f2591eece58653c731019cff4d9d4a9442480c8e67cb0",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -87,6 +92,117 @@
           },
           "t_mapping(t_address,t_uint256)": {
             "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "010a53821549c2482b09611fdb067449082fc1a5a7891b99154e455e352f221b": {
+      "address": "0x26189A7C19C99119E2B6c027de6a9EB75d0Bc051",
+      "txHash": "0xa846a1c48a11de6bde9f172c67501016d85bf472f0eb0322e5e43732f58ee598",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:29"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:30"
+          },
+          {
+            "label": "s_arkadaRewarder",
+            "offset": 1,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:31"
+          },
+          {
+            "label": "s_questIssueNumbers",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:48"
+          },
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:49"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:50"
+          },
+          {
+            "label": "s_treasury",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:52"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:59"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
             "numberOfBytes": "32"
           },
           "t_uint256": {

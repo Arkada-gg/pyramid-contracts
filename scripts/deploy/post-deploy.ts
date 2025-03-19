@@ -16,8 +16,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const owner = await hre.ethers.getSigner(deployer);
 
   // pre-requisites
-  const TREASURY_ADDRESS = '0xBeBc06B551737cCa62FF23A3504549F90a1639fE';
-  const SIGNER_ADDRESS = '0xA3F1D90b5227A128A65AcbE223dbe01870e4AbF3';
+  const TREASURY_ADDRESS = '0x2b412BfEaEfaeFC03134fF62D86CA5bB3359F68a';
+  const SIGNER_ADDRESS = '0x701858645415f04EEBc91816cA2465eAc2fdDC27';
 
   const arkadaRewarder = await hre.ethers.getContractAt(
     ARKADA_REWARDER_CONTRACT_NAME,

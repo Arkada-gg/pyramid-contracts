@@ -23,7 +23,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const TOKEN_SYMBOL = 'PYR';
   const SIGNING_DOMAIN = 'Pyramid';
   const SIGNATURE_VERSION = '1';
-  const ADMIN = owner.address; // Set admin address here
+  const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
   const ARKADA_REWARDER = addresses?.arkadaRewarder; // Set arkada rewarder address here
   // =====================
 
