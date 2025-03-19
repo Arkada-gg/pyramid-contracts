@@ -24,6 +24,11 @@
       "address": "0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989",
       "txHash": "0x7e21e1a451b756c0a44f2591eece58653c731019cff4d9d4a9442480c8e67cb0",
       "kind": "transparent"
+    },
+    {
+      "address": "0x30410050CB1eBCF21741c9D3F817C386401f82fd",
+      "txHash": "0x9af8998a3da6ae25f2c510944dc1286a878b81c88b75dfa046771adbba60c9e5",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -187,6 +192,129 @@
           },
           "t_bytes32": {
             "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "8182b6c442b95bd1a305a7a79455d90ed4ea30624f1fff14b23f3a5e9081dfa5": {
+      "address": "0x360ecC5bf4E5E9aeec708571Fe286c33679c450B",
+      "txHash": "0xcc1e4f01793148eacf7214a72ab9cda4c684ecfbf4b290940c6d86dd38410ef0",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:29"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:30"
+          },
+          {
+            "label": "s_arkadaRewarder",
+            "offset": 1,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:31"
+          },
+          {
+            "label": "s_questIssueNumbers",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:48"
+          },
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:49"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:50"
+          },
+          {
+            "label": "s_quests_ids",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:52"
+          },
+          {
+            "label": "s_treasury",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:54"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:61"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
             "numberOfBytes": "32"
           },
           "t_mapping(t_bytes32,t_uint256)": {
