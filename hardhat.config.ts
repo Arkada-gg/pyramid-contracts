@@ -56,7 +56,8 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    soneium: getNetworkConfig('soneium', []),
+    soneium: getNetworkConfig('soneium'),
+    sonic: getNetworkConfig('sonic'),
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hardhat: FORKING_NETWORK
@@ -86,6 +87,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://soneium.blockscout.com/api/',
           browserURL: 'https://soneium.blockscout.com',
+        },
+      },
+      {
+        network: 'sonic',
+        chainId: 146,
+        urls: {
+          apiURL: 'https://api.sonicscan.org/api/',
+          browserURL: 'https://sonicscan.org',
         },
       },
     ],
