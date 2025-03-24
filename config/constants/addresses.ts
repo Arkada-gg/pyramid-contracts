@@ -11,7 +11,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
 > = {
   soneium: {
     arkadaRewarder: '0x998F98F806F448cc1eAB301D10f95DE065EE2ABe',
-    pyramid: '0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989',
+    pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
   },
   sepolia: undefined,
   hardhat: undefined,
