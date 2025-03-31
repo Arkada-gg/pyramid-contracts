@@ -1,0 +1,187 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x5e92A8DB2EA15678f63B66A9305C6e95530f5F42",
+    "txHash": "0x6accd81446c31915a676fd6d308b36571c83cf988e2a516bff06fe678cfae2a0"
+  },
+  "proxies": [
+    {
+      "address": "0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617",
+      "txHash": "0x2aa093428ca499abd2fef3f29ed2b5e0322c4c14c022c4d989767418887cfee6",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xE99F2AEfff9CCff34832747479Bd84658495F50A",
+      "txHash": "0x1cca857fa1e600acf9d08a540d303a4861765089e914cc655d431b4076948de5",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "c2e55c4b18b603483a2a964cde1182cf4bd740cdac14f2b6c1666454c34a1668": {
+      "address": "0xc88aF67D0462dE26E8270BE6726a436A7B611aeb",
+      "txHash": "0x43cce5630d331a067063493cf01761375e00439f684f7e8bfcf24ec859b270c5",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "userRewards",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ArkadaRewarder",
+            "src": "contracts/ArkadaRewarder.sol:23"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ArkadaRewarder",
+            "src": "contracts/ArkadaRewarder.sol:28"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "8182b6c442b95bd1a305a7a79455d90ed4ea30624f1fff14b23f3a5e9081dfa5": {
+      "address": "0xC6d27c16FBe1921556FBB97E1c558022D0E13961",
+      "txHash": "0xec6a4c7a56af23c9d23f7e50c46ca013f852b8c3ab1e6bd0b8bf7b6d15893fd0",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:29"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:30"
+          },
+          {
+            "label": "s_arkadaRewarder",
+            "offset": 1,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:31"
+          },
+          {
+            "label": "s_questIssueNumbers",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:48"
+          },
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:49"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:50"
+          },
+          {
+            "label": "s_quests_ids",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:52"
+          },
+          {
+            "label": "s_treasury",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:54"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "Pyramid",
+            "src": "contracts/Pyramid.sol:61"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    }
+  }
+}

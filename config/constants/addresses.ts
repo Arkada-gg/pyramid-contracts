@@ -14,8 +14,8 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
   },
   sonic: {
-    arkadaRewarder: '0x6f078B8d3166459b7c16e5E0F595F71b1B18fff9',
-    pyramid: '0xda77C1ED29061756d25A636e7AA1827938135c58',
+    arkadaRewarder: '0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617',
+    pyramid: '0xE99F2AEfff9CCff34832747479Bd84658495F50A',
   },
   sepolia: undefined,
   hardhat: undefined,
