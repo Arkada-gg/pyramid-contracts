@@ -19,6 +19,9 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   sonic: ALCHEMY_KEY
     ? `https://sonic-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://rpc.soniclabs.com`,
+  base: ALCHEMY_KEY
+    ? `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+    : `https://base.llamarpc.com`,
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://sepolia.infura.io/v3/${INFURA_KEY}`,
@@ -29,6 +32,7 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
 export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   soneium: 'auto',
   sonic: 'auto',
+  base: 'auto',
   sepolia: 'auto',
   hardhat: 0,
   localhost: 70 * GWEI,
@@ -37,6 +41,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
 export const chainIds: ConfigPerNetwork<number> = {
   soneium: 1868,
   sonic: 146,
+  base: 8453,
   sepolia: 11155111,
   hardhat: 31337,
   localhost: 31337,
@@ -45,6 +50,7 @@ export const chainIds: ConfigPerNetwork<number> = {
 export const mnemonics: ConfigPerNetwork<string | undefined> = {
   soneium: MNEMONIC_PROD,
   sonic: MNEMONIC_PROD,
+  base: MNEMONIC_PROD,
   sepolia: MNEMONIC_DEV,
   hardhat: MNEMONIC_DEV,
   localhost: MNEMONIC_DEV,
@@ -53,6 +59,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
 export const gases: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
+  base: undefined,
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,
@@ -61,6 +68,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
 export const timeouts: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
+  base: undefined,
   sepolia: 999999,
   hardhat: undefined,
   localhost: 999999,
@@ -69,6 +77,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
 export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
+  base: undefined,
   sepolia: undefined,
   hardhat: 300 * 10 ** 6,
   localhost: undefined,
@@ -77,6 +86,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
 export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
+  base: undefined,
   sepolia: undefined,
   hardhat: 0,
   localhost: undefined,

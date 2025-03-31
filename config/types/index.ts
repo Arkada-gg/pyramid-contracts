@@ -4,6 +4,7 @@ export type Network =
   | NetworkBase
   | 'soneium'
   | 'sonic'
+  | 'base'
   | 'hardhat'
   | 'localhost';
 export type RpcUrl =
