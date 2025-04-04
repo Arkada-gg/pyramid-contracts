@@ -49,6 +49,7 @@ const config: HardhatUserConfig = {
       sepolia: DEPLOYER,
       soneium: DEPLOYER,
       sonic: DEPLOYER,
+      base: DEPLOYER,
     },
   },
   verify: {
