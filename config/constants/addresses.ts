@@ -19,7 +19,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   },
   base: {
     arkadaRewarder: '0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617',
-    pyramid: '0xE99F2AEfff9CCff34832747479Bd84658495F50A',
+    pyramid: '0xC909A19E3cE11841d46E9206f5FD9fe2Bc9B36b5',
   },
   sepolia: undefined,
   hardhat: undefined,
