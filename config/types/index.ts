@@ -19,6 +19,9 @@ export interface Environment {
   readonly ALCHEMY_KEY?: string;
   readonly INFURA_KEY?: string;
   readonly ETHERSCAN_API_KEY?: string;
+  readonly ETHERSCAN_API_KEY_SONEIUM?: string;
+  readonly ETHERSCAN_API_KEY_SONIC?: string;
+  readonly ETHERSCAN_API_KEY_BASE?: string;
   readonly OPTIMIZER: boolean;
   readonly COVERAGE: boolean;
   readonly REPORT_GAS: boolean;

@@ -15,8 +15,16 @@ import {
   Network,
 } from './config';
 
-const { OPTIMIZER, REPORT_GAS, FORKING_NETWORK, ETHERSCAN_API_KEY, DEPLOYER } =
-  ENV;
+const {
+  OPTIMIZER,
+  REPORT_GAS,
+  FORKING_NETWORK,
+  ETHERSCAN_API_KEY,
+  ETHERSCAN_API_KEY_SONEIUM,
+  ETHERSCAN_API_KEY_SONIC,
+  ETHERSCAN_API_KEY_BASE,
+  DEPLOYER,
+} = ENV;
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -82,7 +90,11 @@ const config: HardhatUserConfig = {
     runOnCompile: OPTIMIZER,
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: {
+      soneium: ETHERSCAN_API_KEY_SONEIUM ?? '',
+      sonic: ETHERSCAN_API_KEY_SONIC ?? '',
+      base: ETHERSCAN_API_KEY_BASE ?? '',
+    },
     customChains: [
       {
         network: 'soneium',
