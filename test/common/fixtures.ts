@@ -4,6 +4,7 @@ import { ethers } from 'hardhat';
 import { createEscrowTest } from './factory.helpers';
 
 import {
+  // eslint-disable-next-line
   ArkadaPVPArena__factory,
   // eslint-disable-next-line
   ArkadaRewarder__factory,
@@ -19,8 +20,15 @@ import {
 } from '../../typechain-types';
 
 export async function defaultDeploy() {
-  const [owner, user, treasury, questSigner, admin, arenaSigner] =
-    await ethers.getSigners();
+  const [
+    owner,
+    user,
+    treasury,
+    questSigner,
+    admin,
+    arenaSigner,
+    ...regularAccounts
+  ] = await ethers.getSigners();
 
   const domain = {
     name: 'pyramid',
@@ -235,7 +243,7 @@ export async function defaultDeploy() {
       arenaDomain.version,
       treasury.address,
       arenaSigner.address,
-      admin.address,
+      owner.address,
       arenaInitialConfig.feeBPS,
       arenaInitialConfig.minPlayersCount,
       arenaInitialConfig.minIntervalToStart,
@@ -281,5 +289,6 @@ export async function defaultDeploy() {
     arenaContract,
     arenaSigner,
     arenaInitialConfig,
+    regularAccounts,
   };
 }
