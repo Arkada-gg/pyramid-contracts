@@ -1,5 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { BigNumberish, Contract, ethers } from 'ethers';
+import { BigNumberish, Contract } from 'ethers';
+import { ethers } from 'hardhat';
 
 export type OptionalCommonParams = {
   from?: SignerWithAddress;
@@ -157,4 +158,30 @@ export const signMintDataTyped = async (
 ) => {
   // Sign the hash directly
   return await signer._signTypedData(domain, TYPES, data);
+};
+
+/**
+ * Increases the Hardhat EVM time by the specified number of seconds
+ * @param seconds Number of seconds to increase time by
+ */
+export const increaseTime = async (seconds: number): Promise<void> => {
+  await ethers.provider.send('evm_increaseTime', [seconds]);
+  await ethers.provider.send('evm_mine', []);
+};
+
+/**
+ * Increases time and mines the specified number of blocks
+ * @param seconds Number of seconds to increase time by
+ * @param blocks Number of blocks to mine
+ */
+export const increaseTimeAndMine = async (
+  seconds: number,
+  blocks: number,
+): Promise<void> => {
+  await ethers.provider.send('evm_increaseTime', [seconds]);
+
+  // Mine the specified number of blocks
+  for (let i = 0; i < blocks; i++) {
+    await ethers.provider.send('evm_mine', []);
+  }
 };

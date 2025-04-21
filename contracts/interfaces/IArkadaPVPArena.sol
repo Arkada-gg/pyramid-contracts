@@ -22,6 +22,8 @@ interface IArkadaPVPArena {
     error PVPArena__RewardsNotDistributed();
     error PVPArena__InvalidProofs();
     error PVPArena__IAlreadyClaimed();
+    error PVPArena__InvalidDuration();
+    error PVPArena__InvalidMinMax();
 
     event ArenaCreated(
         uint256 indexed arenaId,
@@ -40,18 +42,22 @@ interface IArkadaPVPArena {
     );
     event TreasurySet(address indexed caller, address indexed newTreasury);
     event FeeBpsSet(address indexed caller, uint16 indexed newFeeBPS);
-    event MinPlayersCountSet(
+    event PlayersConfigSet(address indexed caller, uint256 min, uint256 max);
+    event IntervalToStartConfigSet(
         address indexed caller,
-        uint256 indexed newMinPlayersCount
+        uint256 min,
+        uint256 max
     );
-    event MinIntervalToStartSet(
-        address indexed caller,
-        uint256 indexed newMinIntervalToStart
-    );
+    event DurationConfigSet(address indexed caller, uint256 min, uint256 max);
 
     enum ArenaType {
         TIME,
         PLACES
+    }
+
+    struct MinMax {
+        uint256 min;
+        uint256 max;
     }
 
     struct ArenaInfo {
@@ -81,27 +87,25 @@ interface IArkadaPVPArena {
         uint256 _startTime,
         uint256 _requiredPlayers,
         bool _signatured
-    ) external;
+    ) external returns (uint256);
 
     function joinArena(uint256 _arenaId) external payable;
 
-    function joinArena(
-        JoinData calldata data,
-        bytes calldata signature
-    ) external;
+    function joinArena(JoinData calldata data, bytes calldata signature)
+        external;
 
     function leaveArena(uint256 _arenaId) external;
 
-    function endArenaAndDistributeRewards(
-        uint256 _arenaId,
-        bytes32 _root
-    ) external;
+    function endArenaAndDistributeRewards(uint256 _arenaId, bytes32 _root)
+        external;
 
     function setTreasury(address _treasury) external;
 
     function setFeeBPS(uint16 _feeBPS) external;
 
-    function setMinPlayersCount(uint256 _minPlayersCount) external;
+    function setPlayersConfig(MinMax calldata _config) external;
 
-    function setMinIntervalToStart(uint256 _minIntervalToStart) external;
+    function setIntervalToStartConfig(MinMax calldata _config) external;
+
+    function setDurationConfig(MinMax calldata _config) external;
 }

@@ -196,8 +196,18 @@ export async function defaultDeploy() {
 
   const arenaInitialConfig = {
     feeBPS: 100,
-    minPlayersCount: 3,
-    minIntervalToStart: 60 * 60,
+    playersConfig: {
+      min: 3,
+      max: 50,
+    },
+    intervalToStartConfig: {
+      min: 60 * 60,
+      max: 60 * 60 * 5,
+    },
+    durationConfig: {
+      min: 60 * 60,
+      max: 60 * 60 * 5,
+    },
   };
 
   const arenaContract = await new ArkadaPVPArena__factory(owner).deploy();
@@ -209,8 +219,9 @@ export async function defaultDeploy() {
       arenaSigner.address,
       admin.address,
       arenaInitialConfig.feeBPS,
-      arenaInitialConfig.minPlayersCount,
-      arenaInitialConfig.minIntervalToStart,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
     ),
   ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
   await expect(
@@ -221,8 +232,9 @@ export async function defaultDeploy() {
       ethers.constants.AddressZero,
       admin.address,
       arenaInitialConfig.feeBPS,
-      arenaInitialConfig.minPlayersCount,
-      arenaInitialConfig.minIntervalToStart,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
     ),
   ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
   await expect(
@@ -233,8 +245,9 @@ export async function defaultDeploy() {
       arenaSigner.address,
       ethers.constants.AddressZero,
       arenaInitialConfig.feeBPS,
-      arenaInitialConfig.minPlayersCount,
-      arenaInitialConfig.minIntervalToStart,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
     ),
   ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
   await expect(
@@ -245,8 +258,9 @@ export async function defaultDeploy() {
       arenaSigner.address,
       owner.address,
       arenaInitialConfig.feeBPS,
-      arenaInitialConfig.minPlayersCount,
-      arenaInitialConfig.minIntervalToStart,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
     ),
   ).to.not.reverted;
 
