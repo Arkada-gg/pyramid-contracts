@@ -35,7 +35,7 @@
     "verify:main": "hardhat verify --network soneium",
     "deploy:rewarder": "yarn hh:run scripts/deploy/deploy_ArkadaRewarder.ts",
     "deploy:pyramid": "yarn hh:run scripts/deploy/deploy_Pyramid.ts --network base",
-    "post-deploy": "yarn hh:run scripts/deploy/post-deploy.ts --network base"
+    "post-deploy:pyr": "yarn hh:run scripts/deploy/post-deploy-pyr.ts --network base"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
