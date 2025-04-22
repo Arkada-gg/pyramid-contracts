@@ -11,8 +11,6 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IArkadaPVPArena} from "./interfaces/IArkadaPVPArena.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-import "hardhat/console.sol";
-
 contract ArkadaPVPArena is
     Initializable,
     AccessControlUpgradeable,
@@ -137,10 +135,10 @@ contract ArkadaPVPArena is
         _joinArena(_arenaId, msg.sender, false);
     }
 
-    function joinArena(JoinData calldata data, bytes calldata signature)
-        external
-        nonReentrant
-    {
+    function joinArena(
+        JoinData calldata data,
+        bytes calldata signature
+    ) external nonReentrant {
         // Validate the signature to ensure the join request is authorized
         _validateSignature(data, signature);
 
@@ -184,10 +182,10 @@ contract ArkadaPVPArena is
         emit PlayerLeft(_arenaId, msg.sender);
     }
 
-    function endArenaAndDistributeRewards(uint256 _arenaId, bytes32 _root)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function endArenaAndDistributeRewards(
+        uint256 _arenaId,
+        bytes32 _root
+    ) external onlyRole(ADMIN_ROLE) {
         ArenaInfo memory arena = arenas[_arenaId];
 
         if (arena.id == 0) revert PVPArena__InvalidArenaID();
@@ -258,28 +256,25 @@ contract ArkadaPVPArena is
         emit FeeBpsSet(msg.sender, _feeBPS);
     }
 
-    function setPlayersConfig(MinMax calldata _config)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function setPlayersConfig(
+        MinMax calldata _config
+    ) external onlyRole(ADMIN_ROLE) {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         playersConfig = _config;
         emit PlayersConfigSet(msg.sender, _config.min, _config.max);
     }
 
-    function setIntervalToStartConfig(MinMax calldata _config)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function setIntervalToStartConfig(
+        MinMax calldata _config
+    ) external onlyRole(ADMIN_ROLE) {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         intervalToStartConfig = _config;
         emit IntervalToStartConfigSet(msg.sender, _config.min, _config.max);
     }
 
-    function setDurationConfig(MinMax calldata _config)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function setDurationConfig(
+        MinMax calldata _config
+    ) external onlyRole(ADMIN_ROLE) {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         durationConfig = _config;
         emit DurationConfigSet(msg.sender, _config.min, _config.max);
@@ -309,11 +304,10 @@ contract ArkadaPVPArena is
     /// @param data The JoinData struct containing the details of join request
     /// @param sig The signature associated with the JoinData
     /// @return The address of the signer who signed the JoinData
-    function _getSigner(JoinData calldata data, bytes calldata sig)
-        internal
-        view
-        returns (address)
-    {
+    function _getSigner(
+        JoinData calldata data,
+        bytes calldata sig
+    ) internal view returns (address) {
         bytes32 digest = _computeDigest(data);
         return digest.recover(sig);
     }
@@ -322,11 +316,9 @@ contract ArkadaPVPArena is
     /// @dev Generates the digest that must be signed by the signer.
     /// @param data The JoinData to generate a digest for
     /// @return The computed EIP712 digest
-    function _computeDigest(JoinData calldata data)
-        internal
-        view
-        returns (bytes32)
-    {
+    function _computeDigest(
+        JoinData calldata data
+    ) internal view returns (bytes32) {
         return _hashTypedDataV4(keccak256(_getStructHash(data)));
     }
 
@@ -334,11 +326,9 @@ contract ArkadaPVPArena is
     /// @dev Encodes the JoinData struct into a hash as per EIP712 standard.
     /// @param data The JoinData struct to hash
     /// @return A hash representing the encoded JoinData
-    function _getStructHash(JoinData calldata data)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function _getStructHash(
+        JoinData calldata data
+    ) internal pure returns (bytes memory) {
         return
             abi.encode(_JOIN_DATA_HASH, data.arenaId, data.player, data.nonce);
     }
