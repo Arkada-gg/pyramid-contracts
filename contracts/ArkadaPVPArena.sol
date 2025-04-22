@@ -11,6 +11,10 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IArkadaPVPArena} from "./interfaces/IArkadaPVPArena.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
+/// @title ArkadaPVPArena
+/// @dev Implementation of a PVP Arena smart contract with EIP712 signatures.
+/// The contract is upgradeable using OpenZeppelin's proxy pattern.
+/// Allows users to create and join battle arenas, with different types of competition mechanics.
 contract ArkadaPVPArena is
     Initializable,
     AccessControlUpgradeable,
@@ -23,29 +27,70 @@ contract ArkadaPVPArena is
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
+    /// @notice Type hash for join data according to EIP-712
+    /// @dev Used in typed signature recovery for arena joining
     bytes32 internal constant _JOIN_DATA_HASH =
         keccak256("JoinData(uint256 arenaId,address player,uint256 nonce)");
 
+    /// @notice Counter for arena IDs, incremented for each new arena
+    /// @dev Next available ID for arena creation
     uint256 internal s_nextArenaId;
 
+    /// @notice Address where protocol fees are sent
+    /// @dev Set during initialization and can be updated by admin
     address public treasury;
 
+    /// @notice Fee percentage in basis points (10000 = 100%)
+    /// @dev Fee taken from each arena's prize pool
     uint16 public feeBPS;
 
+    /// @notice Min/max configuration for player counts in arenas
+    /// @dev Used to validate player requirements for PLACES type arenas
     MinMax public playersConfig;
+
+    /// @notice Min/max configuration for time intervals before arena start
+    /// @dev Used to validate start times for TIME type arenas
     MinMax public intervalToStartConfig;
+
+    /// @notice Min/max configuration for arena durations
+    /// @dev Used to validate duration for all arena types
     MinMax public durationConfig;
 
+    /// @notice Mapping to track used nonces for signature validation
+    /// @dev Prevents signature replay attacks
     mapping(uint256 => bool) internal s_nonces;
 
+    /// @notice Mapping from arena ID to arena information
+    /// @dev Stores all data about each arena
     mapping(uint256 => ArenaInfo) public arenas;
+
+    /// @notice Mapping from arena ID to total fees collected
+    /// @dev Used for calculating prize pools and protocol fees
     mapping(uint256 => uint256) public feesByArena;
-    // @dev encoded keccak256(arena.id) with address => participated
+
+    /// @notice Tracks participation in arenas
+    /// @dev Maps keccak256(arenaId, playerAddress) to participation status
     mapping(bytes32 => bool) public participants;
-    // @dev encoded keccak256(arena.id) with address => rewards claimed
+
+    /// @notice Tracks claimed rewards by players
+    /// @dev Maps keccak256(arenaId, playerAddress) to claim status
     mapping(bytes32 => bool) public claimed;
+
+    /// @notice Stores the merkle roots for reward distribution
+    /// @dev Used to verify reward claims with merkle proofs
     mapping(uint256 => bytes32) public rootProofByArena;
 
+    /// @notice Initializes the ArkadaPVPArena contract with necessary parameters
+    /// @dev Sets up contract with configuration parameters and grants initial roles
+    /// @param _signingDomain Domain used for EIP712 signing
+    /// @param _signatureVersion Version of the EIP712 signature
+    /// @param _treasury Address that will receive protocol fees
+    /// @param _signer Address that will be granted the signer role
+    /// @param _admin Address that will be granted the admin role
+    /// @param _feeBPS Fee percentage in basis points to be sent to treasury
+    /// @param _playersConfig Min/Max configuration for player counts
+    /// @param _intervalToStartConfig Min/Max configuration for start time intervals
+    /// @param _durationConfig Min/Max configuration for arena durations
     function initialize(
         string memory _signingDomain,
         string memory _signatureVersion,
@@ -81,6 +126,9 @@ contract ArkadaPVPArena is
         }
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function createArena(
         ArenaType _type,
         uint256 _entryFee,
@@ -131,10 +179,16 @@ contract ArkadaPVPArena is
         emit ArenaCreated(arenaId, msg.sender, _type, _signatured);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function joinArena(uint256 _arenaId) external payable nonReentrant {
         _joinArena(_arenaId, msg.sender, false);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function joinArena(
         JoinData calldata data,
         bytes calldata signature
@@ -145,6 +199,9 @@ contract ArkadaPVPArena is
         _joinArena(data.arenaId, data.player, true);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function leaveArena(uint256 _arenaId) external nonReentrant {
         ArenaInfo memory arena = arenas[_arenaId];
 
@@ -182,6 +239,9 @@ contract ArkadaPVPArena is
         emit PlayerLeft(_arenaId, msg.sender);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function endArenaAndDistributeRewards(
         uint256 _arenaId,
         bytes32 _root
@@ -216,6 +276,9 @@ contract ArkadaPVPArena is
         emit ArenaEnded(_arenaId, _root);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function claimRewards(
         uint256 _arenaId,
         uint256 _amount,
@@ -226,7 +289,7 @@ contract ArkadaPVPArena is
             abi.encodePacked(arenaIdHash, msg.sender)
         );
 
-        if (claimed[arenaIdAndAddressHash]) revert PVPArena__IAlreadyClaimed();
+        if (claimed[arenaIdAndAddressHash]) revert PVPArena__AlreadyClaimed();
 
         bytes32 root = rootProofByArena[_arenaId];
 
@@ -245,17 +308,26 @@ contract ArkadaPVPArena is
         emit RewardsClaimed(_arenaId, msg.sender, _amount);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function setTreasury(address _treasury) external onlyRole(ADMIN_ROLE) {
         if (_treasury == address(0)) revert PVPArena__InvalidAddress();
         treasury = _treasury;
         emit TreasurySet(msg.sender, _treasury);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function setFeeBPS(uint16 _feeBPS) external onlyRole(ADMIN_ROLE) {
         feeBPS = _feeBPS;
         emit FeeBpsSet(msg.sender, _feeBPS);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function setPlayersConfig(
         MinMax calldata _config
     ) external onlyRole(ADMIN_ROLE) {
@@ -264,6 +336,9 @@ contract ArkadaPVPArena is
         emit PlayersConfigSet(msg.sender, _config.min, _config.max);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function setIntervalToStartConfig(
         MinMax calldata _config
     ) external onlyRole(ADMIN_ROLE) {
@@ -272,6 +347,9 @@ contract ArkadaPVPArena is
         emit IntervalToStartConfigSet(msg.sender, _config.min, _config.max);
     }
 
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function setDurationConfig(
         MinMax calldata _config
     ) external onlyRole(ADMIN_ROLE) {
@@ -333,6 +411,11 @@ contract ArkadaPVPArena is
             abi.encode(_JOIN_DATA_HASH, data.arenaId, data.player, data.nonce);
     }
 
+    /// @notice Internal function to process joining an arena
+    /// @dev Handles the logic for both standard joins and signature-based joins
+    /// @param _arenaId The ID of the arena to join
+    /// @param _player The address of the player joining
+    /// @param _freeFromFee Whether the player is exempt from the entry fee
     function _joinArena(
         uint256 _arenaId,
         address _player,
