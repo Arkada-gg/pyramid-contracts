@@ -684,6 +684,38 @@ describe('ArkadaPVPArena', () => {
       );
     });
 
+    it('Should be reverted if player tried to join signatured arena', async () => {
+      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+        defaultDeploy,
+      );
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaTest({
+        arenaContract,
+        owner,
+        type: ArenaType.TIME,
+        duration: arenaInitialConfig.durationConfig.max,
+        entryFee: parseEther('0.1'),
+        requiredPlayers: 0,
+        startTime:
+          blockTimestamp +
+          Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+        signatured: true,
+      });
+
+      await joinArenaTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { revertMessage: 'PVPArena__ArenaIsSignatured' },
+      );
+    });
+
     it('Should be reverted if player already joined', async () => {
       const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,

@@ -10,6 +10,8 @@ interface IArkadaPVPArena {
     error PVPArena__InvalidTimestamp();
     /// @notice Thrown when the required players count is outside allowed range
     error PVPArena__InvalidPlayersRequired();
+    error PVPArena__ArenaIsSignatured();
+    error PVPArena__ArenaNotSignatured();
     error PVPArena__ZeroValue();
     error PVPArena__InvalidArenaID();
     error PVPArena__InvalidFeeAmount();
@@ -180,10 +182,8 @@ interface IArkadaPVPArena {
     /// @dev For signatured arenas or special access cases
     /// @param data The JoinData struct containing join details
     /// @param signature The signature from an authorized signer
-    function joinArena(
-        JoinData calldata data,
-        bytes calldata signature
-    ) external;
+    function joinArena(JoinData calldata data, bytes calldata signature)
+        external;
 
     /// @notice Allows a player to leave an arena and get refunded
     /// @dev Only possible if the arena hasn't started yet
@@ -194,10 +194,8 @@ interface IArkadaPVPArena {
     /// @dev Only callable by admin when arena has completed
     /// @param _arenaId The ID of the arena to end
     /// @param _root Merkle root for reward distribution proofs
-    function endArenaAndDistributeRewards(
-        uint256 _arenaId,
-        bytes32 _root
-    ) external;
+    function endArenaAndDistributeRewards(uint256 _arenaId, bytes32 _root)
+        external;
 
     /// @notice Allows a player to claim their rewards from an ended arena
     /// @dev Uses merkle proofs to verify eligibility for rewards

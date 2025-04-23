@@ -183,20 +183,28 @@ contract ArkadaPVPArena is
      * @inheritdoc IArkadaPVPArena
      */
     function joinArena(uint256 _arenaId) external payable nonReentrant {
-        _joinArena(_arenaId, msg.sender, false);
+        ArenaInfo memory arena = arenas[_arenaId];
+
+        if (arena.signatured) revert PVPArena__ArenaIsSignatured();
+
+        _joinArena(arena, msg.sender, false);
     }
 
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function joinArena(
-        JoinData calldata data,
-        bytes calldata signature
-    ) external nonReentrant {
+    function joinArena(JoinData calldata data, bytes calldata signature)
+        external
+        nonReentrant
+    {
         // Validate the signature to ensure the join request is authorized
         _validateSignature(data, signature);
 
-        _joinArena(data.arenaId, data.player, true);
+        ArenaInfo memory arena = arenas[data.arenaId];
+
+        if (arena.signatured) revert PVPArena__ArenaNotSignatured();
+
+        _joinArena(arena, data.player, true);
     }
 
     /**
@@ -242,10 +250,10 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function endArenaAndDistributeRewards(
-        uint256 _arenaId,
-        bytes32 _root
-    ) external onlyRole(ADMIN_ROLE) {
+    function endArenaAndDistributeRewards(uint256 _arenaId, bytes32 _root)
+        external
+        onlyRole(ADMIN_ROLE)
+    {
         ArenaInfo memory arena = arenas[_arenaId];
 
         if (arena.id == 0) revert PVPArena__InvalidArenaID();
@@ -328,9 +336,10 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function setPlayersConfig(
-        MinMax calldata _config
-    ) external onlyRole(ADMIN_ROLE) {
+    function setPlayersConfig(MinMax calldata _config)
+        external
+        onlyRole(ADMIN_ROLE)
+    {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         playersConfig = _config;
         emit PlayersConfigSet(msg.sender, _config.min, _config.max);
@@ -339,9 +348,10 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function setIntervalToStartConfig(
-        MinMax calldata _config
-    ) external onlyRole(ADMIN_ROLE) {
+    function setIntervalToStartConfig(MinMax calldata _config)
+        external
+        onlyRole(ADMIN_ROLE)
+    {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         intervalToStartConfig = _config;
         emit IntervalToStartConfigSet(msg.sender, _config.min, _config.max);
@@ -350,9 +360,10 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function setDurationConfig(
-        MinMax calldata _config
-    ) external onlyRole(ADMIN_ROLE) {
+    function setDurationConfig(MinMax calldata _config)
+        external
+        onlyRole(ADMIN_ROLE)
+    {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         durationConfig = _config;
         emit DurationConfigSet(msg.sender, _config.min, _config.max);
@@ -382,10 +393,11 @@ contract ArkadaPVPArena is
     /// @param data The JoinData struct containing the details of join request
     /// @param sig The signature associated with the JoinData
     /// @return The address of the signer who signed the JoinData
-    function _getSigner(
-        JoinData calldata data,
-        bytes calldata sig
-    ) internal view returns (address) {
+    function _getSigner(JoinData calldata data, bytes calldata sig)
+        internal
+        view
+        returns (address)
+    {
         bytes32 digest = _computeDigest(data);
         return digest.recover(sig);
     }
@@ -394,9 +406,11 @@ contract ArkadaPVPArena is
     /// @dev Generates the digest that must be signed by the signer.
     /// @param data The JoinData to generate a digest for
     /// @return The computed EIP712 digest
-    function _computeDigest(
-        JoinData calldata data
-    ) internal view returns (bytes32) {
+    function _computeDigest(JoinData calldata data)
+        internal
+        view
+        returns (bytes32)
+    {
         return _hashTypedDataV4(keccak256(_getStructHash(data)));
     }
 
@@ -404,38 +418,38 @@ contract ArkadaPVPArena is
     /// @dev Encodes the JoinData struct into a hash as per EIP712 standard.
     /// @param data The JoinData struct to hash
     /// @return A hash representing the encoded JoinData
-    function _getStructHash(
-        JoinData calldata data
-    ) internal pure returns (bytes memory) {
+    function _getStructHash(JoinData calldata data)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return
             abi.encode(_JOIN_DATA_HASH, data.arenaId, data.player, data.nonce);
     }
 
     /// @notice Internal function to process joining an arena
     /// @dev Handles the logic for both standard joins and signature-based joins
-    /// @param _arenaId The ID of the arena to join
+    /// @param _arena Arena data
     /// @param _player The address of the player joining
     /// @param _freeFromFee Whether the player is exempt from the entry fee
     function _joinArena(
-        uint256 _arenaId,
+        ArenaInfo memory _arena,
         address _player,
         bool _freeFromFee
     ) private {
-        ArenaInfo memory arena = arenas[_arenaId];
-
-        if (arena.id == 0) revert PVPArena__InvalidArenaID();
-        if (!_freeFromFee && msg.value != arena.entryFee)
+        if (_arena.id == 0) revert PVPArena__InvalidArenaID();
+        if (!_freeFromFee && msg.value != _arena.entryFee)
             revert PVPArena__InvalidFeeAmount();
 
-        if (arena.arenaType == ArenaType.TIME) {
-            if (block.timestamp >= arena.startTime)
+        if (_arena.arenaType == ArenaType.TIME) {
+            if (block.timestamp >= _arena.startTime)
                 revert PVPArena__ArenaStarted();
         } else {
-            if (arena.players == arena.requiredPlayers)
+            if (_arena.players == _arena.requiredPlayers)
                 revert PVPArena__ArenaStarted();
         }
 
-        bytes32 arenaIdHash = keccak256(abi.encodePacked(arena.id));
+        bytes32 arenaIdHash = keccak256(abi.encodePacked(_arena.id));
         bytes32 arenaIdAndAddressHash = keccak256(
             abi.encodePacked(arenaIdHash, _player)
         );
@@ -443,21 +457,21 @@ contract ArkadaPVPArena is
         if (participants[arenaIdAndAddressHash])
             revert PVPArena__AlreadyJoined();
 
-        arena.players++;
+        _arena.players++;
 
         // Start arena if type = PLACES and requiredPlayers achieved
         if (
-            arena.arenaType == ArenaType.PLACES &&
-            arena.players == arena.requiredPlayers
+            _arena.arenaType == ArenaType.PLACES &&
+            _arena.players == _arena.requiredPlayers
         ) {
-            arena.startTime = block.timestamp;
-            arena.endTime = block.timestamp + arena.duration;
+            _arena.startTime = block.timestamp;
+            _arena.endTime = block.timestamp + _arena.duration;
         }
 
-        arenas[_arenaId] = arena;
+        arenas[_arena.id] = _arena;
         participants[arenaIdAndAddressHash] = true;
-        if (!_freeFromFee) feesByArena[_arenaId] += msg.value;
+        if (!_freeFromFee) feesByArena[_arena.id] += msg.value;
 
-        emit PlayerJoined(_arenaId, _player);
+        emit PlayerJoined(_arena.id, _player);
     }
 }
