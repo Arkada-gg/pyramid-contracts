@@ -98,3 +98,21 @@ export const verify = async (
 
 export const encodeFnSelector = (selector: string) =>
   ethers.utils.id(selector).substring(0, 10);
+
+export const toSeconds = (
+  value: number,
+  unit: 'day' | 'week' | 'month' | 'millisecond',
+): number => {
+  switch (unit) {
+    case 'day':
+      return value * 24 * 60 * 60; // 1 day = 86,400 seconds
+    case 'week':
+      return value * 7 * 24 * 60 * 60; // 1 week = 604,800 seconds
+    case 'month':
+      return value * 30.44 * 24 * 60 * 60; // ~30.44 days per month = ~2,629,746 seconds
+    case 'millisecond':
+      return value / 1000; // 1000 milliseconds = 1 second
+    default:
+      throw new Error(`Unsupported time unit: ${unit}`);
+  }
+};
