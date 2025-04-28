@@ -48,7 +48,7 @@ function createRewardsMerkleTree(
   };
 }
 
-describe('ArkadaPVPArena', () => {
+describe.only('ArkadaPVPArena', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
@@ -896,6 +896,8 @@ describe('ArkadaPVPArena', () => {
           owner,
           arenaId: 1,
           player: owner,
+          freeFromFee: true,
+          discountBps: 0,
           nonce: 1,
           signer: user, // Not authorized signer
         },
@@ -929,6 +931,8 @@ describe('ArkadaPVPArena', () => {
         owner,
         arenaId: 1,
         player: owner,
+        freeFromFee: true,
+        discountBps: 0,
         nonce: 1,
         signer: arenaSigner,
       });
@@ -940,6 +944,8 @@ describe('ArkadaPVPArena', () => {
           owner,
           arenaId: 1,
           player: owner,
+          freeFromFee: true,
+          discountBps: 0,
           nonce: 1, // Same nonce
           signer: arenaSigner,
         },
@@ -957,6 +963,8 @@ describe('ArkadaPVPArena', () => {
           arenaContract,
           owner,
           arenaId: 999, // Non-existent arena
+          freeFromFee: true,
+          discountBps: 0,
           player: owner,
           nonce: 1,
           signer: arenaSigner,
@@ -995,6 +1003,8 @@ describe('ArkadaPVPArena', () => {
           owner,
           arenaId: 1,
           player: owner,
+          freeFromFee: true,
+          discountBps: 0,
           nonce: 1,
           signer: arenaSigner,
         },
@@ -1028,6 +1038,8 @@ describe('ArkadaPVPArena', () => {
         owner,
         arenaId: 1,
         player: owner,
+        freeFromFee: true,
+        discountBps: 0,
         nonce: 1,
         signer: arenaSigner,
       });
@@ -1040,6 +1052,8 @@ describe('ArkadaPVPArena', () => {
           arenaId: 1,
           player: owner,
           nonce: 2,
+          freeFromFee: true,
+          discountBps: 0,
           signer: arenaSigner,
         },
         { revertMessage: 'PVPArena__AlreadyJoined' },
@@ -1072,6 +1086,8 @@ describe('ArkadaPVPArena', () => {
         owner,
         arenaId: 1,
         player: user,
+        freeFromFee: true,
+        discountBps: 0,
         nonce: 1,
         signer: arenaSigner,
       });
@@ -1126,6 +1142,8 @@ describe('ArkadaPVPArena', () => {
         owner,
         arenaId: 1,
         player: regularAccounts[0],
+        freeFromFee: true,
+        discountBps: 0,
         nonce: 1,
         signer: arenaSigner,
       });
@@ -1135,6 +1153,8 @@ describe('ArkadaPVPArena', () => {
         owner,
         arenaId: 1,
         player: regularAccounts[1],
+        freeFromFee: true,
+        discountBps: 0,
         nonce: 2,
         signer: arenaSigner,
       });
@@ -1151,6 +1171,8 @@ describe('ArkadaPVPArena', () => {
         owner,
         arenaId: 1,
         player: regularAccounts[2],
+        freeFromFee: true,
+        discountBps: 0,
         nonce: 3,
         signer: arenaSigner,
       });
@@ -1160,6 +1182,166 @@ describe('ArkadaPVPArena', () => {
       expect(arena.players).to.equal(3);
       expect(arena.startTime).to.be.at.least(blockTimestampBefore);
       expect(arena.endTime).to.equal(arena.startTime.add(arena.duration));
+    });
+  });
+
+  describe('default arena: joinArena with discount using signature', () => {
+    it('Should revert if join with valid signature and discount 10%, but with invalid amount to send', async () => {
+      const { arenaContract, owner, user, arenaSigner, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      const entryFee = parseEther('0.1');
+      const discountBps = 100; // 10%
+
+      // Create a signatured TIME arena
+      await createArenaTest({
+        arenaContract,
+        owner,
+        type: ArenaType.TIME,
+        duration: arenaInitialConfig.durationConfig.max,
+        entryFee,
+        requiredPlayers: 0,
+        startTime:
+          blockTimestamp +
+          Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+        signatured: false,
+      });
+
+      const discount = entryFee.mul(discountBps).div(10000);
+
+      // User joins with signature (free join)
+      await joinArenaWithSignatureTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          player: user,
+          freeFromFee: false,
+          discountBps,
+          nonce: 1,
+          signer: arenaSigner,
+        },
+        {
+          value: entryFee.sub(discount.mul(2)),
+          revertMessage: 'PVPArena__InvalidFeeAmount',
+        },
+      );
+    });
+
+    it('Should successfully join with valid signature and discount 10%', async () => {
+      const { arenaContract, owner, user, arenaSigner, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      const entryFee = parseEther('0.1');
+      const discountBps = 100; // 10%
+
+      // Create a signatured TIME arena
+      await createArenaTest({
+        arenaContract,
+        owner,
+        type: ArenaType.TIME,
+        duration: arenaInitialConfig.durationConfig.max,
+        entryFee,
+        requiredPlayers: 0,
+        startTime:
+          blockTimestamp +
+          Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+        signatured: false,
+      });
+
+      const discount = entryFee.mul(discountBps).div(10000);
+
+      // User joins with signature (free join)
+      await joinArenaWithSignatureTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          player: user,
+          freeFromFee: false,
+          discountBps,
+          nonce: 1,
+          signer: arenaSigner,
+        },
+        {
+          value: entryFee.sub(discount),
+        },
+      );
+
+      // Verify arena state
+      const arena = await arenaContract.arenas(1);
+      expect(arena.players).to.equal(1);
+
+      // Verify user is a participant
+      const arenaIdHash = ethers.utils.solidityKeccak256(['uint256'], [1]);
+      const arenaIdAndAddressHash = ethers.utils.solidityKeccak256(
+        ['bytes32', 'address'],
+        [arenaIdHash, user.address],
+      );
+      expect(await arenaContract.participants(arenaIdAndAddressHash)).to.equal(
+        true,
+      );
+    });
+
+    it('Should successfully join with valid signature and no discount', async () => {
+      const { arenaContract, owner, user, arenaSigner, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      const entryFee = parseEther('0.1');
+      const discountBps = 0;
+
+      // Create a signatured TIME arena
+      await createArenaTest({
+        arenaContract,
+        owner,
+        type: ArenaType.TIME,
+        duration: arenaInitialConfig.durationConfig.max,
+        entryFee,
+        requiredPlayers: 0,
+        startTime:
+          blockTimestamp +
+          Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+        signatured: false,
+      });
+
+      const discount = entryFee.mul(discountBps).div(10000);
+
+      // User joins with signature (free join)
+      await joinArenaWithSignatureTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          player: user,
+          freeFromFee: false,
+          discountBps,
+          nonce: 1,
+          signer: arenaSigner,
+        },
+        {
+          value: entryFee.sub(discount),
+        },
+      );
+
+      // Verify arena state
+      const arena = await arenaContract.arenas(1);
+      expect(arena.players).to.equal(1);
+
+      // Verify user is a participant
+      const arenaIdHash = ethers.utils.solidityKeccak256(['uint256'], [1]);
+      const arenaIdAndAddressHash = ethers.utils.solidityKeccak256(
+        ['bytes32', 'address'],
+        [arenaIdHash, user.address],
+      );
+      expect(await arenaContract.participants(arenaIdAndAddressHash)).to.equal(
+        true,
+      );
     });
   });
 
@@ -1877,7 +2059,7 @@ describe('ArkadaPVPArena', () => {
           amount: parseEther('0.09'),
           proofs: getProof(0),
         },
-        { revertMessage: 'PVPArena__IAlreadyClaimed' },
+        { revertMessage: 'PVPArena__AlreadyClaimed' },
       );
     });
 
@@ -2420,7 +2602,7 @@ describe('ArkadaPVPArena', () => {
           amount: rewards[0].amount,
           proofs: getProof(0),
         },
-        { revertMessage: 'PVPArena__IAlreadyClaimed' },
+        { revertMessage: 'PVPArena__AlreadyClaimed' },
       );
 
       console.log('All rewards claimed successfully!');

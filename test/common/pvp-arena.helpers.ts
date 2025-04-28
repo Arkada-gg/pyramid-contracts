@@ -295,6 +295,8 @@ export const joinArenaTest = async (
 interface IJoinArenaWithSignatureTest extends CommonParams {
   arenaId: BigNumberish;
   player: SignerWithAddress;
+  freeFromFee: boolean;
+  discountBps: BigNumberish;
   nonce: BigNumberish;
   signer: SignerWithAddress;
 }
@@ -304,6 +306,8 @@ export const joinArenaWithSignatureTest = async (
     arenaContract,
     arenaId,
     player,
+    freeFromFee,
+    discountBps,
     nonce,
     signer,
   }: IJoinArenaWithSignatureTest,
@@ -321,6 +325,8 @@ export const joinArenaWithSignatureTest = async (
     JoinData: [
       { name: 'arenaId', type: 'uint256' },
       { name: 'player', type: 'address' },
+      { name: 'freeFromFee', type: 'bool' },
+      { name: 'discountBps', type: 'uint256' },
       { name: 'nonce', type: 'uint256' },
     ],
   };
@@ -328,6 +334,8 @@ export const joinArenaWithSignatureTest = async (
   const value = {
     arenaId,
     player: player.address,
+    freeFromFee,
+    discountBps,
     nonce,
   };
 
@@ -337,9 +345,10 @@ export const joinArenaWithSignatureTest = async (
     await expect(
       arenaContract
         .connect(sender)
-        ['joinArena((uint256,address,uint256),bytes)'](
-          { arenaId, player: player.address, nonce },
+        ['joinArena((uint256,address,bool,uint256,uint256),bytes)'](
+          { arenaId, player: player.address, freeFromFee, discountBps, nonce },
           signature,
+          { value: opt?.value },
         ),
     ).revertedWithCustomError(arenaContract, opt?.revertMessage);
     return;
@@ -351,9 +360,10 @@ export const joinArenaWithSignatureTest = async (
   await expect(
     arenaContract
       .connect(sender)
-      ['joinArena((uint256,address,uint256),bytes)'](
-        { arenaId, player: player.address, nonce },
+      ['joinArena((uint256,address,bool,uint256,uint256),bytes)'](
+        { arenaId, player: player.address, freeFromFee, discountBps, nonce },
         signature,
+        { value: opt?.value },
       ),
   ).to.emit(
     arenaContract,
@@ -377,7 +387,13 @@ export const joinArenaWithSignatureTest = async (
   expect(await arenaContract.participants(arenaIdAndAddressHash)).eq(true);
 
   // Free join with signature doesn't increase fees
-  expect(feeByArenaAfter).eq(feeByArenaBefore);
+  if (freeFromFee) expect(feeByArenaAfter).eq(feeByArenaBefore);
+  if (!freeFromFee) {
+    const discount = arenaDataAfter.entryFee.mul(discountBps).div(10000);
+    expect(feeByArenaAfter).eq(
+      feeByArenaBefore.add(arenaDataAfter.entryFee.sub(discount)),
+    );
+  }
 };
 
 interface ILeaveArenaTest extends CommonParams {

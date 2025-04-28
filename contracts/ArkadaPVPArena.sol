@@ -30,7 +30,12 @@ contract ArkadaPVPArena is
     /// @notice Type hash for join data according to EIP-712
     /// @dev Used in typed signature recovery for arena joining
     bytes32 internal constant _JOIN_DATA_HASH =
-        keccak256("JoinData(uint256 arenaId,address player,uint256 nonce)");
+        keccak256(
+            "JoinData(uint256 arenaId,address player,bool freeFromFee,uint256 discountBps,uint256 nonce)"
+        );
+
+    /// @dev max basis points is 10000 (100%)
+    uint16 public constant MAX_BPS = 10000;
 
     /// @notice Counter for arena IDs, incremented for each new arena
     /// @dev Next available ID for arena creation
@@ -187,7 +192,7 @@ contract ArkadaPVPArena is
 
         if (arena.signatured) revert PVPArena__ArenaIsSignatured();
 
-        _joinArena(arena, msg.sender, false);
+        _joinArena(arena, msg.sender, false, 0);
     }
 
     /**
@@ -195,6 +200,7 @@ contract ArkadaPVPArena is
      */
     function joinArena(JoinData calldata data, bytes calldata signature)
         external
+        payable
         nonReentrant
     {
         // Validate the signature to ensure the join request is authorized
@@ -202,9 +208,7 @@ contract ArkadaPVPArena is
 
         ArenaInfo memory arena = arenas[data.arenaId];
 
-        if (arena.signatured) revert PVPArena__ArenaNotSignatured();
-
-        _joinArena(arena, data.player, true);
+        _joinArena(arena, data.player, data.freeFromFee, data.discountBps);
     }
 
     /**
@@ -273,10 +277,8 @@ contract ArkadaPVPArena is
 
         rootProofByArena[_arenaId] = _root;
 
-        // max basis points is 10k (100%)
-        uint16 maxBps = 10_000;
         uint256 totalFees = feesByArena[_arenaId];
-        uint256 feeAmount = (totalFees * feeBPS) / maxBps;
+        uint256 feeAmount = (totalFees * feeBPS) / MAX_BPS;
 
         (bool success, ) = treasury.call{value: feeAmount}("");
         if (!success) revert PVPArena__TransferFailed();
@@ -424,7 +426,14 @@ contract ArkadaPVPArena is
         returns (bytes memory)
     {
         return
-            abi.encode(_JOIN_DATA_HASH, data.arenaId, data.player, data.nonce);
+            abi.encode(
+                _JOIN_DATA_HASH,
+                data.arenaId,
+                data.player,
+                data.freeFromFee,
+                data.discountBps,
+                data.nonce
+            );
     }
 
     /// @notice Internal function to process joining an arena
@@ -435,10 +444,15 @@ contract ArkadaPVPArena is
     function _joinArena(
         ArenaInfo memory _arena,
         address _player,
-        bool _freeFromFee
+        bool _freeFromFee,
+        uint256 discountBps
     ) private {
         if (_arena.id == 0) revert PVPArena__InvalidArenaID();
-        if (!_freeFromFee && msg.value != _arena.entryFee)
+
+        uint256 entryFeeWithDiscount = _arena.entryFee -
+            ((_arena.entryFee * discountBps) / MAX_BPS);
+
+        if (!_freeFromFee && msg.value != entryFeeWithDiscount)
             revert PVPArena__InvalidFeeAmount();
 
         if (_arena.arenaType == ArenaType.TIME) {

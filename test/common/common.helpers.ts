@@ -5,6 +5,7 @@ import { ethers } from 'hardhat';
 export type OptionalCommonParams = {
   from?: SignerWithAddress;
   revertMessage?: string;
+  value?: BigNumberish;
 };
 
 export type Account = SignerWithAddress | string;

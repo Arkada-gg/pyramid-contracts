@@ -11,7 +11,6 @@ interface IArkadaPVPArena {
     /// @notice Thrown when the required players count is outside allowed range
     error PVPArena__InvalidPlayersRequired();
     error PVPArena__ArenaIsSignatured();
-    error PVPArena__ArenaNotSignatured();
     error PVPArena__ZeroValue();
     error PVPArena__InvalidArenaID();
     error PVPArena__InvalidFeeAmount();
@@ -148,10 +147,14 @@ interface IArkadaPVPArena {
     /// @dev Used for authorized joins with signature validation using EIP-712
     /// @param arenaId ID of the arena to join, must reference a valid existing arena
     /// @param player Address of the player that will join the arena, the beneficiary of the join operation
+    /// @param freeFromFee Flag indicating whether a person needs to pay to join
+    /// @param discountBps Discount percent in basis points (10000 = 100%)
     /// @param nonce Unique number to prevent signature reuse, each nonce can only be used once across all join operations
     struct JoinData {
         uint256 arenaId;
         address player;
+        bool freeFromFee;
+        uint256 discountBps;
         uint256 nonce;
     }
 
@@ -183,7 +186,8 @@ interface IArkadaPVPArena {
     /// @param data The JoinData struct containing join details
     /// @param signature The signature from an authorized signer
     function joinArena(JoinData calldata data, bytes calldata signature)
-        external;
+        external
+        payable;
 
     /// @notice Allows a player to leave an arena and get refunded
     /// @dev Only possible if the arena hasn't started yet
