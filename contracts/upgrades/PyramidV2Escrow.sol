@@ -10,19 +10,19 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidEscrow} from "./interfaces/IPyramidEscrow.sol";
+import {IPyramid} from "./interfaces/IPyramid.sol";
 import {IArkadaRewarder} from "./interfaces/IArkadaRewarder.sol";
 
-/// @title PyramidEscrow
+/// @title PyramidV2Escrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
-contract PyramidEscrow is
+contract PyramidV2Escrow is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
-    IPyramidEscrow
+    IPyramid
 {
     using ECDSA for bytes32;
 
@@ -62,35 +62,7 @@ contract PyramidEscrow is
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
-        return "1";
-    }
-
-    /// @notice Initializes the Pyramid contract with necessary parameters
-    /// @dev Sets up the ERC721 token with given name and symbol, and grants initial roles.
-    /// @param _tokenName Name of the NFT collection
-    /// @param _tokenSymbol Symbol of the NFT collection
-    /// @param _signingDomain Domain used for EIP712 signing
-    /// @param _signatureVersion Version of the EIP712 signature
-    /// @param _admin Address to be granted the admin roles
-    function initialize(
-        string memory _tokenName,
-        string memory _tokenSymbol,
-        string memory _signingDomain,
-        string memory _signatureVersion,
-        address _admin,
-        address _arkadaRewarder
-    ) external initializer {
-        if (_admin == address(0)) revert Pyramid__InvalidAdminAddress();
-        if (_arkadaRewarder == address(0))
-            revert Pyramid__InvalidAdminAddress();
-        __ERC721_init(_tokenName, _tokenSymbol);
-        __EIP712_init(_signingDomain, _signatureVersion);
-        __AccessControl_init();
-        __ReentrancyGuard_init();
-        s_isMintingActive = true;
-        s_arkadaRewarder = _arkadaRewarder;
-
-        _grantRole(DEFAULT_ADMIN_ROLE, _admin);
+        return "2";
     }
 
     /// @notice Retrieves the URI for a given token
@@ -107,7 +79,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramid
      */
     function mintPyramid(
         PyramidData calldata pyramidData,
@@ -186,33 +158,11 @@ contract PyramidEscrow is
             tokenId,
             data.toAddress,
             data.price,
+            data.reward.amount,
             s_questIssueNumbers[questIdHash],
             data.walletProvider,
             data.embedOrigin
         );
-
-        if (data.reward.chainId != 0) {
-            if (data.reward.factoryAddress != address(0)) {
-                IFactory(data.reward.factoryAddress).distributeRewards(
-                    data.questId,
-                    data.reward.tokenAddress,
-                    data.toAddress,
-                    data.reward.amount,
-                    data.reward.tokenId,
-                    data.reward.tokenType,
-                    data.reward.rakeBps
-                );
-            }
-
-            emit TokenReward(
-                tokenId,
-                data.reward.tokenAddress,
-                data.reward.chainId,
-                data.reward.amount,
-                data.reward.tokenId,
-                data.reward.tokenType
-            );
-        }
     }
 
     /// @notice Validates the signature for a Pyramid minting request
@@ -272,6 +222,7 @@ contract PyramidEscrow is
     function _processNativePayouts(PyramidData calldata data) internal {
         uint256 totalReferrals;
         uint256 arrayLength = data.recipients.length;
+        if (data.reward.amount > 0) arrayLength++;
 
         address[] memory recipients = new address[](arrayLength);
         uint256[] memory amounts = new uint256[](arrayLength);
@@ -311,21 +262,32 @@ contract PyramidEscrow is
             }
         }
 
+        uint256 treasuryWithoutReferrals = data.price - totalReferrals;
+
+        if (data.reward.amount > treasuryWithoutReferrals) {
+            revert Pyramid__RewardTooHigh();
+        }
+
+        if (data.reward.amount > 0) {
+            recipients[data.recipients.length] = data.toAddress;
+            amounts[data.recipients.length] = data.reward.amount;
+        }
+
         // Add payouts of referrals and user rewards to the ArkadaRewarder
         IArkadaRewarder(s_arkadaRewarder).addRewards(recipients, amounts);
 
         // Transfer the referrals amount and user rewards to the ArkadaRewarder
         (bool success, ) = payable(s_arkadaRewarder).call{
-            value: totalReferrals
+            value: totalReferrals + data.reward.amount
         }("");
         if (!success) {
             revert Pyramid__TransferFailed();
         }
 
-        uint256 treasuryPayout = data.price - totalReferrals;
-        (bool success, ) = payable(s_treasury).call{
-            value: data.price - totalReferrals
-        }("");
+        uint256 treasuryPayout = treasuryWithoutReferrals - data.reward.amount;
+
+        // Transfer the remaining amount to the treasury
+        (success, ) = payable(s_treasury).call{value: treasuryPayout}("");
         if (!success) {
             revert Pyramid__NativePaymentFailed();
         }
@@ -488,7 +450,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramid
      */
     function setIsMintingActive(bool _isMintingActive)
         external
@@ -499,7 +461,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramid
      */
     function setTreasury(address _treasury)
         external
@@ -523,7 +485,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramid
      */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 withdrawAmount = address(this).balance;
