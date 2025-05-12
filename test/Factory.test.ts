@@ -11,7 +11,6 @@ import {
   updateEscrowAdminTest,
   withdrawFundsTest,
 } from './common/factory.helpers';
-import { initializeQuestTest } from './common/pyramid-escrow.helpers';
 
 import {
   ERC1155Mock,
@@ -33,12 +32,12 @@ describe('Factory', () => {
   let erc20Token: ERC20Mock;
   let erc721Token: ERC721Mock;
   let erc1155Token: ERC1155Mock;
-  let questId: number;
+  let questId: string;
   let whitelistedTokens: string[];
 
   beforeEach(async () => {
     [owner, user, admin, treasury, signer] = await ethers.getSigners();
-    questId = 1;
+    questId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test'));
 
     // Deploy mock tokens
     const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
@@ -64,6 +63,7 @@ describe('Factory', () => {
       'test',
       '1',
       owner.address,
+      owner.address, // Using owner as arkadaRewarder for testing
     );
     await pyramidContract.grantRole(
       await pyramidContract.SIGNER_ROLE(),
@@ -253,7 +253,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: 2,
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           token: erc721Token.address,
         },
         {
@@ -304,7 +304,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: 2,
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           token: erc721Token.address,
         },
         {
@@ -423,39 +423,6 @@ describe('Factory', () => {
       expect(balanceAfter).eq(100);
     });
 
-    it('should revert if quest is active', async () => {
-      await initializeQuestTest(
-        {
-          pyramidEscrowContract: pyramidContract,
-          owner,
-          questId,
-          communities: ['test'],
-          title: 'Test Quest',
-          difficulty: 0, // BEGINNER
-          questType: 0, // QUEST
-          tags: ['test'],
-        },
-        {
-          from: signer,
-        },
-      );
-
-      await withdrawFundsTest(
-        {
-          factoryContract,
-          owner,
-          questId,
-          to: user.address,
-          token: erc20Token.address,
-          tokenId: 0,
-          tokenType: 1,
-        },
-        {
-          revertMessage: 'Factory__PYRAMIDQuestIsActive',
-        },
-      );
-    });
-
     it('should revert if not admin', async () => {
       await withdrawFundsTest(
         {
@@ -479,7 +446,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: 2,
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           to: user.address,
           token: erc20Token.address,
           tokenId: 0,
@@ -588,6 +555,98 @@ describe('Factory', () => {
       expect(await erc1155Token.balanceOf(user.address, 1)).gt(0);
     });
 
+    it('should distribute correct amounts with 10% rake (1000 bps)', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 1000; // 10%
+      const expectedUserAmount = amount.mul(9000).div(10000); // 90%
+      const expectedTreasuryAmount = amount.mul(1000).div(10000); // 10%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(
+        expectedUserAmount,
+      );
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(
+        expectedTreasuryAmount,
+      );
+    });
+
+    it('should distribute correct amounts with 5% rake (500 bps)', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 500; // 5%
+      const expectedUserAmount = amount.mul(9500).div(10000); // 95%
+      const expectedTreasuryAmount = amount.mul(500).div(10000); // 5%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(
+        expectedUserAmount,
+      );
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(
+        expectedTreasuryAmount,
+      );
+    });
+
+    it('should distribute full amount when rake is 0 bps', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 0; // 0%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(amount);
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(0);
+    });
+
+    it('should distribute full amount to treasury when rake is 10000 bps', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 10000; // 100%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(0);
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(amount);
+    });
+
     it('should revert if not called by Pyramid', async () => {
       await distributeRewardsTest(
         {
@@ -613,7 +672,7 @@ describe('Factory', () => {
         {
           factoryContract: factoryContractDisributeTester,
           owner,
-          questId: 2,
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           token: erc20Token.address,
           to: user.address,
           amount: ethers.utils.parseEther('100'),

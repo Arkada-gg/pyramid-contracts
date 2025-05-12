@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 
 import { IMintPyramidData, OptionalCommonParams } from './common.helpers';
 
-import { Pyramid } from '../../typechain-types';
+import { Pyramid, PyramidEscrow, PyramidV2Escrow } from '../../typechain-types';
 
 type CommonParams = {
   pyramidContract: Pyramid;
@@ -117,8 +117,9 @@ export const mintPyramidTest = async (
   ).to.not.reverted;
 };
 
-interface ISetArkadaRewarderTest extends CommonParams {
+interface ISetArkadaRewarderTest extends Omit<CommonParams, 'pyramidContract'> {
   arkadaRewarder: string;
+  pyramidContract: PyramidEscrow | Pyramid | PyramidV2Escrow;
 }
 export const setArkadaRewarderTest = async (
   { pyramidContract, owner, arkadaRewarder }: ISetArkadaRewarderTest,

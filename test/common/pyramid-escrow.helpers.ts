@@ -5,9 +5,10 @@ import { BigNumber } from 'ethers';
 import { IMintPyramidEscrowData, OptionalCommonParams } from './common.helpers';
 
 import { PyramidEscrow } from '../../typechain-types';
+import { PyramidV2Escrow } from '../../typechain-types/contracts/upgrades/PyramidV2Escrow';
 
 type CommonParams = {
-  pyramidEscrowContract: PyramidEscrow;
+  pyramidEscrowContract: PyramidEscrow | PyramidV2Escrow;
   owner: SignerWithAddress;
 };
 
@@ -92,95 +93,6 @@ export const withdrawTest = async (
   );
   expect(balanceAfter).gt(balanceBefore);
 };
-
-interface IInitializeQuestTest extends CommonParams {
-  questId: number;
-  communities: string[];
-  title: string;
-  difficulty: number;
-  questType: number;
-  tags: string[];
-}
-export const initializeQuestTest = async (
-  {
-    pyramidEscrowContract: pyramidContract,
-    owner,
-    questId,
-    communities,
-    title,
-    difficulty,
-    questType,
-    tags,
-  }: IInitializeQuestTest,
-  opt?: OptionalCommonParams,
-) => {
-  const sender = opt?.from ?? owner;
-
-  if (opt?.revertMessage) {
-    await expect(
-      pyramidContract
-        .connect(sender)
-        .initializeQuest(
-          questId,
-          communities,
-          title,
-          difficulty,
-          questType,
-          tags,
-        ),
-    ).revertedWithCustomError(pyramidContract, opt?.revertMessage);
-    return;
-  }
-
-  await expect(
-    pyramidContract
-      .connect(sender)
-      .initializeQuest(
-        questId,
-        communities,
-        title,
-        difficulty,
-        questType,
-        tags,
-      ),
-  ).to.emit(
-    pyramidContract,
-    pyramidContract.interface.events[
-      'QuestMetadata(uint256,uint8,uint8,string,string[],string[])'
-    ].name,
-  ).to.not.reverted;
-
-  expect(await pyramidContract.isQuestActive(questId)).eq(true);
-};
-
-interface IUnpublishQuestTest extends CommonParams {
-  questId: number;
-}
-export const unpublishQuestTest = async (
-  {
-    pyramidEscrowContract: pyramidContract,
-    owner,
-    questId,
-  }: IUnpublishQuestTest,
-  opt?: OptionalCommonParams,
-) => {
-  const sender = opt?.from ?? owner;
-
-  if (opt?.revertMessage) {
-    await expect(
-      pyramidContract.connect(sender).unpublishQuest(questId),
-    ).revertedWithCustomError(pyramidContract, opt?.revertMessage);
-    return;
-  }
-
-  await expect(pyramidContract.connect(sender).unpublishQuest(questId)).to.emit(
-    pyramidContract,
-    pyramidContract.interface.events['QuestDisabled(uint256)'].name,
-  ).to.not.reverted;
-
-  expect(await pyramidContract.isQuestActive(questId)).eq(false);
-};
-
 interface IMintPyramidTest extends CommonParams {
   data: IMintPyramidEscrowData;
   signature: string;
@@ -210,7 +122,7 @@ export const mintPyramidTest = async (
   ).to.emit(
     pyramidContract,
     pyramidContract.interface.events[
-      'PyramidClaim(uint256,uint256,address,uint256,uint256,string,string)'
+      'PyramidClaim(string,uint256,address,uint256,uint256,uint256,string,string)'
     ].name,
   ).to.not.reverted;
 };

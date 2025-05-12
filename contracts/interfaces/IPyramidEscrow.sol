@@ -24,6 +24,7 @@ interface IPyramidEscrow is ITokenType {
     error Pyramid__TreasuryNotSet();
     error Pyramid__InvalidAdminAddress();
     error Pyramid__ZeroAddress();
+    error Pyramid__MintedForQuestId();
 
     enum QuestType {
         QUEST,
@@ -57,14 +58,16 @@ interface IPyramidEscrow is ITokenType {
     /// @param tokenId The token ID of the minted Pyramid
     /// @param claimer Address of the Pyramid claimer
     /// @param price The price paid for the Pyramid
+    /// @param rewards The rewards paid for the Pyramid
     /// @param issueNumber The issue number of the Pyramid
     /// @param walletProvider The name of the wallet provider used for claiming
     /// @param embedOrigin The origin of the embed associated with the Pyramid
     event PyramidClaim(
-        uint256 indexed questId,
+        string questId,
         uint256 indexed tokenId,
         address indexed claimer,
         uint256 price,
+        uint256 rewards,
         uint256 issueNumber,
         string walletProvider,
         string embedOrigin
@@ -123,9 +126,14 @@ interface IPyramidEscrow is ITokenType {
     /// @param newTreasury The new treasury address
     event UpdatedTreasury(address indexed newTreasury);
 
-    /// @notice Emitted when the L3 token address is updated
-    /// @param token The L3 token address
-    event UpdatedL3Address(address indexed token);
+    /// @notice Emitted when the Arkada rewarder address is updated
+    /// @param newArkadaRewarder The new Arkada rewarder address
+    event UpdatedArkadaRewarder(address indexed newArkadaRewarder);
+
+    /// @notice Emitted when payout to treasury
+    /// @param caller caller address
+    /// @param amount ether amount
+    event TreasuryPayout(address indexed caller, uint256 amount);
 
     /// @dev Represents the data needed for minting a Pyramid.
     /// @param questId The ID of the quest associated with the Pyramid
@@ -139,7 +147,7 @@ interface IPyramidEscrow is ITokenType {
     /// @param recipients An array of recipients for fee payouts
     /// @param reward Data about the reward associated with the Pyramid
     struct PyramidData {
-        uint256 questId;
+        string questId;
         uint256 nonce;
         uint256 price;
         address toAddress;
@@ -208,24 +216,8 @@ interface IPyramidEscrow is ITokenType {
     /// @dev Can only be called by an account with the default admin role.
     function withdraw() external;
 
-    /// @notice Initializes a new quest with given parameters
-    /// @dev Can only be called by an account with the signer role.
-    /// @param questId Unique identifier for the quest
-    /// @param communities Array of community names associated with the quest
-    /// @param title Title of the quest
-    /// @param difficulty Difficulty level of the quest
-    /// @param questType Type of the quest
-    function initializeQuest(
-        uint256 questId,
-        string[] memory communities,
-        string memory title,
-        Difficulty difficulty,
-        QuestType questType,
-        string[] memory tags
-    ) external;
-
-    /// @notice Unpublishes and disables a quest
-    /// @dev Can only be called by an account with the signer role
-    /// @param questId Unique identifier for the quest
-    function unpublishQuest(uint256 questId) external;
+    /// @notice Sets a new Arkada rewarder address
+    /// @dev Can only be called by an account with the default admin role.
+    /// @param _arkadaRewarder Address of the new Arkada rewarder
+    function setArkadaRewarder(address _arkadaRewarder) external;
 }

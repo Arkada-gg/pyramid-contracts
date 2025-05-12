@@ -5,7 +5,7 @@ import {ITokenType} from "./ITokenType.sol";
 
 interface IFactory is ITokenType {
     function distributeRewards(
-        uint256 questId,
+        bytes32 questId,
         address token,
         address to,
         uint256 amount,
@@ -15,7 +15,7 @@ interface IFactory is ITokenType {
     ) external;
 
     function withdrawFunds(
-        uint256 questId,
+        bytes32 questId,
         address to,
         address token,
         uint256 tokenId,
@@ -23,15 +23,15 @@ interface IFactory is ITokenType {
     ) external;
 
     function createEscrow(
-        uint256 questId,
+        bytes32 questId,
         address admin,
         address[] memory whitelistedTokens,
         address treasury
     ) external;
 
-    function updateEscrowAdmin(uint256 questId, address newAdmin) external;
+    function updateEscrowAdmin(bytes32 questId, address newAdmin) external;
 
-    function addTokenToWhitelist(uint256 questId, address token) external;
+    function addTokenToWhitelist(bytes32 questId, address token) external;
 
-    function removeTokenFromWhitelist(uint256 questId, address token) external;
+    function removeTokenFromWhitelist(bytes32 questId, address token) external;
 }

@@ -17,13 +17,13 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     error Factory__ZeroAddress();
 
     PyramidEscrow public i_pyramid;
-    mapping(uint256 => address) public s_escrows;
-    mapping(uint256 => address) public s_escrow_admin;
+    mapping(bytes32 => address) public s_escrows;
+    mapping(bytes32 => address) public s_escrow_admin;
 
     event EscrowRegistered(
         address indexed registror,
         address indexed escrowAddress,
-        uint256 indexed questId
+        bytes32 indexed questId
     );
     event TokenPayout(
         address indexed receiver,
@@ -31,7 +31,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         uint256 indexed tokenId,
         uint256 amount,
         uint8 tokenType,
-        uint256 questId
+        bytes32 questId
     );
     event EscrowWithdrawal(
         address indexed caller,
@@ -40,15 +40,15 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         uint256 tokenId,
         uint256 amount,
         uint8 tokenType,
-        uint256 questId
+        bytes32 questId
     );
     event EscrowAdminUpdated(
         address indexed updater,
-        uint256 indexed questId,
+        bytes32 indexed questId,
         address indexed newAdmin
     );
 
-    modifier onlyAdmin(uint256 questId) {
+    modifier onlyAdmin(bytes32 questId) {
         if (
             msg.sender != s_escrow_admin[questId] &&
             !hasRole(DEFAULT_ADMIN_ROLE, msg.sender)
@@ -65,7 +65,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         if (admin == address(0)) revert Factory__ZeroAddress();
         __AccessControl_init();
 
-        i_pyramid = PyramidEscrow(pyramid);
+        i_pyramid = PyramidEscrow(payable(pyramid));
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
@@ -73,10 +73,10 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     /// @dev Can only be called by the current escrow admin.
     /// @param questId Identifier of the quest associated with the escrow.
     /// @param newAdmin Address of the new admin.
-    function updateEscrowAdmin(uint256 questId, address newAdmin)
-        external
-        override
-    {
+    function updateEscrowAdmin(
+        bytes32 questId,
+        address newAdmin
+    ) external override {
         if (s_escrow_admin[questId] != msg.sender) {
             revert Factory__OnlyCallableByAdmin();
         }
@@ -94,7 +94,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     /// @param whitelistedTokens Array of addresses of tokens that are whitelisted for the escrow.
     /// @param treasury Address of the treasury where fees are sent.
     function createEscrow(
-        uint256 questId,
+        bytes32 questId,
         address admin,
         address[] calldata whitelistedTokens,
         address treasury
@@ -105,7 +105,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
 
         s_escrow_admin[questId] = admin;
         address escrow = address(
-            new Escrow{salt: bytes32(questId)}(
+            new Escrow{salt: questId}(
                 address(this),
                 whitelistedTokens,
                 treasury
@@ -118,11 +118,10 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
 
     /// @notice Adds a token to the whitelist, allowing it to be used in the escrow.
     /// @param token The address of the token to whitelist.
-    function addTokenToWhitelist(uint256 questId, address token)
-        external
-        override
-        onlyAdmin(questId)
-    {
+    function addTokenToWhitelist(
+        bytes32 questId,
+        address token
+    ) external override onlyAdmin(questId) {
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
@@ -133,11 +132,10 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
 
     /// @notice Removes a token from the whitelist.
     /// @param token The address of the token to remove from the whitelist.
-    function removeTokenFromWhitelist(uint256 questId, address token)
-        external
-        override
-        onlyAdmin(questId)
-    {
+    function removeTokenFromWhitelist(
+        bytes32 questId,
+        address token
+    ) external override onlyAdmin(questId) {
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
@@ -154,16 +152,12 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     /// @param tokenId Identifier of the token (for ERC721 and ERC1155).
     /// @param tokenType Type of the token being withdrawn.
     function withdrawFunds(
-        uint256 questId,
+        bytes32 questId,
         address to,
         address token,
         uint256 tokenId,
         TokenType tokenType
     ) external override onlyAdmin(questId) {
-        // only allow withdrawals if quest is inactive
-        if (i_pyramid.isQuestActive(questId)) {
-            revert Factory__PYRAMIDQuestIsActive();
-        }
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
@@ -232,7 +226,7 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     /// @param tokenType Type of the token for rewards.
     /// @param rakeBps Basis points for the rake to be taken from the reward.
     function distributeRewards(
-        uint256 questId,
+        bytes32 questId,
         address token,
         address to,
         uint256 amount,
@@ -284,12 +278,9 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         }
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(AccessControlUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
