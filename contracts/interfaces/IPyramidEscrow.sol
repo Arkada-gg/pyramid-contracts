@@ -58,6 +58,7 @@ interface IPyramidEscrow is ITokenType {
     /// @param tokenId The token ID of the minted Pyramid
     /// @param claimer Address of the Pyramid claimer
     /// @param price The price paid for the Pyramid
+    /// @param rewards The rewards paid for the Pyramid
     /// @param issueNumber The issue number of the Pyramid
     /// @param walletProvider The name of the wallet provider used for claiming
     /// @param embedOrigin The origin of the embed associated with the Pyramid
@@ -66,6 +67,7 @@ interface IPyramidEscrow is ITokenType {
         uint256 indexed tokenId,
         address indexed claimer,
         uint256 price,
+        uint256 rewards,
         uint256 issueNumber,
         string walletProvider,
         string embedOrigin
@@ -218,25 +220,4 @@ interface IPyramidEscrow is ITokenType {
     /// @dev Can only be called by an account with the default admin role.
     /// @param _arkadaRewarder Address of the new Arkada rewarder
     function setArkadaRewarder(address _arkadaRewarder) external;
-
-    // /// @notice Initializes a new quest with given parameters
-    // /// @dev Can only be called by an account with the signer role.
-    // /// @param questId Unique identifier for the quest
-    // /// @param communities Array of community names associated with the quest
-    // /// @param title Title of the quest
-    // /// @param difficulty Difficulty level of the quest
-    // /// @param questType Type of the quest
-    // function initializeQuest(
-    //     uint256 questId,
-    //     string[] memory communities,
-    //     string memory title,
-    //     Difficulty difficulty,
-    //     QuestType questType,
-    //     string[] memory tags
-    // ) external;
-
-    // /// @notice Unpublishes and disables a quest
-    // /// @dev Can only be called by an account with the signer role
-    // /// @param questId Unique identifier for the quest
-    // function unpublishQuest(uint256 questId) external;
 }

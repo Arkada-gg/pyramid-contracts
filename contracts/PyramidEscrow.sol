@@ -184,6 +184,7 @@ contract PyramidEscrow is
             tokenId,
             data.toAddress,
             data.price,
+            data.reward.amount,
             s_questIssueNumbers[questIdHash],
             data.walletProvider,
             data.embedOrigin
@@ -323,9 +324,9 @@ contract PyramidEscrow is
         }
 
         uint256 treasuryPayout = data.price - totalReferrals;
-        (success, ) = payable(s_treasury).call{
-            value: data.price - totalReferrals
-        }("");
+
+        // Transfer the remaining amount to the treasury
+        (success, ) = payable(s_treasury).call{value: treasuryPayout}("");
         if (!success) {
             revert Pyramid__NativePaymentFailed();
         }

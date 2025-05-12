@@ -12,7 +12,7 @@ type CommonParams = {
 };
 
 interface ICreateEscrowTest extends CommonParams {
-  questId: number;
+  questId: string;
   admin: string;
   whitelistedTokens: string[];
   treasury: string;
@@ -52,7 +52,7 @@ export const createEscrowTest = async (
 };
 
 interface IUpdateEscrowAdminTest extends CommonParams {
-  questId: number;
+  questId: string;
   newAdmin: string;
 }
 export const updateEscrowAdminTest = async (
@@ -78,7 +78,7 @@ export const updateEscrowAdminTest = async (
 };
 
 interface IAddTokenToWhitelistTest extends CommonParams {
-  questId: number;
+  questId: string;
   token: string;
 }
 export const addTokenToWhitelistTest = async (
@@ -100,7 +100,7 @@ export const addTokenToWhitelistTest = async (
 };
 
 interface IRemoveTokenFromWhitelistTest extends CommonParams {
-  questId: number;
+  questId: string;
   token: string;
 }
 export const removeTokenFromWhitelistTest = async (
@@ -122,7 +122,7 @@ export const removeTokenFromWhitelistTest = async (
 };
 
 interface IWithdrawFundsTest extends CommonParams {
-  questId: number;
+  questId: string;
   to: string;
   token: string;
   tokenId: number;
@@ -169,7 +169,7 @@ export const withdrawFundsTest = async (
 };
 
 interface IDistributeRewardsTest extends CommonParams {
-  questId: number;
+  questId: string;
   token: string;
   to: string;
   amount: BigNumber;

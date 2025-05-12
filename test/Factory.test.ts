@@ -11,7 +11,6 @@ import {
   updateEscrowAdminTest,
   withdrawFundsTest,
 } from './common/factory.helpers';
-import { initializeQuestTest } from './common/pyramid-escrow.helpers';
 
 import {
   ERC1155Mock,
@@ -33,12 +32,12 @@ describe('Factory', () => {
   let erc20Token: ERC20Mock;
   let erc721Token: ERC721Mock;
   let erc1155Token: ERC1155Mock;
-  let questId: number;
+  let questId: string;
   let whitelistedTokens: string[];
 
   beforeEach(async () => {
     [owner, user, admin, treasury, signer] = await ethers.getSigners();
-    questId = 1;
+    questId = 'test';
 
     // Deploy mock tokens
     const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
@@ -64,6 +63,7 @@ describe('Factory', () => {
       'test',
       '1',
       owner.address,
+      owner.address, // Using owner as arkadaRewarder for testing
     );
     await pyramidContract.grantRole(
       await pyramidContract.SIGNER_ROLE(),
@@ -253,7 +253,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: 2,
+          questId: '2',
           token: erc721Token.address,
         },
         {
@@ -304,7 +304,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: 2,
+          questId: '2',
           token: erc721Token.address,
         },
         {
@@ -424,22 +424,6 @@ describe('Factory', () => {
     });
 
     it('should revert if quest is active', async () => {
-      await initializeQuestTest(
-        {
-          pyramidEscrowContract: pyramidContract,
-          owner,
-          questId,
-          communities: ['test'],
-          title: 'Test Quest',
-          difficulty: 0, // BEGINNER
-          questType: 0, // QUEST
-          tags: ['test'],
-        },
-        {
-          from: signer,
-        },
-      );
-
       await withdrawFundsTest(
         {
           factoryContract,
@@ -479,7 +463,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: 2,
+          questId: '2',
           to: user.address,
           token: erc20Token.address,
           tokenId: 0,
@@ -613,7 +597,7 @@ describe('Factory', () => {
         {
           factoryContract: factoryContractDisributeTester,
           owner,
-          questId: 2,
+          questId: '2',
           token: erc20Token.address,
           to: user.address,
           amount: ethers.utils.parseEther('100'),

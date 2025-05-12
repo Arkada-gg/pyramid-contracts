@@ -10,7 +10,7 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "../escrow/interfaces/IFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramid} from "../interfaces/IPyramid.sol";
+import {IPyramidEscrow} from "../interfaces/IPyramidEscrow.sol";
 import {IArkadaRewarder} from "../interfaces/IArkadaRewarder.sol";
 
 /// @title PyramidV2Escrow
@@ -22,7 +22,7 @@ contract PyramidV2Escrow is
     AccessControlUpgradeable,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
-    IPyramid
+    IPyramidEscrow
 {
     using ECDSA for bytes32;
 
@@ -76,7 +76,7 @@ contract PyramidV2Escrow is
     }
 
     /**
-     * @inheritdoc IPyramid
+     * @inheritdoc IPyramidEscrow
      */
     function mintPyramid(
         PyramidData calldata pyramidData,
@@ -161,6 +161,29 @@ contract PyramidV2Escrow is
             data.walletProvider,
             data.embedOrigin
         );
+
+        if (data.reward.chainId != 0) {
+            if (data.reward.factoryAddress != address(0)) {
+                IFactory(data.reward.factoryAddress).distributeRewards(
+                    questIdHash,
+                    data.reward.tokenAddress,
+                    data.toAddress,
+                    data.reward.amount,
+                    data.reward.tokenId,
+                    data.reward.tokenType,
+                    data.reward.rakeBps
+                );
+            }
+
+            emit TokenReward(
+                tokenId,
+                data.reward.tokenAddress,
+                data.reward.chainId,
+                data.reward.amount,
+                data.reward.tokenId,
+                data.reward.tokenType
+            );
+        }
     }
 
     /// @notice Validates the signature for a Pyramid minting request
@@ -222,7 +245,6 @@ contract PyramidV2Escrow is
     function _processNativePayouts(PyramidData calldata data) internal {
         uint256 totalReferrals;
         uint256 arrayLength = data.recipients.length;
-        if (data.reward.amount > 0) arrayLength++;
 
         address[] memory recipients = new address[](arrayLength);
         uint256[] memory amounts = new uint256[](arrayLength);
@@ -262,29 +284,18 @@ contract PyramidV2Escrow is
             }
         }
 
-        uint256 treasuryWithoutReferrals = data.price - totalReferrals;
-
-        if (data.reward.amount > treasuryWithoutReferrals) {
-            revert Pyramid__RewardTooHigh();
-        }
-
-        if (data.reward.amount > 0) {
-            recipients[data.recipients.length] = data.toAddress;
-            amounts[data.recipients.length] = data.reward.amount;
-        }
-
         // Add payouts of referrals and user rewards to the ArkadaRewarder
         IArkadaRewarder(s_arkadaRewarder).addRewards(recipients, amounts);
 
         // Transfer the referrals amount and user rewards to the ArkadaRewarder
         (bool success, ) = payable(s_arkadaRewarder).call{
-            value: totalReferrals + data.reward.amount
+            value: totalReferrals
         }("");
         if (!success) {
             revert Pyramid__TransferFailed();
         }
 
-        uint256 treasuryPayout = treasuryWithoutReferrals - data.reward.amount;
+        uint256 treasuryPayout = data.price - totalReferrals;
 
         // Transfer the remaining amount to the treasury
         (success, ) = payable(s_treasury).call{value: treasuryPayout}("");
@@ -433,7 +444,7 @@ contract PyramidV2Escrow is
     }
 
     /**
-     * @inheritdoc IPyramid
+     * @inheritdoc IPyramidEscrow
      */
     function setIsMintingActive(
         bool _isMintingActive
@@ -443,7 +454,7 @@ contract PyramidV2Escrow is
     }
 
     /**
-     * @inheritdoc IPyramid
+     * @inheritdoc IPyramidEscrow
      */
     function setTreasury(
         address _treasury
@@ -454,7 +465,7 @@ contract PyramidV2Escrow is
     }
 
     /**
-     * @inheritdoc IPyramid
+     * @inheritdoc IPyramidEscrow
      */
     function setArkadaRewarder(
         address _arkadaRewarder
@@ -465,7 +476,7 @@ contract PyramidV2Escrow is
     }
 
     /**
-     * @inheritdoc IPyramid
+     * @inheritdoc IPyramidEscrow
      */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 withdrawAmount = address(this).balance;

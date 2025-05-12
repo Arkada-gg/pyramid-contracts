@@ -104,6 +104,20 @@ export async function defaultDeploy() {
       domain.name,
       domain.version,
       ethers.constants.AddressZero,
+      arkadaRewarderContract.address,
+    ),
+  ).to.be.revertedWithCustomError(
+    pyramidEscrowContract,
+    'Pyramid__InvalidAdminAddress',
+  );
+  await expect(
+    pyramidEscrowContract.initialize(
+      'Pyramid',
+      'PYR',
+      domain.name,
+      domain.version,
+      owner.address,
+      ethers.constants.AddressZero,
     ),
   ).to.be.revertedWithCustomError(
     pyramidEscrowContract,
@@ -115,6 +129,7 @@ export async function defaultDeploy() {
     domain.name,
     domain.version,
     owner.address,
+    arkadaRewarderContract.address,
   );
 
   await pyramidEscrowContract.grantRole(
@@ -123,6 +138,11 @@ export async function defaultDeploy() {
   );
 
   await pyramidEscrowContract.setTreasury(treasury.address);
+
+  await arkadaRewarderContract.grantRole(
+    await arkadaRewarderContract.OPERATOR_ROLE(),
+    pyramidEscrowContract.address,
+  );
 
   const { chainId } = await ethers.provider.getNetwork();
 
@@ -157,7 +177,10 @@ export async function defaultDeploy() {
   const erc1155Token = (await ERC1155Mock.deploy()) as ERC1155Mock;
   await erc1155Token.deployed();
 
-  const QUEST_ID = 1;
+  const QUEST_ID = 'test';
+  const QUEST_ID_HASH = ethers.utils.keccak256(
+    ethers.utils.toUtf8Bytes(QUEST_ID),
+  );
   const COMMUNITIES = ['community1', 'community2'];
   const TITLE = 'Test Quest';
   const DIFFICULTY = 1;
@@ -167,7 +190,7 @@ export async function defaultDeploy() {
   await createEscrowTest({
     factoryContract,
     owner,
-    questId: QUEST_ID,
+    questId: QUEST_ID_HASH,
     admin: admin.address,
     whitelistedTokens: [
       erc20Token.address,
@@ -177,7 +200,7 @@ export async function defaultDeploy() {
     treasury: treasury.address,
   });
 
-  const escrowAddress = await factoryContract.s_escrows(QUEST_ID);
+  const escrowAddress = await factoryContract.s_escrows(QUEST_ID_HASH);
   // Setup initial balances
   await erc20Token.mint(escrowAddress, ethers.utils.parseEther('1000'));
   await erc721Token.mint(escrowAddress, 1);
@@ -288,6 +311,7 @@ export async function defaultDeploy() {
       verifyingContract: arenaContract.address,
     },
     QUEST_ID,
+    QUEST_ID_HASH,
     COMMUNITIES,
     TITLE,
     DIFFICULTY,

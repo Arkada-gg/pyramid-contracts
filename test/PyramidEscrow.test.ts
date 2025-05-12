@@ -5,17 +5,16 @@ import { ethers } from 'hardhat';
 
 import {
   IMintPyramidEscrowData,
-  signMintDataEscrowTyped,
+  signMintDataTyped,
 } from './common/common.helpers';
 import { defaultDeploy } from './common/fixtures';
 import {
-  initializeQuestTest,
   mintPyramidTest,
   setIsMintingActiveTest,
   setTreasuryTest,
-  unpublishQuestTest,
   withdrawTest,
 } from './common/pyramid-escrow.helpers';
+import { setArkadaRewarderTest } from './common/pyramid.helpers';
 
 describe('PyramidEscrow', () => {
   it('deployment', async () => {
@@ -109,153 +108,25 @@ describe('PyramidEscrow', () => {
     });
   });
 
-  describe('Quest Management', () => {
-    it('Should allow signer role to initialize quest', async () => {
-      const {
-        pyramidEscrowContract,
+  describe('Arkada Rewarder Management', () => {
+    it('Should allow owner to set Arkada rewarder', async () => {
+      const { pyramidEscrowContract, owner, arkadaRewarderContract } =
+        await loadFixture(defaultDeploy);
+      await setArkadaRewarderTest({
+        pyramidContract: pyramidEscrowContract,
         owner,
-        questSigner,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({
-        pyramidEscrowContract,
-        owner,
-        isActive: true,
+        arkadaRewarder: arkadaRewarderContract.address,
       });
-
-      await initializeQuestTest(
-        {
-          pyramidEscrowContract,
-          owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: questSigner },
-      );
     });
 
-    it('Should not allow non-signer role to initialize quest', async () => {
-      const {
-        pyramidEscrowContract,
-        owner,
-        user,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({
-        pyramidEscrowContract,
-        owner,
-        isActive: true,
-      });
-
-      await initializeQuestTest(
+    it('Should not allow non-owner to set Arkada rewarder', async () => {
+      const { pyramidEscrowContract, owner, user, arkadaRewarderContract } =
+        await loadFixture(defaultDeploy);
+      await setArkadaRewarderTest(
         {
-          pyramidEscrowContract,
+          pyramidContract: pyramidEscrowContract,
           owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
-      );
-    });
-
-    it('Should allow signer role to unpublish quest', async () => {
-      const {
-        pyramidEscrowContract,
-        owner,
-        questSigner,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({
-        pyramidEscrowContract,
-        owner,
-        isActive: true,
-      });
-
-      await initializeQuestTest(
-        {
-          pyramidEscrowContract,
-          owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: questSigner },
-      );
-
-      await unpublishQuestTest(
-        {
-          pyramidEscrowContract,
-          owner,
-          questId: QUEST_ID,
-        },
-        { from: questSigner },
-      );
-    });
-
-    it('Should not allow non-owner to unpublish quest', async () => {
-      const {
-        pyramidEscrowContract,
-        owner,
-        user,
-        questSigner,
-        QUEST_ID,
-        COMMUNITIES,
-        TITLE,
-        DIFFICULTY,
-        QUEST_TYPE,
-        TAGS,
-      } = await loadFixture(defaultDeploy);
-      await setIsMintingActiveTest({
-        pyramidEscrowContract,
-        owner,
-        isActive: true,
-      });
-
-      await initializeQuestTest(
-        {
-          pyramidEscrowContract,
-          owner,
-          questId: QUEST_ID,
-          communities: COMMUNITIES,
-          title: TITLE,
-          difficulty: DIFFICULTY,
-          questType: QUEST_TYPE,
-          tags: TAGS,
-        },
-        { from: questSigner },
-      );
-
-      await unpublishQuestTest(
-        {
-          pyramidEscrowContract,
-          owner,
-          questId: QUEST_ID,
+          arkadaRewarder: arkadaRewarderContract.address,
         },
         { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
       );
@@ -309,7 +180,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(data, user, domain);
+      const signature = await signMintDataTyped(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -364,7 +235,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(data, user, domain);
+      const signature = await signMintDataTyped(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -420,7 +291,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(
+      const signature = await signMintDataTyped(
         data,
         questSigner,
         domainEscrow,
@@ -459,6 +330,7 @@ describe('PyramidEscrow', () => {
         factoryContract,
         domainEscrow,
         treasury,
+        arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -498,7 +370,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(
+      const signature = await signMintDataTyped(
         data,
         questSigner,
         domainEscrow,
@@ -509,9 +381,6 @@ describe('PyramidEscrow', () => {
 
       const treasuryBalanceBefore = await ethers.provider.getBalance(
         treasury.address,
-      );
-      const recipientBalanceBefore = await ethers.provider.getBalance(
-        questSigner.address,
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
@@ -530,14 +399,105 @@ describe('PyramidEscrow', () => {
       const treasuryBalanceAfter = await ethers.provider.getBalance(
         treasury.address,
       );
-      const recipientBalanceAfter = await ethers.provider.getBalance(
-        questSigner.address,
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+
+      expect(
+        await arkadaRewarderContract.userRewards(questSigner.address),
+      ).to.equal(expectedRecipientPayout);
+
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(
+        userBalanceBefore.sub(price).add(rewards),
+      );
+    });
+
+    it('Should allow successful minting without any rewards', async () => {
+      const {
+        pyramidEscrowContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContract,
+        domainEscrow,
+        treasury,
+        arkadaRewarderContract,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = parseEther('0');
+
+      const data: IMintPyramidEscrowData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 0,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 0,
+          rakeBps: 0,
+          factoryAddress: ethers.constants.AddressZero,
+        },
+      };
+
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+
+      await mintPyramidTest(
+        {
+          pyramidEscrowContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
 
-      expect(recipientBalanceAfter).to.equal(
-        recipientBalanceBefore.add(expectedRecipientPayout),
-      );
+      expect(
+        await arkadaRewarderContract.userRewards(questSigner.address),
+      ).to.equal(expectedRecipientPayout);
+
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
@@ -557,6 +517,7 @@ describe('PyramidEscrow', () => {
         domainEscrow,
         treasury,
         tokens,
+        arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -596,7 +557,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(
+      const signature = await signMintDataTyped(
         data,
         questSigner,
         domainEscrow,
@@ -607,9 +568,6 @@ describe('PyramidEscrow', () => {
 
       const treasuryBalanceBefore = await ethers.provider.getBalance(
         treasury.address,
-      );
-      const recipientBalanceBefore = await ethers.provider.getBalance(
-        questSigner.address,
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
@@ -631,14 +589,11 @@ describe('PyramidEscrow', () => {
       const treasuryBalanceAfter = await ethers.provider.getBalance(
         treasury.address,
       );
-      const recipientBalanceAfter = await ethers.provider.getBalance(
-        questSigner.address,
-      );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
       const erc20BalanceAfter = await tokens.erc20Token.balanceOf(user.address);
-      expect(recipientBalanceAfter).to.equal(
-        recipientBalanceBefore.add(expectedRecipientPayout),
-      );
+      expect(
+        await arkadaRewarderContract.userRewards(questSigner.address),
+      ).to.equal(expectedRecipientPayout);
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
@@ -657,6 +612,7 @@ describe('PyramidEscrow', () => {
         domainEscrow,
         treasury,
         tokens,
+        arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -696,7 +652,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(
+      const signature = await signMintDataTyped(
         data,
         questSigner,
         domainEscrow,
@@ -707,9 +663,6 @@ describe('PyramidEscrow', () => {
 
       const treasuryBalanceBefore = await ethers.provider.getBalance(
         treasury.address,
-      );
-      const recipientBalanceBefore = await ethers.provider.getBalance(
-        questSigner.address,
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
@@ -728,14 +681,11 @@ describe('PyramidEscrow', () => {
       const treasuryBalanceAfter = await ethers.provider.getBalance(
         treasury.address,
       );
-      const recipientBalanceAfter = await ethers.provider.getBalance(
-        questSigner.address,
-      );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
 
-      expect(recipientBalanceAfter).to.equal(
-        recipientBalanceBefore.add(expectedRecipientPayout),
-      );
+      expect(
+        await arkadaRewarderContract.userRewards(questSigner.address),
+      ).to.equal(expectedRecipientPayout);
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
@@ -752,6 +702,7 @@ describe('PyramidEscrow', () => {
         QUEST_ID,
         factoryContract,
         domainEscrow,
+        arkadaRewarderContract,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -793,7 +744,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(
+      const signature = await signMintDataTyped(
         data,
         questSigner,
         domainEscrow,
@@ -804,9 +755,6 @@ describe('PyramidEscrow', () => {
 
       const treasuryBalanceBefore = await ethers.provider.getBalance(
         treasury.address,
-      );
-      const recipientBalanceBefore = await ethers.provider.getBalance(
-        questSigner.address,
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
@@ -825,14 +773,11 @@ describe('PyramidEscrow', () => {
       const treasuryBalanceAfter = await ethers.provider.getBalance(
         treasury.address,
       );
-      const recipientBalanceAfter = await ethers.provider.getBalance(
-        questSigner.address,
-      );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
 
-      expect(recipientBalanceAfter).to.equal(
-        recipientBalanceBefore.add(expectedRecipientPayout),
-      );
+      expect(
+        await arkadaRewarderContract.userRewards(questSigner.address),
+      ).to.equal(expectedRecipientPayout);
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
@@ -889,7 +834,7 @@ describe('PyramidEscrow', () => {
         },
       };
 
-      const signature = await signMintDataEscrowTyped(
+      const signature = await signMintDataTyped(
         data,
         questSigner,
         domainEscrow,

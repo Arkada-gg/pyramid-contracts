@@ -158,10 +158,6 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         uint256 tokenId,
         TokenType tokenType
     ) external override onlyAdmin(questId) {
-        // only allow withdrawals if quest is inactive
-        // if (i_pyramid.isQuestActive(questId)) {
-        //     revert Factory__PYRAMIDQuestIsActive();
-        // }
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
