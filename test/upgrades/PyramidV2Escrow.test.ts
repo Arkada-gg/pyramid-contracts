@@ -193,7 +193,7 @@ const upgradeFixture = async () => {
   };
 };
 
-describe.only('PyramidV2Escrow', () => {
+describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
   describe('Upgrade', () => {
     it('should upgrade successfully and maintain state', async () => {
       await loadFixture(upgradeFixture);

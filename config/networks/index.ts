@@ -1,6 +1,6 @@
 import { HardhatNetworkUserConfig, NetworkUserConfig } from 'hardhat/types';
 
-import { GWEI, MOCK_AGGREGATOR_NETWORK_TAG } from '../constants';
+import { MOCK_AGGREGATOR_NETWORK_TAG } from '../constants';
 import { ENV } from '../env';
 import { ConfigPerNetwork, Network, RpcUrl } from '../types';
 
@@ -35,7 +35,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   base: 'auto',
   sepolia: 'auto',
   hardhat: 0,
-  localhost: 70 * GWEI,
+  localhost: 0,
 };
 
 export const chainIds: ConfigPerNetwork<number> = {
