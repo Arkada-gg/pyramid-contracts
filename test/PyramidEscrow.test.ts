@@ -320,7 +320,7 @@ describe('PyramidEscrow', () => {
       );
     });
 
-    it('Should allow successful minting', async () => {
+    it('Should allow successful minting with native token rewards', async () => {
       const {
         pyramidEscrowContract,
         owner,

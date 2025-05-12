@@ -473,7 +473,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
       );
     });
 
-    it('Should allow successful minting', async () => {
+    it('Should allow successful minting with native token rewards', async () => {
       const {
         pyramidV2Escrow,
         owner,

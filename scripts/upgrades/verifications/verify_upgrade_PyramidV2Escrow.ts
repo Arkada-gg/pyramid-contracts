@@ -106,9 +106,9 @@ async function main() {
     DEFAULT_ADMIN_ROLE,
     adminAddress,
   );
-  console.log('Owner has admin role:', hasAdminRole);
+  console.log(`${adminAddress} has admin role:`, hasAdminRole);
   if (!hasAdminRole) {
-    throw new Error('Owner does not have admin role');
+    throw new Error(`${adminAddress} does not have admin role`);
   }
 
   // 6. Verify contract is upgradeable
