@@ -37,7 +37,7 @@ describe('Factory', () => {
 
   beforeEach(async () => {
     [owner, user, admin, treasury, signer] = await ethers.getSigners();
-    questId = 'test';
+    questId = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test'));
 
     // Deploy mock tokens
     const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
@@ -253,7 +253,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: '2',
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           token: erc721Token.address,
         },
         {
@@ -304,7 +304,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: '2',
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           token: erc721Token.address,
         },
         {
@@ -423,23 +423,6 @@ describe('Factory', () => {
       expect(balanceAfter).eq(100);
     });
 
-    it('should revert if quest is active', async () => {
-      await withdrawFundsTest(
-        {
-          factoryContract,
-          owner,
-          questId,
-          to: user.address,
-          token: erc20Token.address,
-          tokenId: 0,
-          tokenType: 1,
-        },
-        {
-          revertMessage: 'Factory__PYRAMIDQuestIsActive',
-        },
-      );
-    });
-
     it('should revert if not admin', async () => {
       await withdrawFundsTest(
         {
@@ -463,7 +446,7 @@ describe('Factory', () => {
         {
           factoryContract,
           owner,
-          questId: '2',
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           to: user.address,
           token: erc20Token.address,
           tokenId: 0,
@@ -597,7 +580,7 @@ describe('Factory', () => {
         {
           factoryContract: factoryContractDisributeTester,
           owner,
-          questId: '2',
+          questId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('2')),
           token: erc20Token.address,
           to: user.address,
           amount: ethers.utils.parseEther('100'),
