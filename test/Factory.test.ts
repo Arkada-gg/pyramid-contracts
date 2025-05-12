@@ -555,6 +555,98 @@ describe('Factory', () => {
       expect(await erc1155Token.balanceOf(user.address, 1)).gt(0);
     });
 
+    it('should distribute correct amounts with 10% rake (1000 bps)', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 1000; // 10%
+      const expectedUserAmount = amount.mul(9000).div(10000); // 90%
+      const expectedTreasuryAmount = amount.mul(1000).div(10000); // 10%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(
+        expectedUserAmount,
+      );
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(
+        expectedTreasuryAmount,
+      );
+    });
+
+    it('should distribute correct amounts with 5% rake (500 bps)', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 500; // 5%
+      const expectedUserAmount = amount.mul(9500).div(10000); // 95%
+      const expectedTreasuryAmount = amount.mul(500).div(10000); // 5%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(
+        expectedUserAmount,
+      );
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(
+        expectedTreasuryAmount,
+      );
+    });
+
+    it('should distribute full amount when rake is 0 bps', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 0; // 0%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(amount);
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(0);
+    });
+
+    it('should distribute full amount to treasury when rake is 10000 bps', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 10000; // 100%
+
+      await distributeRewardsTest({
+        factoryContract: factoryContractDisributeTester,
+        owner,
+        questId,
+        token: erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await erc20Token.balanceOf(user.address)).to.equal(0);
+      expect(await erc20Token.balanceOf(treasury.address)).to.equal(amount);
+    });
+
     it('should revert if not called by Pyramid', async () => {
       await distributeRewardsTest(
         {

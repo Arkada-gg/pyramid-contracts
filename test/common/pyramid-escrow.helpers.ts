@@ -5,9 +5,10 @@ import { BigNumber } from 'ethers';
 import { IMintPyramidEscrowData, OptionalCommonParams } from './common.helpers';
 
 import { PyramidEscrow } from '../../typechain-types';
+import { PyramidV2Escrow } from '../../typechain-types/contracts/upgrades/PyramidV2Escrow';
 
 type CommonParams = {
-  pyramidEscrowContract: PyramidEscrow;
+  pyramidEscrowContract: PyramidEscrow | PyramidV2Escrow;
   owner: SignerWithAddress;
 };
 
