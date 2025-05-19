@@ -19,9 +19,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // initialise params <=========
   const SIGNING_DOMAIN = 'ArkadaPVPArena';
   const SIGNATURE_VERSION = '1';
-  const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
-  const TREASURY = ''; // Set treasury address here
-  const SIGNER = ''; // Set signer address here
+  const ADMIN = deployer; // Set admin address here
+  const TREASURY = deployer; // Set treasury address here
+  const SIGNER = '0xA3F1D90b5227A128A65AcbE223dbe01870e4AbF3'; // Set signer address here
   const FEE_BPS = 100; // fee percent to treasury send (10000 = 100%)
   const PLAYERS_CONFIG = {
     min: 3,
@@ -29,11 +29,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   }; // required players config to start arena with PLACES type
   const INTERVAL_TO_START_CONFIG = {
     min: 60 * 60,
-    max: 60 * 60,
+    max: 180 * 60,
   }; // interval to start in seconds config for arenas with TIME type
   const DURATION_CONFIG = {
     min: 60 * 60,
-    max: 60 * 60,
+    max: 24 * 60 * 60,
   }; // arenas duration config in seconds
 
   // =====================
