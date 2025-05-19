@@ -2,6 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { parseEther } from 'ethers/lib/utils';
 import { ethers, upgrades } from 'hardhat';
+
 import {
   ArkadaRewarder,
   ERC1155Mock,
