@@ -339,6 +339,129 @@
           }
         }
       }
+    },
+    "bfca1afa3fa6f7f1639b89b702cc58503804c0b7d428fa6fe12c27ae0023359d": {
+      "address": "0xEB32071504D8fB91Ce48374E5345069d7f5BbBd7",
+      "txHash": "0x547c0bbea715f8e7907a6bdda462d3dfcab97bd83d0e5346886aff2def8e09b2",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:29"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:30"
+          },
+          {
+            "label": "s_arkadaRewarder",
+            "offset": 1,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:31"
+          },
+          {
+            "label": "s_questIssueNumbers",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:48"
+          },
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:49"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:50"
+          },
+          {
+            "label": "s_quests_ids",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:52"
+          },
+          {
+            "label": "s_treasury",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:54"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "PyramidV2Escrow",
+            "src": "contracts/upgrades/PyramidV2Escrow.sol:61"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
     }
   }
 }
