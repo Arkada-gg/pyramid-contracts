@@ -302,7 +302,7 @@ contract PyramidV2Escrow is
         if (!success) {
             revert Pyramid__NativePaymentFailed();
         }
-        emit TreasuryPayout(msg.sender, treasuryPayout);
+        emit TreasuryPayout(s_treasury, treasuryPayout);
     }
 
     /// @notice Recovers the signer's address from the PyramidData and its associated signature
