@@ -5,6 +5,7 @@ export type Network =
   | 'soneium'
   | 'sonic'
   | 'base'
+  | 'monadtestnet'
   | 'hardhat'
   | 'localhost';
 export type RpcUrl =

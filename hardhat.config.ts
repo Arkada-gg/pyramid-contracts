@@ -5,7 +5,6 @@ import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-contract-sizer';
 import 'hardhat-deploy';
 import 'solidity-docgen';
-// import './tasks';
 
 import {
   ENV,
@@ -58,6 +57,7 @@ const config: HardhatUserConfig = {
       soneium: DEPLOYER,
       sonic: DEPLOYER,
       base: DEPLOYER,
+      monadtestnet: DEPLOYER,
     },
   },
   verify: {
@@ -69,6 +69,7 @@ const config: HardhatUserConfig = {
     soneium: getNetworkConfig('soneium'),
     sonic: getNetworkConfig('sonic'),
     base: getNetworkConfig('base'),
+    monadtestnet: getNetworkConfig('monadtestnet'),
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hardhat: FORKING_NETWORK
@@ -94,6 +95,7 @@ const config: HardhatUserConfig = {
       soneium: ETHERSCAN_API_KEY_SONEIUM ?? '',
       sonic: ETHERSCAN_API_KEY_SONIC ?? '',
       base: ETHERSCAN_API_KEY_BASE ?? '',
+      monadtestnet: ETHERSCAN_API_KEY_BASE ?? '',
     },
     customChains: [
       {
@@ -118,6 +120,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.basescan.org/api/',
           browserURL: 'https://basescan.org',
+        },
+      },
+      {
+        network: 'monadtestnet',
+        chainId: 10143,
+        urls: {
+          apiURL: 'https://sourcify-api-monad.blockvision.org',
+          browserURL: 'https://testnet.monvision.io/',
         },
       },
     ],

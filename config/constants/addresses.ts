@@ -29,6 +29,12 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     arena: '',
     escrowFactory: '0x84E5c76f4152E7b463BDa5Ded10559732Ac649C0',
   },
+  monadtestnet: {
+    arkadaRewarder: '0x360ecC5bf4E5E9aeec708571Fe286c33679c450B',
+    pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
+    arena: '',
+    escrowFactory: '0x1AE93e93A8B421725F114a27c82237BEF4ada624',
+  },
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,

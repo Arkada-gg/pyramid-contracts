@@ -17,7 +17,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   // pre-requisites
   const TREASURY_ADDRESS = '0x2b412BfEaEfaeFC03134fF62D86CA5bB3359F68a';
-  const SIGNER_ADDRESS = '0x701858645415f04EEBc91816cA2465eAc2fdDC27';
+  const SIGNER_ADDRESS = '0xDE91c31f1b9c3dc4270cADaec8ab4C4C5aCAD93f';
+  const NEW_ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74';
 
   const arkadaRewarder = await hre.ethers.getContractAt(
     ARKADA_REWARDER_CONTRACT_NAME,
@@ -38,6 +39,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log('Pyramid Treasury address set to: ', TREASURY_ADDRESS);
 
   const OPERATOR_ROLE = await arkadaRewarder.OPERATOR_ROLE();
+  console.log('OPERATOR_ROLE: ', OPERATOR_ROLE);
   tx = await arkadaRewarder
     .connect(owner)
     .grantRole(OPERATOR_ROLE, pyramid.address);
@@ -48,6 +50,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   tx = await pyramid.connect(owner).grantRole(SIGNER_ROLE, SIGNER_ADDRESS);
   await tx.wait();
   console.log('Pyramid signer role set to: ', SIGNER_ADDRESS);
+
+  if (NEW_ADMIN) {
+    const DEFAULT_ADMIN_ROLE = await pyramid.DEFAULT_ADMIN_ROLE();
+    let tx = await pyramid.grantRole(DEFAULT_ADMIN_ROLE, NEW_ADMIN);
+    await tx.wait();
+    tx = await pyramid.revokeRole(DEFAULT_ADMIN_ROLE, owner.address);
+    await tx.wait();
+    console.log('Pyramid admin set to: ', NEW_ADMIN);
+    console.log('Pyramid admin revoked from: ', owner.address);
+
+    tx = await arkadaRewarder.grantRole(DEFAULT_ADMIN_ROLE, NEW_ADMIN);
+    await tx.wait();
+    tx = await arkadaRewarder.revokeRole(DEFAULT_ADMIN_ROLE, owner.address);
+    await tx.wait();
+    console.log('Arkada Rewarder admin set to: ', NEW_ADMIN);
+    console.log('Arkada Rewarder admin revoked from: ', owner.address);
+  }
 };
 
 func(hre).then(console.log).catch(console.error);

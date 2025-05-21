@@ -22,6 +22,7 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   base: ALCHEMY_KEY
     ? `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://base.llamarpc.com`,
+  monadtestnet: 'https://testnet-rpc.monad.xyz',
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://sepolia.infura.io/v3/${INFURA_KEY}`,
@@ -33,6 +34,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   soneium: 'auto',
   sonic: 'auto',
   base: 'auto',
+  monadtestnet: 'auto',
   sepolia: 'auto',
   hardhat: 0,
   localhost: 0,
@@ -42,6 +44,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   soneium: 1868,
   sonic: 146,
   base: 8453,
+  monadtestnet: 10143,
   sepolia: 11155111,
   hardhat: 31337,
   localhost: 31337,
@@ -51,6 +54,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   soneium: MNEMONIC_PROD,
   sonic: MNEMONIC_PROD,
   base: MNEMONIC_PROD,
+  monadtestnet: MNEMONIC_PROD,
   sepolia: MNEMONIC_DEV,
   hardhat: MNEMONIC_DEV,
   localhost: MNEMONIC_DEV,
@@ -60,6 +64,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
   base: undefined,
+  monadtestnet: undefined,
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,
@@ -69,6 +74,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
   base: undefined,
+  monadtestnet: undefined,
   sepolia: 999999,
   hardhat: undefined,
   localhost: 999999,
@@ -78,6 +84,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
   base: undefined,
+  monadtestnet: undefined,
   sepolia: undefined,
   hardhat: 300 * 10 ** 6,
   localhost: undefined,
@@ -87,6 +94,7 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
   base: undefined,
+  monadtestnet: undefined,
   sepolia: undefined,
   hardhat: 0,
   localhost: undefined,
