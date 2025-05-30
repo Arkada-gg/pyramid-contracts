@@ -1,6 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
 import { OptionalCommonParams } from './common.helpers';
@@ -194,6 +194,7 @@ export const createArenaTest = async (
           startTime,
           requiredPlayers,
           signatured ?? false,
+          { value: opt?.value },
         ),
     ).revertedWithCustomError(arenaContract, opt?.revertMessage);
     return;
@@ -208,6 +209,7 @@ export const createArenaTest = async (
       startTime,
       requiredPlayers,
       signatured ?? false,
+      { value: opt?.value },
     );
 
   await expect(
@@ -220,6 +222,7 @@ export const createArenaTest = async (
         startTime,
         requiredPlayers,
         signatured ?? false,
+        { value: opt?.value },
       ),
   ).to.emit(
     arenaContract,
@@ -229,17 +232,26 @@ export const createArenaTest = async (
 
   const arenaData = await arenaContract.arenas(arenaId);
 
+  const hasAdminRole = await arenaContract.hasRole(
+    await arenaContract.ADMIN_ROLE(),
+    sender.address,
+  );
+
   expect(arenaData.id).eq(arenaId);
   expect(arenaData.creator).eq(sender.address);
   expect(arenaData.entryFee).eq(entryFee);
   expect(arenaData.duration).eq(duration);
-  expect(arenaData.startTime).eq(startTime);
-  expect(arenaData.endTime).eq(
-    type === ArenaType.PLACES ? 0 : Number(startTime) + Number(duration),
-  );
+  if (type === ArenaType.TIME) expect(arenaData.startTime).eq(startTime);
+  if (type === ArenaType.TIME)
+    expect(arenaData.endTime).eq(Number(startTime) + Number(duration));
   expect(arenaData.arenaType).eq(type);
   expect(arenaData.requiredPlayers).eq(requiredPlayers);
-  expect(arenaData.players).eq(0);
+  expect(arenaData.players).eq(hasAdminRole ? 0 : 1);
+  expect(arenaData.initialPrizePool).eq(
+    hasAdminRole
+      ? opt?.value ?? 0
+      : BigNumber.from(opt?.value ?? 0).sub(arenaData.entryFee),
+  );
   expect(arenaData.signatured).eq(signatured);
 };
 
@@ -459,16 +471,18 @@ export const leaveArenaTest = async (
     expect(arenaDataAfter.players).to.equal(arenaDataBefore.players.sub(1));
   }
 
+  const paidForEntry = await arenaContract.paidForParticipate(
+    arenaIdAndAddressHash,
+  );
+
   // Fees should be decreased by the entry fee
   const feeByArenaAfter = await arenaContract.feesByArena(arenaId);
-  expect(feeByArenaAfter).to.equal(
-    feeByArenaBefore.sub(arenaDataBefore.entryFee),
-  );
+  expect(feeByArenaAfter).to.equal(feeByArenaBefore.sub(paidForEntry));
 
   // Player should be refunded with the entry fee
   const senderBalanceAfter = await sender.getBalance();
   expect(senderBalanceAfter).to.be.closeTo(
-    senderBalanceBefore.add(arenaDataBefore.entryFee).sub(gasCost),
+    senderBalanceBefore.add(paidForEntry).sub(gasCost),
     1000, // Allow for a small rounding error
   );
 
@@ -496,14 +510,24 @@ export const endArenaAndDistributeRewardsTest = async (
     return;
   }
 
-  const feesByArenaBefore = await arenaContract.feesByArena(arenaId);
+  const feesByArena = await arenaContract.feesByArena(arenaId);
+  const arena = await arenaContract.arenas(arenaId);
+
   const treasuryBalanceBefore = await ethers.provider.getBalance(
     await arenaContract.treasury(),
   );
   const feeBPS = await arenaContract.feeBPS();
 
+  const amountToTreasury = feesByArena.gt(arena.initialPrizePool)
+    ? arena.initialPrizePool
+    : feesByArena;
+
+  const amountForFees = feesByArena.lt(arena.initialPrizePool)
+    ? arena.initialPrizePool
+    : feesByArena;
+
   // Calculate expected fee amount
-  const feeAmount = feesByArenaBefore.mul(feeBPS).div(10000);
+  const feeAmount = amountForFees.mul(feeBPS).div(10000);
 
   // End arena and distribute rewards
   const tx = await arenaContract
@@ -525,7 +549,9 @@ export const endArenaAndDistributeRewardsTest = async (
   const treasuryBalanceAfter = await ethers.provider.getBalance(
     await arenaContract.treasury(),
   );
-  expect(treasuryBalanceAfter).to.equal(treasuryBalanceBefore.add(feeAmount));
+  expect(treasuryBalanceAfter).to.equal(
+    treasuryBalanceBefore.add(feeAmount).add(amountToTreasury),
+  );
 };
 
 interface IClaimRewardsTest extends CommonParams {

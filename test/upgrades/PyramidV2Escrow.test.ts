@@ -8,6 +8,7 @@ import {
   ERC1155Mock,
   ERC20Mock,
   ERC721Mock,
+  // eslint-disable-next-line
   Factory__factory,
   Pyramid,
   PyramidV2Escrow,

@@ -22,6 +22,7 @@ const {
   ETHERSCAN_API_KEY_SONEIUM,
   ETHERSCAN_API_KEY_SONIC,
   ETHERSCAN_API_KEY_BASE,
+  ETHERSCAN_API_KEY_ARBITRUM,
   DEPLOYER,
 } = ENV;
 
@@ -58,6 +59,7 @@ const config: HardhatUserConfig = {
       sonic: DEPLOYER,
       base: DEPLOYER,
       monadtestnet: DEPLOYER,
+      arbitrum: DEPLOYER,
     },
   },
   verify: {
@@ -70,6 +72,7 @@ const config: HardhatUserConfig = {
     sonic: getNetworkConfig('sonic'),
     base: getNetworkConfig('base'),
     monadtestnet: getNetworkConfig('monadtestnet'),
+    arbitrum: getNetworkConfig('arbitrum'),
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hardhat: FORKING_NETWORK
@@ -95,7 +98,7 @@ const config: HardhatUserConfig = {
       soneium: ETHERSCAN_API_KEY_SONEIUM ?? '',
       sonic: ETHERSCAN_API_KEY_SONIC ?? '',
       base: ETHERSCAN_API_KEY_BASE ?? '',
-      monadtestnet: ETHERSCAN_API_KEY_BASE ?? '',
+      arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
     },
     customChains: [
       {
@@ -123,11 +126,11 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        network: 'monadtestnet',
-        chainId: 10143,
+        network: 'arbitrum',
+        chainId: 42161,
         urls: {
-          apiURL: 'https://sourcify-api-monad.blockvision.org',
-          browserURL: 'https://testnet.monvision.io/',
+          apiURL: 'https://api.arbiscan.io/api',
+          browserURL: 'https://arbiscan.io/',
         },
       },
     ],

@@ -77,6 +77,10 @@ contract ArkadaPVPArena is
     /// @dev Maps keccak256(arenaId, playerAddress) to participation status
     mapping(bytes32 => bool) public participants;
 
+    /// @notice Tracks how much user paid for participate in arena
+    /// @dev Maps keccak256(arenaId, playerAddress) to paid amount
+    mapping(bytes32 => uint256) public paidForParticipate;
+
     /// @notice Tracks claimed rewards by players
     /// @dev Maps keccak256(arenaId, playerAddress) to claim status
     mapping(bytes32 => bool) public claimed;
@@ -141,7 +145,7 @@ contract ArkadaPVPArena is
         uint256 _startTime,
         uint256 _requiredPlayers,
         bool _signatured
-    ) external returns (uint256 arenaId) {
+    ) external payable returns (uint256 arenaId) {
         if (_signatured) _checkRole(ADMIN_ROLE);
 
         if (_duration < durationConfig.min || _duration > durationConfig.max)
@@ -165,6 +169,15 @@ contract ArkadaPVPArena is
 
         arenaId = s_nextArenaId++;
 
+        bool hasAdminRole = hasRole(ADMIN_ROLE, msg.sender);
+
+        if (!hasAdminRole && msg.value < _entryFee)
+            revert PVPArena__InvalidFeeAmount();
+
+        uint256 initialPrizePool = hasAdminRole
+            ? msg.value
+            : msg.value - _entryFee;
+
         ArenaInfo memory newArena = ArenaInfo({
             id: arenaId,
             creator: msg.sender,
@@ -176,12 +189,15 @@ contract ArkadaPVPArena is
             arenaType: _type,
             requiredPlayers: _requiredPlayers,
             players: 0,
+            initialPrizePool: initialPrizePool,
             signatured: _signatured
         });
 
         arenas[arenaId] = newArena;
 
         emit ArenaCreated(arenaId, msg.sender, _type, _signatured);
+
+        if (!hasAdminRole) _joinArena(newArena, msg.sender, false, 0);
     }
 
     /**
@@ -238,12 +254,23 @@ contract ArkadaPVPArena is
         arenas[_arenaId] = arena;
 
         participants[arenaIdAndAddressHash] = false;
-        feesByArena[_arenaId] -= arena.entryFee;
 
-        (bool success, ) = msg.sender.call{value: arena.entryFee}("");
-        if (!success) revert PVPArena__TransferFailed();
+        uint256 paidForEntry = paidForParticipate[arenaIdAndAddressHash];
+        if (paidForEntry > 0) {
+            feesByArena[_arenaId] -= paidForEntry;
+
+            (bool success, ) = msg.sender.call{value: paidForEntry}("");
+            if (!success) revert PVPArena__TransferFailed();
+        }
 
         if (arena.players == 0) {
+            if (arena.initialPrizePool > 0) {
+                (bool success, ) = treasury.call{value: arena.initialPrizePool}(
+                    ""
+                );
+                if (!success) revert PVPArena__TransferFailed();
+            }
+
             delete arenas[_arenaId];
             emit ArenaDeleted(_arenaId);
         }
@@ -277,10 +304,19 @@ contract ArkadaPVPArena is
 
         rootProofByArena[_arenaId] = _root;
 
-        uint256 totalFees = feesByArena[_arenaId];
-        uint256 feeAmount = (totalFees * feeBPS) / MAX_BPS;
+        uint256 arenaFees = feesByArena[_arenaId];
 
-        (bool success, ) = treasury.call{value: feeAmount}("");
+        uint256 treasuryAmount = arenaFees < arena.initialPrizePool
+            ? arenaFees
+            : arena.initialPrizePool;
+
+        uint256 feesAmount = arenaFees > arena.initialPrizePool
+            ? arenaFees
+            : arena.initialPrizePool;
+
+        uint256 feeAmount = (feesAmount * feeBPS) / MAX_BPS;
+
+        (bool success, ) = treasury.call{value: feeAmount + treasuryAmount}("");
         if (!success) revert PVPArena__TransferFailed();
 
         emit ArenaEnded(_arenaId, _root);
@@ -452,7 +488,7 @@ contract ArkadaPVPArena is
         uint256 entryFeeWithDiscount = _arena.entryFee -
             ((_arena.entryFee * discountBps) / MAX_BPS);
 
-        if (!_freeFromFee && msg.value != entryFeeWithDiscount)
+        if (!_freeFromFee && msg.value < entryFeeWithDiscount)
             revert PVPArena__InvalidFeeAmount();
 
         if (_arena.arenaType == ArenaType.TIME) {
@@ -484,7 +520,11 @@ contract ArkadaPVPArena is
 
         arenas[_arena.id] = _arena;
         participants[arenaIdAndAddressHash] = true;
-        if (!_freeFromFee) feesByArena[_arena.id] += msg.value;
+        if (!_freeFromFee) feesByArena[_arena.id] += entryFeeWithDiscount;
+
+        paidForParticipate[arenaIdAndAddressHash] = _freeFromFee
+            ? 0
+            : entryFeeWithDiscount;
 
         emit PlayerJoined(_arena.id, _player);
     }

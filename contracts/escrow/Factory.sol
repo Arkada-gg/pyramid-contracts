@@ -73,10 +73,10 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
     /// @dev Can only be called by the current escrow admin.
     /// @param questId Identifier of the quest associated with the escrow.
     /// @param newAdmin Address of the new admin.
-    function updateEscrowAdmin(
-        bytes32 questId,
-        address newAdmin
-    ) external override {
+    function updateEscrowAdmin(bytes32 questId, address newAdmin)
+        external
+        override
+    {
         if (s_escrow_admin[questId] != msg.sender) {
             revert Factory__OnlyCallableByAdmin();
         }
@@ -118,10 +118,11 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
 
     /// @notice Adds a token to the whitelist, allowing it to be used in the escrow.
     /// @param token The address of the token to whitelist.
-    function addTokenToWhitelist(
-        bytes32 questId,
-        address token
-    ) external override onlyAdmin(questId) {
+    function addTokenToWhitelist(bytes32 questId, address token)
+        external
+        override
+        onlyAdmin(questId)
+    {
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
@@ -132,10 +133,11 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
 
     /// @notice Removes a token from the whitelist.
     /// @param token The address of the token to remove from the whitelist.
-    function removeTokenFromWhitelist(
-        bytes32 questId,
-        address token
-    ) external override onlyAdmin(questId) {
+    function removeTokenFromWhitelist(bytes32 questId, address token)
+        external
+        override
+        onlyAdmin(questId)
+    {
         address escrow = s_escrows[questId];
         if (escrow == address(0)) {
             revert Factory__NoQuestEscrowFound();
@@ -278,9 +280,12 @@ contract Factory is IFactory, Initializable, AccessControlUpgradeable {
         }
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(AccessControlUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(AccessControlUpgradeable)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 }

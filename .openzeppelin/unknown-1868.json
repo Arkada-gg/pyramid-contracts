@@ -642,10 +642,7 @@
           },
           "t_enum(ArenaType)14968": {
             "label": "enum IArkadaPVPArena.ArenaType",
-            "members": [
-              "TIME",
-              "PLACES"
-            ],
+            "members": ["TIME", "PLACES"],
             "numberOfBytes": "1"
           },
           "t_mapping(t_bytes32,t_bool)": {

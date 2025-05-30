@@ -140,6 +140,7 @@ interface IArkadaPVPArena {
         ArenaType arenaType;
         uint256 requiredPlayers;
         uint256 players;
+        uint256 initialPrizePool;
         bool signatured;
     }
 
@@ -174,7 +175,7 @@ interface IArkadaPVPArena {
         uint256 _startTime,
         uint256 _requiredPlayers,
         bool _signatured
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     /// @notice Allows a user to join an arena by paying the entry fee
     /// @dev User must send the exact entry fee amount

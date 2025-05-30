@@ -23,6 +23,9 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
     ? `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://base.llamarpc.com`,
   monadtestnet: 'https://testnet-rpc.monad.xyz',
+  arbitrum: ALCHEMY_KEY
+    ? `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+    : `https://arbitrum-one-rpc.publicnode.com`,
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://sepolia.infura.io/v3/${INFURA_KEY}`,
@@ -35,6 +38,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   sonic: 'auto',
   base: 'auto',
   monadtestnet: 'auto',
+  arbitrum: 'auto',
   sepolia: 'auto',
   hardhat: 0,
   localhost: 0,
@@ -45,6 +49,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   sonic: 146,
   base: 8453,
   monadtestnet: 10143,
+  arbitrum: 42161,
   sepolia: 11155111,
   hardhat: 31337,
   localhost: 31337,
@@ -55,6 +60,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   sonic: MNEMONIC_PROD,
   base: MNEMONIC_PROD,
   monadtestnet: MNEMONIC_PROD,
+  arbitrum: MNEMONIC_PROD,
   sepolia: MNEMONIC_DEV,
   hardhat: MNEMONIC_DEV,
   localhost: MNEMONIC_DEV,
@@ -65,6 +71,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   sonic: undefined,
   base: undefined,
   monadtestnet: undefined,
+  arbitrum: undefined,
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,
@@ -75,6 +82,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   sonic: undefined,
   base: undefined,
   monadtestnet: undefined,
+  arbitrum: undefined,
   sepolia: 999999,
   hardhat: undefined,
   localhost: 999999,
@@ -85,6 +93,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   sonic: undefined,
   base: undefined,
   monadtestnet: undefined,
+  arbitrum: undefined,
   sepolia: undefined,
   hardhat: 300 * 10 ** 6,
   localhost: undefined,
@@ -95,6 +104,7 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   sonic: undefined,
   base: undefined,
   monadtestnet: undefined,
+  arbitrum: undefined,
   sepolia: undefined,
   hardhat: 0,
   localhost: undefined,
