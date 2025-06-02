@@ -11,6 +11,7 @@ import {
   ArenaType,
   claimRewardsTest,
   createArenaTest,
+  emergencyCloseTest,
   endArenaAndDistributeRewardsTest,
   joinArenaTest,
   joinArenaWithSignatureTest,
@@ -48,7 +49,7 @@ function createRewardsMerkleTree(
   };
 }
 
-describe.only('ArkadaPVPArena', () => {
+describe('ArkadaPVPArena', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
@@ -2430,6 +2431,282 @@ describe.only('ArkadaPVPArena', () => {
         arenaId: 1,
         amount: parseEther('0.07'),
         proofs: getProof(2),
+      });
+    });
+  });
+
+  describe('emnergency close', () => {
+    it('Should be reverted not admin try to emergency close arena', async () => {
+      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaTest(
+        {
+          arenaContract,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
+          signatured: false,
+        },
+        { value: parseEther('0.1') },
+      );
+
+      // Try to claim rewards before distribution
+      await emergencyCloseTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+        },
+        {
+          from: regularAccounts[0],
+          revertMessage: 'AccessControlUnauthorizedAccount',
+        },
+      );
+    });
+
+    it('Should be emergency closed by admin', async () => {
+      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+        defaultDeploy,
+      );
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaTest(
+        {
+          arenaContract,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
+          signatured: false,
+        },
+        { value: parseEther('0.1') },
+      );
+
+      // Try to claim rewards before distribution
+      await emergencyCloseTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+    });
+
+    it('Should be reverted if admin try to distribute rewards for emergency closed arena', async () => {
+      const { arenaContract, owner, user, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaTest(
+        {
+          arenaContract,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
+          signatured: false,
+        },
+        { value: parseEther('0.1') },
+      );
+
+      // Try to claim rewards before distribution
+      await emergencyCloseTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+
+      // Forward time to after arena ends
+      await increaseTime(
+        arenaInitialConfig.intervalToStartConfig.min +
+          arenaInitialConfig.durationConfig.max +
+          20,
+      );
+
+      // Generate merkle tree for owner only
+      const rewards = [
+        { address: owner.address, amount: parseEther('0.09').toString() },
+      ];
+      const { root } = createRewardsMerkleTree(rewards);
+
+      // End arena and distribute rewards
+      await endArenaAndDistributeRewardsTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          root,
+        },
+        { revertMessage: 'PVPArena__EmergencyClosed' },
+      );
+    });
+
+    it('Should be reverted if user try to join emergency closed arena', async () => {
+      const { arenaContract, owner, user, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaTest(
+        {
+          arenaContract,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
+          signatured: false,
+        },
+        { value: parseEther('0.1') },
+      );
+
+      // Try to claim rewards before distribution
+      await emergencyCloseTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+
+      await joinArenaTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { revertMessage: 'PVPArena__EmergencyClosed' },
+      );
+    });
+
+    it('Initial pize pool should transfer to treasury when emergency closed', async () => {
+      const { arenaContract, owner, arenaInitialConfig, treasury } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+        .timestamp;
+
+      const initialPrizePool = parseEther('1');
+
+      // Create a TIME arena
+      await createArenaTest(
+        {
+          arenaContract,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
+          signatured: false,
+        },
+        { value: initialPrizePool },
+      );
+
+      const treasuryBalanceBefore = await treasury.getBalance();
+
+      await emergencyCloseTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+
+      const treasuryBalanceAfter = await treasury.getBalance();
+
+      expect(treasuryBalanceAfter).eq(
+        treasuryBalanceBefore.add(initialPrizePool),
+      );
+    });
+
+    it('Users should able to leave and get refund from closed arena', async () => {
+      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+
+      // Create a PLACES arena with requiredPlayers = 3
+      await createArenaTest(
+        {
+          arenaContract,
+          owner,
+          type: ArenaType.PLACES,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 3,
+          startTime: 0,
+          signatured: false,
+        },
+        { value: parseEther('0.1') },
+      );
+
+      // All required players join
+      await joinArenaTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      await joinArenaTest({
+        arenaContract,
+        owner: regularAccounts[0],
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      await joinArenaTest({
+        arenaContract,
+        owner: regularAccounts[1],
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      await emergencyCloseTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+
+      // Forward time to after arena ends
+      await increaseTime(arenaInitialConfig.durationConfig.max + 20);
+
+      await leaveArenaTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+
+      await leaveArenaTest({
+        arenaContract,
+        owner: regularAccounts[0],
+        arenaId: 1,
+      });
+
+      await leaveArenaTest({
+        arenaContract,
+        owner: regularAccounts[1],
+        arenaId: 1,
       });
     });
   });

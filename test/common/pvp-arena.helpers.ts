@@ -616,3 +616,34 @@ export const claimRewardsTest = async (
     1000, // Allow for a small rounding error
   );
 };
+
+interface IEmergencyCloseTest extends CommonParams {
+  arenaId: BigNumberish;
+}
+
+export const emergencyCloseTest = async (
+  { arenaContract, owner, arenaId }: IEmergencyCloseTest,
+  opt?: OptionalCommonParams,
+) => {
+  const sender = opt?.from ?? owner;
+
+  if (opt?.revertMessage) {
+    await expect(
+      arenaContract.connect(sender).emergencyClose(arenaId),
+    ).revertedWithCustomError(arenaContract, opt?.revertMessage);
+    return;
+  }
+
+  // Check event emission
+  await expect(arenaContract.connect(sender).emergencyClose(arenaId))
+    .to.emit(
+      arenaContract,
+      arenaContract.interface.events['EmergencyClosed(address,uint256)'].name,
+    )
+    .withArgs(sender.address, arenaId);
+
+  const arena = await arenaContract.arenas(arenaId);
+
+  // Participant status should be false
+  expect(arena.emergencyClosed).to.equal(true);
+};
