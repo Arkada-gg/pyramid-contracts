@@ -40,6 +40,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     ],
     {
       unsafeAllow: ['constructor'],
+      timeout: 5000,
     },
   );
 

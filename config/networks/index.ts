@@ -26,6 +26,8 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   arbitrum: ALCHEMY_KEY
     ? `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://arbitrum-one-rpc.publicnode.com`,
+  hyperevm: 'https://rpc.hyperliquid.xyz/evm',
+
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://sepolia.infura.io/v3/${INFURA_KEY}`,
@@ -39,6 +41,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   base: 'auto',
   monadtestnet: 'auto',
   arbitrum: 'auto',
+  hyperevm: 'auto',
   sepolia: 'auto',
   hardhat: 0,
   localhost: 0,
@@ -50,6 +53,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   base: 8453,
   monadtestnet: 10143,
   arbitrum: 42161,
+  hyperevm: 999,
   sepolia: 11155111,
   hardhat: 31337,
   localhost: 31337,
@@ -61,6 +65,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   base: MNEMONIC_PROD,
   monadtestnet: MNEMONIC_PROD,
   arbitrum: MNEMONIC_PROD,
+  hyperevm: MNEMONIC_PROD,
   sepolia: MNEMONIC_DEV,
   hardhat: MNEMONIC_DEV,
   localhost: MNEMONIC_DEV,
@@ -72,6 +77,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   base: undefined,
   monadtestnet: undefined,
   arbitrum: undefined,
+  hyperevm: undefined,
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,
@@ -83,6 +89,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   base: undefined,
   monadtestnet: undefined,
   arbitrum: undefined,
+  hyperevm: undefined,
   sepolia: 999999,
   hardhat: undefined,
   localhost: 999999,
@@ -94,6 +101,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   base: undefined,
   monadtestnet: undefined,
   arbitrum: undefined,
+  hyperevm: undefined,
   sepolia: undefined,
   hardhat: 300 * 10 ** 6,
   localhost: undefined,
@@ -105,6 +113,7 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   base: undefined,
   monadtestnet: undefined,
   arbitrum: undefined,
+  hyperevm: undefined,
   sepolia: undefined,
   hardhat: 0,
   localhost: undefined,

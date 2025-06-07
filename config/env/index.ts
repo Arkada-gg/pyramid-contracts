@@ -9,6 +9,7 @@ export const ENV: Environment = {
   ETHERSCAN_API_KEY_SONIC: process.env.ETHERSCAN_API_KEY_SONIC ?? '',
   ETHERSCAN_API_KEY_BASE: process.env.ETHERSCAN_API_KEY_BASE ?? '',
   ETHERSCAN_API_KEY_ARBITRUM: process.env.ETHERSCAN_API_KEY_ARBITRUM ?? '',
+  ETHERSCAN_API_KEY_HYPEREVM: process.env.ETHERSCAN_API_KEY_HYPEREVM ?? '',
   OPTIMIZER: process.env.OPTIMIZER === 'true',
   COVERAGE: process.env.COVERAGE === 'true',
   REPORT_GAS: process.env.REPORT_GAS === 'true',

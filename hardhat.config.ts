@@ -23,6 +23,7 @@ const {
   ETHERSCAN_API_KEY_SONIC,
   ETHERSCAN_API_KEY_BASE,
   ETHERSCAN_API_KEY_ARBITRUM,
+  ETHERSCAN_API_KEY_HYPEREVM,
   DEPLOYER,
 } = ENV;
 
@@ -60,6 +61,7 @@ const config: HardhatUserConfig = {
       base: DEPLOYER,
       monadtestnet: DEPLOYER,
       arbitrum: DEPLOYER,
+      hyperevm: DEPLOYER,
     },
   },
   verify: {
@@ -73,6 +75,7 @@ const config: HardhatUserConfig = {
     base: getNetworkConfig('base'),
     monadtestnet: getNetworkConfig('monadtestnet'),
     arbitrum: getNetworkConfig('arbitrum'),
+    hyperevm: getNetworkConfig('hyperevm'),
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hardhat: FORKING_NETWORK
@@ -99,6 +102,7 @@ const config: HardhatUserConfig = {
       sonic: ETHERSCAN_API_KEY_SONIC ?? '',
       base: ETHERSCAN_API_KEY_BASE ?? '',
       arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
+      hyperevm: ETHERSCAN_API_KEY_HYPEREVM ?? '',
     },
     customChains: [
       {
@@ -131,6 +135,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.arbiscan.io/api',
           browserURL: 'https://arbiscan.io/',
+        },
+      },
+      {
+        network: 'hyperevm',
+        chainId: 999,
+        urls: {
+          apiURL: 'https://www.hyperscan.com/api/v2',
+          browserURL: 'https://www.hyperscan.com/',
         },
       },
     ],
