@@ -77,6 +77,10 @@ contract ArkadaPVPArena is
     /// @dev Maps keccak256(arenaId, playerAddress) to participation status
     mapping(bytes32 => bool) public participants;
 
+    /// @notice Tracks how much user paid for participate in arena
+    /// @dev Maps keccak256(arenaId, playerAddress) to paid amount
+    mapping(bytes32 => uint256) public paidForParticipate;
+
     /// @notice Tracks claimed rewards by players
     /// @dev Maps keccak256(arenaId, playerAddress) to claim status
     mapping(bytes32 => bool) public claimed;
@@ -141,7 +145,7 @@ contract ArkadaPVPArena is
         uint256 _startTime,
         uint256 _requiredPlayers,
         bool _signatured
-    ) external returns (uint256 arenaId) {
+    ) external payable returns (uint256 arenaId) {
         if (_signatured) _checkRole(ADMIN_ROLE);
 
         if (_duration < durationConfig.min || _duration > durationConfig.max)
@@ -165,6 +169,15 @@ contract ArkadaPVPArena is
 
         arenaId = s_nextArenaId++;
 
+        bool hasAdminRole = hasRole(ADMIN_ROLE, msg.sender);
+
+        if (!hasAdminRole && msg.value < _entryFee)
+            revert PVPArena__InvalidFeeAmount();
+
+        uint256 initialPrizePool = hasAdminRole
+            ? msg.value
+            : msg.value - _entryFee;
+
         ArenaInfo memory newArena = ArenaInfo({
             id: arenaId,
             creator: msg.sender,
@@ -176,12 +189,16 @@ contract ArkadaPVPArena is
             arenaType: _type,
             requiredPlayers: _requiredPlayers,
             players: 0,
-            signatured: _signatured
+            initialPrizePool: initialPrizePool,
+            signatured: _signatured,
+            emergencyClosed: false
         });
 
         arenas[arenaId] = newArena;
 
         emit ArenaCreated(arenaId, msg.sender, _type, _signatured);
+
+        if (!hasAdminRole) _joinArena(newArena, msg.sender, false, 0);
     }
 
     /**
@@ -198,11 +215,10 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function joinArena(JoinData calldata data, bytes calldata signature)
-        external
-        payable
-        nonReentrant
-    {
+    function joinArena(
+        JoinData calldata data,
+        bytes calldata signature
+    ) external payable nonReentrant {
         // Validate the signature to ensure the join request is authorized
         _validateSignature(data, signature);
 
@@ -219,12 +235,14 @@ contract ArkadaPVPArena is
 
         if (arena.id == 0) revert PVPArena__InvalidArenaID();
 
-        if (arena.arenaType == ArenaType.TIME) {
-            if (block.timestamp >= arena.startTime)
-                revert PVPArena__ArenaStarted();
-        } else {
-            if (arena.players == arena.requiredPlayers)
-                revert PVPArena__ArenaStarted();
+        if (!arena.emergencyClosed) {
+            if (arena.arenaType == ArenaType.TIME) {
+                if (block.timestamp >= arena.startTime)
+                    revert PVPArena__ArenaStarted();
+            } else {
+                if (arena.players == arena.requiredPlayers)
+                    revert PVPArena__ArenaStarted();
+            }
         }
 
         bytes32 arenaIdHash = keccak256(abi.encodePacked(arena.id));
@@ -238,12 +256,23 @@ contract ArkadaPVPArena is
         arenas[_arenaId] = arena;
 
         participants[arenaIdAndAddressHash] = false;
-        feesByArena[_arenaId] -= arena.entryFee;
 
-        (bool success, ) = msg.sender.call{value: arena.entryFee}("");
-        if (!success) revert PVPArena__TransferFailed();
+        uint256 paidForEntry = paidForParticipate[arenaIdAndAddressHash];
+        if (paidForEntry > 0) {
+            feesByArena[_arenaId] -= paidForEntry;
+
+            (bool success, ) = msg.sender.call{value: paidForEntry}("");
+            if (!success) revert PVPArena__TransferFailed();
+        }
 
         if (arena.players == 0) {
+            if (arena.initialPrizePool > 0) {
+                (bool success, ) = treasury.call{value: arena.initialPrizePool}(
+                    ""
+                );
+                if (!success) revert PVPArena__TransferFailed();
+            }
+
             delete arenas[_arenaId];
             emit ArenaDeleted(_arenaId);
         }
@@ -254,13 +283,15 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function endArenaAndDistributeRewards(uint256 _arenaId, bytes32 _root)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function endArenaAndDistributeRewards(
+        uint256 _arenaId,
+        bytes32 _root
+    ) external onlyRole(ADMIN_ROLE) {
         ArenaInfo memory arena = arenas[_arenaId];
 
         if (arena.id == 0) revert PVPArena__InvalidArenaID();
+
+        if (arena.emergencyClosed) revert PVPArena__EmergencyClosed();
 
         if (arena.arenaType == ArenaType.TIME) {
             if (block.timestamp < arena.startTime)
@@ -277,10 +308,19 @@ contract ArkadaPVPArena is
 
         rootProofByArena[_arenaId] = _root;
 
-        uint256 totalFees = feesByArena[_arenaId];
-        uint256 feeAmount = (totalFees * feeBPS) / MAX_BPS;
+        uint256 arenaFees = feesByArena[_arenaId];
 
-        (bool success, ) = treasury.call{value: feeAmount}("");
+        uint256 treasuryAmount = arenaFees < arena.initialPrizePool
+            ? arenaFees
+            : arena.initialPrizePool;
+
+        uint256 feesAmount = arenaFees > arena.initialPrizePool
+            ? arenaFees
+            : arena.initialPrizePool;
+
+        uint256 feeAmount = (feesAmount * feeBPS) / MAX_BPS;
+
+        (bool success, ) = treasury.call{value: feeAmount + treasuryAmount}("");
         if (!success) revert PVPArena__TransferFailed();
 
         emit ArenaEnded(_arenaId, _root);
@@ -338,10 +378,9 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function setPlayersConfig(MinMax calldata _config)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function setPlayersConfig(
+        MinMax calldata _config
+    ) external onlyRole(ADMIN_ROLE) {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         playersConfig = _config;
         emit PlayersConfigSet(msg.sender, _config.min, _config.max);
@@ -350,10 +389,9 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function setIntervalToStartConfig(MinMax calldata _config)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function setIntervalToStartConfig(
+        MinMax calldata _config
+    ) external onlyRole(ADMIN_ROLE) {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         intervalToStartConfig = _config;
         emit IntervalToStartConfigSet(msg.sender, _config.min, _config.max);
@@ -362,13 +400,33 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
-    function setDurationConfig(MinMax calldata _config)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function setDurationConfig(
+        MinMax calldata _config
+    ) external onlyRole(ADMIN_ROLE) {
         if (_config.max < _config.min) revert PVPArena__InvalidMinMax();
         durationConfig = _config;
         emit DurationConfigSet(msg.sender, _config.min, _config.max);
+    }
+
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
+    function emergencyClose(uint256 _arenaId) external onlyRole(ADMIN_ROLE) {
+        ArenaInfo memory arena = arenas[_arenaId];
+
+        if (arena.id == 0) revert PVPArena__InvalidArenaID();
+
+        arena.emergencyClosed = true;
+
+        if (arena.initialPrizePool > 0) {
+            (bool success, ) = treasury.call{value: arena.initialPrizePool}("");
+            if (!success) revert PVPArena__TransferFailed();
+            arena.initialPrizePool = 0;
+        }
+
+        arenas[_arenaId] = arena;
+
+        emit EmergencyClosed(msg.sender, _arenaId);
     }
 
     /// @notice Validates the signature for a arena join request
@@ -395,11 +453,10 @@ contract ArkadaPVPArena is
     /// @param data The JoinData struct containing the details of join request
     /// @param sig The signature associated with the JoinData
     /// @return The address of the signer who signed the JoinData
-    function _getSigner(JoinData calldata data, bytes calldata sig)
-        internal
-        view
-        returns (address)
-    {
+    function _getSigner(
+        JoinData calldata data,
+        bytes calldata sig
+    ) internal view returns (address) {
         bytes32 digest = _computeDigest(data);
         return digest.recover(sig);
     }
@@ -408,11 +465,9 @@ contract ArkadaPVPArena is
     /// @dev Generates the digest that must be signed by the signer.
     /// @param data The JoinData to generate a digest for
     /// @return The computed EIP712 digest
-    function _computeDigest(JoinData calldata data)
-        internal
-        view
-        returns (bytes32)
-    {
+    function _computeDigest(
+        JoinData calldata data
+    ) internal view returns (bytes32) {
         return _hashTypedDataV4(keccak256(_getStructHash(data)));
     }
 
@@ -420,11 +475,9 @@ contract ArkadaPVPArena is
     /// @dev Encodes the JoinData struct into a hash as per EIP712 standard.
     /// @param data The JoinData struct to hash
     /// @return A hash representing the encoded JoinData
-    function _getStructHash(JoinData calldata data)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function _getStructHash(
+        JoinData calldata data
+    ) internal pure returns (bytes memory) {
         return
             abi.encode(
                 _JOIN_DATA_HASH,
@@ -449,10 +502,12 @@ contract ArkadaPVPArena is
     ) private {
         if (_arena.id == 0) revert PVPArena__InvalidArenaID();
 
+        if (_arena.emergencyClosed) revert PVPArena__EmergencyClosed();
+
         uint256 entryFeeWithDiscount = _arena.entryFee -
             ((_arena.entryFee * discountBps) / MAX_BPS);
 
-        if (!_freeFromFee && msg.value != entryFeeWithDiscount)
+        if (!_freeFromFee && msg.value < entryFeeWithDiscount)
             revert PVPArena__InvalidFeeAmount();
 
         if (_arena.arenaType == ArenaType.TIME) {
@@ -484,7 +539,11 @@ contract ArkadaPVPArena is
 
         arenas[_arena.id] = _arena;
         participants[arenaIdAndAddressHash] = true;
-        if (!_freeFromFee) feesByArena[_arena.id] += msg.value;
+        if (!_freeFromFee) feesByArena[_arena.id] += entryFeeWithDiscount;
+
+        paidForParticipate[arenaIdAndAddressHash] = _freeFromFee
+            ? 0
+            : entryFeeWithDiscount;
 
         emit PlayerJoined(_arena.id, _player);
     }

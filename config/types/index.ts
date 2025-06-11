@@ -5,6 +5,13 @@ export type Network =
   | 'soneium'
   | 'sonic'
   | 'base'
+  | 'monadtestnet'
+  | 'arbitrum'
+  | 'hyperevm'
+  | 'megaeth-testnet'
+  | 'pharos-testnet'
+  | 'plume'
+  | 'somnia'
   | 'hardhat'
   | 'localhost';
 export type RpcUrl =
@@ -22,6 +29,7 @@ export interface Environment {
   readonly ETHERSCAN_API_KEY_SONEIUM?: string;
   readonly ETHERSCAN_API_KEY_SONIC?: string;
   readonly ETHERSCAN_API_KEY_BASE?: string;
+  readonly ETHERSCAN_API_KEY_ARBITRUM?: string;
   readonly OPTIMIZER: boolean;
   readonly COVERAGE: boolean;
   readonly REPORT_GAS: boolean;

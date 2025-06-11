@@ -28,6 +28,7 @@ interface IArkadaPVPArena {
     error PVPArena__AlreadyClaimed();
     error PVPArena__InvalidDuration();
     error PVPArena__InvalidMinMax();
+    error PVPArena__EmergencyClosed();
 
     /// @notice Emitted when a new arena is created
     /// @param arenaId Unique identifier for the created arena
@@ -96,6 +97,11 @@ interface IArkadaPVPArena {
         uint256 max
     );
 
+    /// @notice Emitted when the arena emergencyClosed flag is updated
+    /// @param caller Address that called the function
+    /// @param arenaId Arena id
+    event EmergencyClosed(address indexed caller, uint256 arenaId);
+
     /// @notice Emitted when the duration configuration is updated
     /// @param caller Address that called the function
     /// @param min Minimum duration allowed
@@ -129,6 +135,7 @@ interface IArkadaPVPArena {
     /// @param requiredPlayers Number of players required to start a PLACES type arena, must be within playersConfig min/max range
     /// @param players Current number of players in the arena, incremented when players join, decremented when they leave
     /// @param signatured Whether the arena requires signatures to join, if true, only players with valid signatures can join
+    /// @param emergencyClosed Flag to close arena operations, exclude leaveArena to make refund
     struct ArenaInfo {
         uint256 id;
         address creator;
@@ -137,10 +144,12 @@ interface IArkadaPVPArena {
         uint256 startTime;
         uint256 endTime;
         uint256 createdAt;
-        ArenaType arenaType;
         uint256 requiredPlayers;
         uint256 players;
+        uint256 initialPrizePool;
+        ArenaType arenaType;
         bool signatured;
+        bool emergencyClosed;
     }
 
     /// @notice Structure for joining an arena with a signature
@@ -160,6 +169,8 @@ interface IArkadaPVPArena {
 
     /// @notice Creates a new battle arena with specified parameters
     /// @dev Creates either TIME-based or PLACES-based arenas with different mechanics
+    /// @dev Payable, rest msg.value - entryFee goes to initial prize pool,
+    ///      if called by ADMIN_ROLE full amount of msg.value goes to initial prize pool
     /// @param _type Type of arena (TIME or PLACES)
     /// @param _entryFee Fee required to join the arena
     /// @param _duration Duration of the arena in seconds
@@ -174,7 +185,7 @@ interface IArkadaPVPArena {
         uint256 _startTime,
         uint256 _requiredPlayers,
         bool _signatured
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     /// @notice Allows a user to join an arena by paying the entry fee
     /// @dev User must send the exact entry fee amount
@@ -185,9 +196,10 @@ interface IArkadaPVPArena {
     /// @dev For signatured arenas or special access cases
     /// @param data The JoinData struct containing join details
     /// @param signature The signature from an authorized signer
-    function joinArena(JoinData calldata data, bytes calldata signature)
-        external
-        payable;
+    function joinArena(
+        JoinData calldata data,
+        bytes calldata signature
+    ) external payable;
 
     /// @notice Allows a player to leave an arena and get refunded
     /// @dev Only possible if the arena hasn't started yet
@@ -198,8 +210,10 @@ interface IArkadaPVPArena {
     /// @dev Only callable by admin when arena has completed
     /// @param _arenaId The ID of the arena to end
     /// @param _root Merkle root for reward distribution proofs
-    function endArenaAndDistributeRewards(uint256 _arenaId, bytes32 _root)
-        external;
+    function endArenaAndDistributeRewards(
+        uint256 _arenaId,
+        bytes32 _root
+    ) external;
 
     /// @notice Allows a player to claim their rewards from an ended arena
     /// @dev Uses merkle proofs to verify eligibility for rewards
@@ -236,4 +250,9 @@ interface IArkadaPVPArena {
     /// @dev Only callable by admin
     /// @param _config New duration configuration
     function setDurationConfig(MinMax calldata _config) external;
+
+    /// @notice Sets the emergencyClosed flag condition
+    /// @dev Only callable by admin
+    /// @param _arenaId Arena id
+    function emergencyClose(uint256 _arenaId) external;
 }

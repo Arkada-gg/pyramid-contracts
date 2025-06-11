@@ -5,7 +5,6 @@ import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-contract-sizer';
 import 'hardhat-deploy';
 import 'solidity-docgen';
-// import './tasks';
 
 import {
   ENV,
@@ -19,10 +18,11 @@ const {
   OPTIMIZER,
   REPORT_GAS,
   FORKING_NETWORK,
-  ETHERSCAN_API_KEY,
+  // ETHERSCAN_API_KEY,
   ETHERSCAN_API_KEY_SONEIUM,
   ETHERSCAN_API_KEY_SONIC,
   ETHERSCAN_API_KEY_BASE,
+  ETHERSCAN_API_KEY_ARBITRUM,
   DEPLOYER,
 } = ENV;
 
@@ -58,17 +58,28 @@ const config: HardhatUserConfig = {
       soneium: DEPLOYER,
       sonic: DEPLOYER,
       base: DEPLOYER,
+      monadtestnet: DEPLOYER,
+      arbitrum: DEPLOYER,
+      hyperevm: DEPLOYER,
     },
   },
-  verify: {
-    etherscan: {
-      apiKey: ETHERSCAN_API_KEY,
-    },
-  },
+  // verify: {
+  //   etherscan: {
+  //     apiKey: ETHERSCAN_API_KEY,
+  //   },
+  // },
   networks: {
     soneium: getNetworkConfig('soneium'),
     sonic: getNetworkConfig('sonic'),
     base: getNetworkConfig('base'),
+    monadtestnet: getNetworkConfig('monadtestnet'),
+    arbitrum: getNetworkConfig('arbitrum'),
+    hyperevm: getNetworkConfig('hyperevm'),
+    plume: getNetworkConfig('plume'),
+    somnia: getNetworkConfig('somnia'),
+    'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
+    'pharos-testnet': getNetworkConfig('pharos-testnet'),
+
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hardhat: FORKING_NETWORK
@@ -94,6 +105,7 @@ const config: HardhatUserConfig = {
       soneium: ETHERSCAN_API_KEY_SONEIUM ?? '',
       sonic: ETHERSCAN_API_KEY_SONIC ?? '',
       base: ETHERSCAN_API_KEY_BASE ?? '',
+      arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
     },
     customChains: [
       {
@@ -118,6 +130,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.basescan.org/api/',
           browserURL: 'https://basescan.org',
+        },
+      },
+      {
+        network: 'arbitrum',
+        chainId: 42161,
+        urls: {
+          apiURL: 'https://api.arbiscan.io/api',
+          browserURL: 'https://arbiscan.io/',
         },
       },
     ],
