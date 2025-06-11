@@ -18,12 +18,11 @@ const {
   OPTIMIZER,
   REPORT_GAS,
   FORKING_NETWORK,
-  ETHERSCAN_API_KEY,
+  // ETHERSCAN_API_KEY,
   ETHERSCAN_API_KEY_SONEIUM,
   ETHERSCAN_API_KEY_SONIC,
   ETHERSCAN_API_KEY_BASE,
   ETHERSCAN_API_KEY_ARBITRUM,
-  ETHERSCAN_API_KEY_HYPEREVM,
   DEPLOYER,
 } = ENV;
 
@@ -64,11 +63,11 @@ const config: HardhatUserConfig = {
       hyperevm: DEPLOYER,
     },
   },
-  verify: {
-    etherscan: {
-      apiKey: ETHERSCAN_API_KEY,
-    },
-  },
+  // verify: {
+  //   etherscan: {
+  //     apiKey: ETHERSCAN_API_KEY,
+  //   },
+  // },
   networks: {
     soneium: getNetworkConfig('soneium'),
     sonic: getNetworkConfig('sonic'),
@@ -76,6 +75,11 @@ const config: HardhatUserConfig = {
     monadtestnet: getNetworkConfig('monadtestnet'),
     arbitrum: getNetworkConfig('arbitrum'),
     hyperevm: getNetworkConfig('hyperevm'),
+    plume: getNetworkConfig('plume'),
+    somnia: getNetworkConfig('somnia'),
+    'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
+    'pharos-testnet': getNetworkConfig('pharos-testnet'),
+
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hardhat: FORKING_NETWORK
@@ -102,7 +106,6 @@ const config: HardhatUserConfig = {
       sonic: ETHERSCAN_API_KEY_SONIC ?? '',
       base: ETHERSCAN_API_KEY_BASE ?? '',
       arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
-      hyperevm: ETHERSCAN_API_KEY_HYPEREVM ?? '',
     },
     customChains: [
       {
@@ -135,14 +138,6 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.arbiscan.io/api',
           browserURL: 'https://arbiscan.io/',
-        },
-      },
-      {
-        network: 'hyperevm',
-        chainId: 999,
-        urls: {
-          apiURL: 'https://www.hyperscan.com/api/v2',
-          browserURL: 'https://www.hyperscan.com/',
         },
       },
     ],

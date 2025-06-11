@@ -47,6 +47,31 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     arena: '',
     escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
   },
+  'megaeth-testnet': {
+    arkadaRewarder: '',
+    pyramid: '',
+    arena: '',
+    escrowFactory: '',
+  },
+  'pharos-testnet': {
+    arkadaRewarder: '',
+    pyramid: '',
+    arena: '',
+    escrowFactory: '',
+  },
+  plume: {
+    arkadaRewarder: '',
+    pyramid: '',
+    arena: '',
+    escrowFactory: '',
+  },
+  somnia: {
+    arkadaRewarder: '',
+    pyramid: '',
+    arena: '',
+    escrowFactory: '',
+  },
+
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,

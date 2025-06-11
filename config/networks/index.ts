@@ -27,6 +27,12 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
     ? `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://arbitrum-one-rpc.publicnode.com`,
   hyperevm: 'https://rpc.hyperliquid.xyz/evm',
+  'megaeth-testnet': ALCHEMY_KEY
+    ? `https://megaeth-testnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+    : `https://carrot.megaeth.com/rpc`,
+  'pharos-testnet': 'https://testnet.dplabs-internal.com/',
+  plume: 'https://rpc.plume.org',
+  somnia: 'https://dream-rpc.somnia.network/',
 
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
@@ -42,6 +48,11 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   monadtestnet: 'auto',
   arbitrum: 'auto',
   hyperevm: 'auto',
+  plume: 'auto',
+  somnia: 'auto',
+  'megaeth-testnet': 'auto',
+  'pharos-testnet': 'auto',
+
   sepolia: 'auto',
   hardhat: 0,
   localhost: 0,
@@ -54,6 +65,11 @@ export const chainIds: ConfigPerNetwork<number> = {
   monadtestnet: 10143,
   arbitrum: 42161,
   hyperevm: 999,
+  plume: 98866,
+  somnia: 50312,
+  'megaeth-testnet': 6342,
+  'pharos-testnet': 688688,
+
   sepolia: 11155111,
   hardhat: 31337,
   localhost: 31337,
@@ -66,6 +82,11 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   monadtestnet: MNEMONIC_PROD,
   arbitrum: MNEMONIC_PROD,
   hyperevm: MNEMONIC_PROD,
+  plume: MNEMONIC_PROD,
+  somnia: MNEMONIC_PROD,
+  'megaeth-testnet': MNEMONIC_PROD,
+  'pharos-testnet': MNEMONIC_PROD,
+
   sepolia: MNEMONIC_DEV,
   hardhat: MNEMONIC_DEV,
   localhost: MNEMONIC_DEV,
@@ -78,6 +99,11 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   monadtestnet: undefined,
   arbitrum: undefined,
   hyperevm: undefined,
+  plume: undefined,
+  somnia: undefined,
+  'megaeth-testnet': undefined,
+  'pharos-testnet': undefined,
+
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,
@@ -90,6 +116,11 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   monadtestnet: undefined,
   arbitrum: undefined,
   hyperevm: undefined,
+  plume: undefined,
+  somnia: undefined,
+  'megaeth-testnet': undefined,
+  'pharos-testnet': undefined,
+
   sepolia: 999999,
   hardhat: undefined,
   localhost: 999999,
@@ -102,6 +133,11 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   monadtestnet: undefined,
   arbitrum: undefined,
   hyperevm: undefined,
+  plume: undefined,
+  somnia: undefined,
+  'megaeth-testnet': undefined,
+  'pharos-testnet': undefined,
+
   sepolia: undefined,
   hardhat: 300 * 10 ** 6,
   localhost: undefined,
@@ -114,6 +150,11 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   monadtestnet: undefined,
   arbitrum: undefined,
   hyperevm: undefined,
+  plume: undefined,
+  somnia: undefined,
+  'megaeth-testnet': undefined,
+  'pharos-testnet': undefined,
+
   sepolia: undefined,
   hardhat: 0,
   localhost: undefined,
