@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   // initialise params <=========
   // const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
-  const ADMIN = '0xd0623f1fC15d9cb59D0dc81f3498F30bcaE6B97C'; // Set admin address here
+  const ADMIN = '0xd0623f1fC15d9cb59D0dc81f3498F30bcaE6B97C'; // Temporary admin
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(
@@ -28,6 +28,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       unsafeAllow: ['constructor'],
     },
   );
+
+  console.log('TX Hash:', deployment.deployTransaction?.hash);
 
   if (deployment.deployTransaction) {
     console.log('Waiting 5 blocks...');

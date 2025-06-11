@@ -61,6 +61,10 @@ const config: HardhatUserConfig = {
       monadtestnet: DEPLOYER,
       arbitrum: DEPLOYER,
       hyperevm: DEPLOYER,
+      plume: DEPLOYER,
+      somnia: DEPLOYER,
+      'megaeth-testnet': DEPLOYER,
+      'pharos-testnet': DEPLOYER,
     },
   },
   // verify: {
@@ -106,6 +110,7 @@ const config: HardhatUserConfig = {
       sonic: ETHERSCAN_API_KEY_SONIC ?? '',
       base: ETHERSCAN_API_KEY_BASE ?? '',
       arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
+      'pharos-testnet': ETHERSCAN_API_KEY_ARBITRUM ?? '',
     },
     customChains: [
       {
@@ -138,6 +143,15 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.arbiscan.io/api',
           browserURL: 'https://arbiscan.io/',
+        },
+      },
+      {
+        network: 'pharos-testnet',
+        chainId: 688688,
+        urls: {
+          apiURL:
+            'https://api.socialscan.io/pharos-testnet/v1/explorer/command_api/contract',
+          browserURL: 'https://pharos-testnet.socialscan.io/',
         },
       },
     ],

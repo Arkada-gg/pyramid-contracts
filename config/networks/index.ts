@@ -27,9 +27,7 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
     ? `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://arbitrum-one-rpc.publicnode.com`,
   hyperevm: 'https://rpc.hyperliquid.xyz/evm',
-  'megaeth-testnet': ALCHEMY_KEY
-    ? `https://megaeth-testnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
-    : `https://carrot.megaeth.com/rpc`,
+  'megaeth-testnet': `https://carrot.megaeth.com/rpc`,
   'pharos-testnet': 'https://testnet.dplabs-internal.com/',
   plume: 'https://rpc.plume.org',
   somnia: 'https://dream-rpc.somnia.network/',
@@ -118,8 +116,8 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   hyperevm: undefined,
   plume: undefined,
   somnia: undefined,
-  'megaeth-testnet': undefined,
-  'pharos-testnet': undefined,
+  'megaeth-testnet': 999999,
+  'pharos-testnet': 999999,
 
   sepolia: 999999,
   hardhat: undefined,
