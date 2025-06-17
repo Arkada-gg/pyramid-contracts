@@ -17,6 +17,7 @@ interface IArkadaPVPArena {
     error PVPArena__ArenaStarted();
     error PVPArena__ArenaNotStarted();
     error PVPArena__ArenaNotEnded();
+    error PVPArena__ArenaCanceled();
     error PVPArena__AlreadyEnded();
     error PVPArena__AlreadyJoined();
     error PVPArena__NotJoined();

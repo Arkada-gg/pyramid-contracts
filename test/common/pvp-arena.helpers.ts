@@ -236,6 +236,7 @@ export const createArenaTest = async (
     await arenaContract.ADMIN_ROLE(),
     sender.address,
   );
+  const playersConfig = await arenaContract.playersConfig();
 
   expect(arenaData.id).eq(arenaId);
   expect(arenaData.creator).eq(sender.address);
@@ -245,7 +246,9 @@ export const createArenaTest = async (
   if (type === ArenaType.TIME)
     expect(arenaData.endTime).eq(Number(startTime) + Number(duration));
   expect(arenaData.arenaType).eq(type);
-  expect(arenaData.requiredPlayers).eq(requiredPlayers);
+  expect(arenaData.requiredPlayers).eq(
+    requiredPlayers === 0 ? playersConfig.min : requiredPlayers,
+  );
   expect(arenaData.players).eq(hasAdminRole ? 0 : 1);
   expect(arenaData.initialPrizePool).eq(
     hasAdminRole
@@ -276,6 +279,7 @@ export const joinArenaTest = async (
   const feeByArenaBefore = await arenaContract.feesByArena(arenaId);
   const senderBalanceBefore = await sender.getBalance();
 
+  // await arenaContract.connect(sender)['joinArena(uint256)'](arenaId, { value })
   await expect(
     arenaContract.connect(sender)['joinArena(uint256)'](arenaId, { value }),
   ).to.emit(
@@ -290,7 +294,10 @@ export const joinArenaTest = async (
   expect(senderBalanceAfter).eq(senderBalanceBefore.sub(value));
   expect(arenaDataAfter.players).eq(arenaDataBefore.players.add(1));
 
-  if (arenaDataAfter.players.eq(arenaDataAfter.requiredPlayers)) {
+  if (
+    arenaDataAfter.arenaType === ArenaType.PLACES &&
+    arenaDataAfter.players.eq(arenaDataAfter.requiredPlayers)
+  ) {
     expect(arenaDataAfter.startTime).gt(arenaDataBefore.startTime);
     expect(arenaDataAfter.endTime).gt(arenaDataBefore.endTime);
   }
@@ -387,7 +394,10 @@ export const joinArenaWithSignatureTest = async (
 
   expect(arenaDataAfter.players).eq(arenaDataBefore.players.add(1));
 
-  if (arenaDataAfter.players.eq(arenaDataAfter.requiredPlayers)) {
+  if (
+    arenaDataAfter.arenaType === ArenaType.PLACES &&
+    arenaDataAfter.players.eq(arenaDataAfter.requiredPlayers)
+  ) {
     expect(arenaDataAfter.startTime).gt(arenaDataBefore.startTime);
     expect(arenaDataAfter.endTime).gt(arenaDataBefore.endTime);
   }

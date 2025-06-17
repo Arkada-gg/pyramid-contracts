@@ -187,7 +187,9 @@ contract ArkadaPVPArena is
             endTime: _type == ArenaType.TIME ? _startTime + _duration : 0,
             createdAt: block.timestamp,
             arenaType: _type,
-            requiredPlayers: _requiredPlayers,
+            requiredPlayers: _requiredPlayers == 0
+                ? playersConfig.min
+                : _requiredPlayers,
             players: 0,
             initialPrizePool: initialPrizePool,
             signatured: _signatured,
@@ -237,8 +239,10 @@ contract ArkadaPVPArena is
 
         if (!arena.emergencyClosed) {
             if (arena.arenaType == ArenaType.TIME) {
-                if (block.timestamp >= arena.startTime)
-                    revert PVPArena__ArenaStarted();
+                if (
+                    block.timestamp >= arena.startTime &&
+                    arena.players >= arena.requiredPlayers
+                ) revert PVPArena__ArenaStarted();
             } else {
                 if (arena.players == arena.requiredPlayers)
                     revert PVPArena__ArenaStarted();
@@ -294,8 +298,10 @@ contract ArkadaPVPArena is
         if (arena.emergencyClosed) revert PVPArena__EmergencyClosed();
 
         if (arena.arenaType == ArenaType.TIME) {
-            if (block.timestamp < arena.startTime)
-                revert PVPArena__ArenaNotStarted();
+            if (
+                block.timestamp < arena.startTime ||
+                arena.players < arena.requiredPlayers
+            ) revert PVPArena__ArenaNotStarted();
         } else {
             if (arena.players < arena.requiredPlayers)
                 revert PVPArena__ArenaNotStarted();
@@ -511,8 +517,14 @@ contract ArkadaPVPArena is
             revert PVPArena__InvalidFeeAmount();
 
         if (_arena.arenaType == ArenaType.TIME) {
-            if (block.timestamp >= _arena.startTime)
-                revert PVPArena__ArenaStarted();
+            if (
+                block.timestamp >= _arena.startTime &&
+                _arena.players >= _arena.requiredPlayers
+            ) revert PVPArena__ArenaStarted();
+            if (
+                block.timestamp >= _arena.startTime &&
+                _arena.players < _arena.requiredPlayers
+            ) revert PVPArena__ArenaCanceled();
         } else {
             if (_arena.players == _arena.requiredPlayers)
                 revert PVPArena__ArenaStarted();
