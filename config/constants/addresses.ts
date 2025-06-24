@@ -14,7 +14,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   soneium: {
     arkadaRewarder: '0x998F98F806F448cc1eAB301D10f95DE065EE2ABe',
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
-    arena: '0x6DE71Afc6C40fE3B0c15B058852577773374f6DF',
+    arena: '0xAEDF46Add9A2f466565AA2b4f20C3C21e334E1e3',
     escrowFactory: '0xfA15F981DDCa3A9bFaeE28c35334fC9539E18E9E',
   },
   sonic: {
@@ -32,7 +32,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   monadtestnet: {
     arkadaRewarder: '0x360ecC5bf4E5E9aeec708571Fe286c33679c450B',
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
-    arena: '',
+    arena: '0x3A1c0Fb2618d762586998A5De53E60c1E0b5Da1E',
     escrowFactory: '0x1AE93e93A8B421725F114a27c82237BEF4ada624',
   },
   arbitrum: {

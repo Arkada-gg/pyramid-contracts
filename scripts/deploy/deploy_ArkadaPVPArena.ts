@@ -22,7 +22,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const ADMIN = deployer; // Set admin address here
   const TREASURY = deployer; // Set treasury address here
   const SIGNER = '0xA3F1D90b5227A128A65AcbE223dbe01870e4AbF3'; // Set signer address here
+  // const SIGNER = '0xDE91c31f1b9c3dc4270cADaec8ab4C4C5aCAD93f'; // Set signer address here  PROD
   const FEE_BPS = 100; // fee percent to treasury send (10000 = 100%)
+  const TIME_LEFT_TO_REBUY_BPS = 1000; // fee percent to treasury send (10000 = 100%)
   const PLAYERS_CONFIG = {
     min: 3,
     max: 123,
@@ -47,6 +49,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       SIGNER,
       ADMIN,
       FEE_BPS,
+      TIME_LEFT_TO_REBUY_BPS,
       PLAYERS_CONFIG,
       INTERVAL_TO_START_CONFIG,
       DURATION_CONFIG,
