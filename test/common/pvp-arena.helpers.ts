@@ -657,3 +657,68 @@ export const emergencyCloseTest = async (
   // Participant status should be false
   expect(arena.emergencyClosed).to.equal(true);
 };
+
+interface IRebuyTest extends CommonParams {
+  arenaId: BigNumberish;
+}
+
+export const rebuyTest = async (
+  { arenaContract, owner, arenaId }: IRebuyTest,
+  opt?: OptionalCommonParams,
+) => {
+  const sender = opt?.from ?? owner;
+
+  if (opt?.revertMessage) {
+    await expect(
+      arenaContract.connect(sender).rebuy(arenaId, { value: opt.value }),
+    ).revertedWithCustomError(arenaContract, opt?.revertMessage);
+    return;
+  }
+
+  const arenaDataBefore = await arenaContract.arenas(arenaId);
+  const feeByArenaBefore = await arenaContract.feesByArena(arenaId);
+  const senderBalanceBefore = await sender.getBalance();
+
+  // Calculate the hash for participant mapping
+  const arenaIdAndAddressHash = ethers.utils.solidityKeccak256(
+    ['bytes32', 'address'],
+    [ethers.utils.solidityKeccak256(['uint256'], [arenaId]), sender.address],
+  );
+
+  // Check participant status before leaving
+  expect(await arenaContract.participants(arenaIdAndAddressHash)).to.equal(
+    true,
+  );
+
+  // Check event emission
+  await expect(
+    arenaContract.connect(sender).rebuy(arenaId, { value: opt?.value }),
+  )
+    .to.emit(
+      arenaContract,
+      arenaContract.interface.events['PlayerRebuy(uint256,address)'].name,
+    )
+    .withArgs(arenaId, sender.address);
+
+  const arenaDataAfter = await arenaContract.arenas(arenaId);
+  const feeByArenaAfter = await arenaContract.feesByArena(arenaId);
+  const senderBalanceAfter = await sender.getBalance();
+
+  expect(arenaDataBefore.players).eq(arenaDataAfter.players);
+  expect(arenaDataBefore.requiredPlayers).eq(arenaDataAfter.requiredPlayers);
+  expect(arenaDataBefore.arenaType).eq(arenaDataAfter.arenaType);
+  expect(arenaDataBefore.createdAt).eq(arenaDataAfter.createdAt);
+  expect(arenaDataBefore.creator).eq(arenaDataAfter.creator);
+  expect(arenaDataBefore.duration).eq(arenaDataAfter.duration);
+  expect(arenaDataBefore.startTime).eq(arenaDataAfter.startTime);
+  expect(arenaDataBefore.endTime).eq(arenaDataAfter.endTime);
+  expect(arenaDataBefore.emergencyClosed).eq(arenaDataAfter.emergencyClosed);
+  expect(arenaDataBefore.signatured).eq(arenaDataAfter.signatured);
+  expect(arenaDataBefore.entryFee).eq(arenaDataAfter.entryFee);
+
+  expect(feeByArenaAfter).eq(feeByArenaBefore.add(arenaDataAfter.entryFee));
+
+  expect(senderBalanceAfter).eq(
+    senderBalanceBefore.sub(arenaDataAfter.entryFee),
+  );
+};

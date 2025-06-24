@@ -219,6 +219,7 @@ export async function defaultDeploy() {
 
   const arenaInitialConfig = {
     feeBPS: 100,
+    timeLeftForRebuyBPS: 100,
     playersConfig: {
       min: 3,
       max: 50,
@@ -242,6 +243,7 @@ export async function defaultDeploy() {
       arenaSigner.address,
       admin.address,
       arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
       arenaInitialConfig.playersConfig,
       arenaInitialConfig.intervalToStartConfig,
       arenaInitialConfig.durationConfig,
@@ -255,6 +257,7 @@ export async function defaultDeploy() {
       ethers.constants.AddressZero,
       admin.address,
       arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
       arenaInitialConfig.playersConfig,
       arenaInitialConfig.intervalToStartConfig,
       arenaInitialConfig.durationConfig,
@@ -268,6 +271,7 @@ export async function defaultDeploy() {
       arenaSigner.address,
       ethers.constants.AddressZero,
       arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
       arenaInitialConfig.playersConfig,
       arenaInitialConfig.intervalToStartConfig,
       arenaInitialConfig.durationConfig,
@@ -281,6 +285,7 @@ export async function defaultDeploy() {
       arenaSigner.address,
       owner.address,
       arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
       arenaInitialConfig.playersConfig,
       arenaInitialConfig.intervalToStartConfig,
       arenaInitialConfig.durationConfig,

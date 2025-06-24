@@ -18,6 +18,7 @@ interface IArkadaPVPArena {
     error PVPArena__ArenaNotStarted();
     error PVPArena__ArenaNotEnded();
     error PVPArena__ArenaCanceled();
+    error PVPArena__ArenaRebuyTimeExeeded();
     error PVPArena__AlreadyEnded();
     error PVPArena__AlreadyJoined();
     error PVPArena__NotJoined();
@@ -52,6 +53,11 @@ interface IArkadaPVPArena {
     /// @param player Address of the player that joined
     event PlayerJoined(uint256 indexed arenaId, address indexed player);
 
+    /// @notice Emitted when a player rebuy entry
+    /// @param arenaId Unique identifier for the arena
+    /// @param player Address of the player that joined
+    event PlayerRebuy(uint256 indexed arenaId, address indexed player);
+
     /// @notice Emitted when a player leaves an arena
     /// @param arenaId Unique identifier for the arena
     /// @param player Address of the player that left
@@ -81,6 +87,14 @@ interface IArkadaPVPArena {
     /// @param caller Address that called the function
     /// @param newFeeBPS New fee percentage in basis points
     event FeeBpsSet(address indexed caller, uint16 indexed newFeeBPS);
+
+    /// @notice Emitted when the timeLeftToRebuyBPS basis points are updated
+    /// @param caller Address that called the function
+    /// @param newTimeLeftToRebuyBPS New timeLeftToRebuyBPS percentage in basis points
+    event TimeLeftToRebuyBPSSet(
+        address indexed caller,
+        uint16 indexed newTimeLeftToRebuyBPS
+    );
 
     /// @notice Emitted when the players configuration is updated
     /// @param caller Address that called the function
@@ -189,7 +203,7 @@ interface IArkadaPVPArena {
     ) external payable returns (uint256);
 
     /// @notice Allows a user to join an arena by paying the entry fee
-    /// @dev User must send the exact entry fee amount
+    /// @dev User must send the greater or equal entry fee amount
     /// @param _arenaId The ID of the arena to join
     function joinArena(uint256 _arenaId) external payable;
 
@@ -227,6 +241,11 @@ interface IArkadaPVPArena {
         bytes32[] calldata _proofs
     ) external;
 
+    /// @notice Allows a user to rebuy entry for arena by paying the entry fee
+    /// @dev User must send the greater or equal entry fee amount
+    /// @param _arenaId The ID of the arena to join
+    function rebuy(uint256 _arenaId) external payable;
+
     /// @notice Sets the treasury address that receives protocol fees
     /// @dev Only callable by admin
     /// @param _treasury New treasury address
@@ -236,6 +255,11 @@ interface IArkadaPVPArena {
     /// @dev Only callable by admin
     /// @param _feeBPS New fee percentage in basis points
     function setFeeBPS(uint16 _feeBPS) external;
+
+    /// @notice Sets the time left to rebuy in basis points (10000 = 100%)
+    /// @dev Only callable by admin
+    /// @param _timeLeftToRebuyBPS New time left to rebuy in basis points
+    function setTimeLeftToRebuyBPS(uint16 _timeLeftToRebuyBPS) external;
 
     /// @notice Sets the min/max configuration for player counts
     /// @dev Only callable by admin

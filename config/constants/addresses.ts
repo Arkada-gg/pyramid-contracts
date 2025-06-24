@@ -14,7 +14,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   soneium: {
     arkadaRewarder: '0x998F98F806F448cc1eAB301D10f95DE065EE2ABe',
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
-    arena: '',
+    arena: '0x6DE71Afc6C40fE3B0c15B058852577773374f6DF',
     escrowFactory: '0xfA15F981DDCa3A9bFaeE28c35334fC9539E18E9E',
   },
   sonic: {

@@ -49,6 +49,9 @@ contract ArkadaPVPArena is
     /// @dev Fee taken from each arena's prize pool
     uint16 public feeBPS;
 
+    /// @notice Time left to rebuy in basis points (10000 = 100%)
+    uint16 public timeLeftToRebuyBPS;
+
     /// @notice Min/max configuration for player counts in arenas
     /// @dev Used to validate player requirements for PLACES type arenas
     MinMax public playersConfig;
@@ -107,6 +110,7 @@ contract ArkadaPVPArena is
         address _signer,
         address _admin,
         uint16 _feeBPS,
+        uint16 _timeLeftToRebuyBPS,
         MinMax memory _playersConfig,
         MinMax memory _intervalToStartConfig,
         MinMax memory _durationConfig
@@ -128,6 +132,7 @@ contract ArkadaPVPArena is
         playersConfig = _playersConfig;
         intervalToStartConfig = _intervalToStartConfig;
         durationConfig = _durationConfig;
+        timeLeftToRebuyBPS = _timeLeftToRebuyBPS;
 
         // Increasing _nextArenaId to start ids from 1
         unchecked {
@@ -187,7 +192,7 @@ contract ArkadaPVPArena is
             endTime: _type == ArenaType.TIME ? _startTime + _duration : 0,
             createdAt: block.timestamp,
             arenaType: _type,
-            requiredPlayers: _requiredPlayers == 0
+            requiredPlayers: _requiredPlayers < playersConfig.min
                 ? playersConfig.min
                 : _requiredPlayers,
             players: 0,
@@ -238,15 +243,10 @@ contract ArkadaPVPArena is
         if (arena.id == 0) revert PVPArena__InvalidArenaID();
 
         if (!arena.emergencyClosed) {
-            if (arena.arenaType == ArenaType.TIME) {
-                if (
-                    block.timestamp >= arena.startTime &&
-                    arena.players >= arena.requiredPlayers
-                ) revert PVPArena__ArenaStarted();
-            } else {
-                if (arena.players == arena.requiredPlayers)
-                    revert PVPArena__ArenaStarted();
-            }
+            if (
+                block.timestamp >= arena.startTime &&
+                arena.players >= arena.requiredPlayers
+            ) revert PVPArena__ArenaStarted();
         }
 
         bytes32 arenaIdHash = keccak256(abi.encodePacked(arena.id));
@@ -297,15 +297,10 @@ contract ArkadaPVPArena is
 
         if (arena.emergencyClosed) revert PVPArena__EmergencyClosed();
 
-        if (arena.arenaType == ArenaType.TIME) {
-            if (
-                block.timestamp < arena.startTime ||
-                arena.players < arena.requiredPlayers
-            ) revert PVPArena__ArenaNotStarted();
-        } else {
-            if (arena.players < arena.requiredPlayers)
-                revert PVPArena__ArenaNotStarted();
-        }
+        if (
+            block.timestamp < arena.startTime ||
+            arena.players < arena.requiredPlayers
+        ) revert PVPArena__ArenaNotStarted();
 
         if (block.timestamp < arena.endTime) revert PVPArena__ArenaNotEnded();
 
@@ -367,6 +362,41 @@ contract ArkadaPVPArena is
     /**
      * @inheritdoc IArkadaPVPArena
      */
+    function rebuy(uint256 _arenaId) external payable nonReentrant {
+        ArenaInfo memory arena = arenas[_arenaId];
+
+        if (arena.id == 0) revert PVPArena__InvalidArenaID();
+
+        if (arena.emergencyClosed) revert PVPArena__EmergencyClosed();
+
+        if (
+            block.timestamp < arena.startTime ||
+            arena.players < arena.requiredPlayers
+        ) revert PVPArena__ArenaNotStarted();
+
+        if (msg.value < arena.entryFee) revert PVPArena__InvalidFeeAmount();
+
+        bytes32 arenaIdHash = keccak256(abi.encodePacked(_arenaId));
+        bytes32 arenaIdAndAddressHash = keccak256(
+            abi.encodePacked(arenaIdHash, msg.sender)
+        );
+
+        if (!participants[arenaIdAndAddressHash]) revert PVPArena__NotJoined();
+
+        uint256 rebuyEndTime = arena.startTime +
+            (arena.duration -
+                ((arena.duration * timeLeftToRebuyBPS) / MAX_BPS));
+        if (block.timestamp > rebuyEndTime)
+            revert PVPArena__ArenaRebuyTimeExeeded();
+
+        feesByArena[_arenaId] += arena.entryFee;
+
+        emit PlayerRebuy(_arenaId, msg.sender);
+    }
+
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
     function setTreasury(address _treasury) external onlyRole(ADMIN_ROLE) {
         if (_treasury == address(0)) revert PVPArena__InvalidAddress();
         treasury = _treasury;
@@ -379,6 +409,16 @@ contract ArkadaPVPArena is
     function setFeeBPS(uint16 _feeBPS) external onlyRole(ADMIN_ROLE) {
         feeBPS = _feeBPS;
         emit FeeBpsSet(msg.sender, _feeBPS);
+    }
+
+    /**
+     * @inheritdoc IArkadaPVPArena
+     */
+    function setTimeLeftToRebuyBPS(
+        uint16 _timeLeftToRebuyBPS
+    ) external onlyRole(ADMIN_ROLE) {
+        timeLeftToRebuyBPS = _timeLeftToRebuyBPS;
+        emit TimeLeftToRebuyBPSSet(msg.sender, _timeLeftToRebuyBPS);
     }
 
     /**
@@ -516,18 +556,21 @@ contract ArkadaPVPArena is
         if (!_freeFromFee && msg.value < entryFeeWithDiscount)
             revert PVPArena__InvalidFeeAmount();
 
-        if (_arena.arenaType == ArenaType.TIME) {
-            if (
-                block.timestamp >= _arena.startTime &&
-                _arena.players >= _arena.requiredPlayers
-            ) revert PVPArena__ArenaStarted();
-            if (
-                block.timestamp >= _arena.startTime &&
-                _arena.players < _arena.requiredPlayers
-            ) revert PVPArena__ArenaCanceled();
-        } else {
-            if (_arena.players == _arena.requiredPlayers)
-                revert PVPArena__ArenaStarted();
+        if (
+            _arena.arenaType == ArenaType.TIME &&
+            block.timestamp >= _arena.startTime &&
+            _arena.players < _arena.requiredPlayers
+        ) revert PVPArena__ArenaCanceled();
+
+        if (
+            block.timestamp >= _arena.startTime &&
+            _arena.players >= _arena.requiredPlayers
+        ) {
+            uint256 rebuyEndTime = _arena.startTime +
+                (_arena.duration -
+                    ((_arena.duration * timeLeftToRebuyBPS) / MAX_BPS));
+            if (block.timestamp > rebuyEndTime)
+                revert PVPArena__ArenaRebuyTimeExeeded();
         }
 
         bytes32 arenaIdHash = keccak256(abi.encodePacked(_arena.id));
