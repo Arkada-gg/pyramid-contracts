@@ -71,6 +71,12 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     arena: '',
     escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
   },
+  abstract: {
+    arkadaRewarder: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
+    pyramid: '0xF668DDa15336129BC9977e36d60c14220cdc63Ec',
+    arena: '',
+    escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
+  },
 
   sepolia: undefined,
   hardhat: undefined,

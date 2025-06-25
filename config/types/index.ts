@@ -12,6 +12,7 @@ export type Network =
   | 'pharos-testnet'
   | 'plume'
   | 'somnia'
+  | 'abstract'
   | 'hardhat'
   | 'localhost';
 export type RpcUrl =
@@ -30,6 +31,7 @@ export interface Environment {
   readonly ETHERSCAN_API_KEY_SONIC?: string;
   readonly ETHERSCAN_API_KEY_BASE?: string;
   readonly ETHERSCAN_API_KEY_ARBITRUM?: string;
+  readonly ETHERSCAN_API_KEY_ABSTRACT?: string;
   readonly OPTIMIZER: boolean;
   readonly COVERAGE: boolean;
   readonly REPORT_GAS: boolean;

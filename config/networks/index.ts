@@ -31,6 +31,7 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   'pharos-testnet': 'https://testnet.dplabs-internal.com/',
   plume: 'https://rpc.plume.org',
   somnia: 'https://dream-rpc.somnia.network/',
+  abstract: 'https://api.mainnet.abs.xyz',
 
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
@@ -48,6 +49,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   hyperevm: 'auto',
   plume: 'auto',
   somnia: 'auto',
+  abstract: 'auto',
   'megaeth-testnet': 'auto',
   'pharos-testnet': 'auto',
 
@@ -65,6 +67,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   hyperevm: 999,
   plume: 98866,
   somnia: 50312,
+  abstract: 2741,
   'megaeth-testnet': 6342,
   'pharos-testnet': 688688,
 
@@ -82,6 +85,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   hyperevm: MNEMONIC_PROD,
   plume: MNEMONIC_PROD,
   somnia: MNEMONIC_PROD,
+  abstract: MNEMONIC_PROD,
   'megaeth-testnet': MNEMONIC_PROD,
   'pharos-testnet': MNEMONIC_PROD,
 
@@ -99,6 +103,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   hyperevm: undefined,
   plume: undefined,
   somnia: undefined,
+  abstract: undefined,
   'megaeth-testnet': undefined,
   'pharos-testnet': undefined,
 
@@ -116,6 +121,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   hyperevm: undefined,
   plume: undefined,
   somnia: undefined,
+  abstract: undefined,
   'megaeth-testnet': 999999,
   'pharos-testnet': 999999,
 
@@ -133,6 +139,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   hyperevm: undefined,
   plume: undefined,
   somnia: undefined,
+  abstract: undefined,
   'megaeth-testnet': undefined,
   'pharos-testnet': undefined,
 
@@ -150,6 +157,7 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   hyperevm: undefined,
   plume: undefined,
   somnia: undefined,
+  abstract: undefined,
   'megaeth-testnet': undefined,
   'pharos-testnet': undefined,
 

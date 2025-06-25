@@ -23,6 +23,7 @@ const {
   ETHERSCAN_API_KEY_SONIC,
   ETHERSCAN_API_KEY_BASE,
   ETHERSCAN_API_KEY_ARBITRUM,
+  ETHERSCAN_API_KEY_ABSTRACT,
   DEPLOYER,
 } = ENV;
 
@@ -63,6 +64,7 @@ const config: HardhatUserConfig = {
       hyperevm: DEPLOYER,
       plume: DEPLOYER,
       somnia: DEPLOYER,
+      abstract: DEPLOYER,
       'megaeth-testnet': DEPLOYER,
       'pharos-testnet': DEPLOYER,
     },
@@ -81,6 +83,7 @@ const config: HardhatUserConfig = {
     hyperevm: getNetworkConfig('hyperevm'),
     plume: getNetworkConfig('plume'),
     somnia: getNetworkConfig('somnia'),
+    abstract: getNetworkConfig('abstract'),
     'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
     'pharos-testnet': getNetworkConfig('pharos-testnet'),
 
@@ -111,6 +114,7 @@ const config: HardhatUserConfig = {
       base: ETHERSCAN_API_KEY_BASE ?? '',
       arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
       'pharos-testnet': ETHERSCAN_API_KEY_ARBITRUM ?? '',
+      abstract: ETHERSCAN_API_KEY_ABSTRACT ?? '',
     },
     customChains: [
       {
@@ -152,6 +156,14 @@ const config: HardhatUserConfig = {
           apiURL:
             'https://api.socialscan.io/pharos-testnet/v1/explorer/command_api/contract',
           browserURL: 'https://pharos-testnet.socialscan.io/',
+        },
+      },
+      {
+        network: 'abstract',
+        chainId: 2741,
+        urls: {
+          apiURL: 'https://api.abscan.org/api',
+          browserURL: 'https://abscan.org/',
         },
       },
     ],
