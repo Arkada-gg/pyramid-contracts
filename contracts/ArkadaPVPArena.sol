@@ -350,7 +350,6 @@ contract ArkadaPVPArena is
         bool verified = MerkleProof.verifyCalldata(_proofs, root, leaf);
         if (!verified) revert PVPArena__InvalidProofs();
 
-        participants[arenaIdAndAddressHash] = false;
         claimed[arenaIdAndAddressHash] = true;
 
         (bool success, ) = msg.sender.call{value: _amount}("");

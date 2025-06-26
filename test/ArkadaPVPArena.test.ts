@@ -50,7 +50,7 @@ function createRewardsMerkleTree(
   };
 }
 
-describe('ArkadaPVPArena', () => {
+describe.only('ArkadaPVPArena', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });

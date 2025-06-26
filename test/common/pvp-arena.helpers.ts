@@ -613,7 +613,7 @@ export const claimRewardsTest = async (
 
   // Participant status should be false
   expect(await arenaContract.participants(arenaIdAndAddressHash)).to.equal(
-    false,
+    true,
   );
 
   // Claimed status should be true
