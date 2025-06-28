@@ -32,7 +32,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   monadtestnet: {
     arkadaRewarder: '0x360ecC5bf4E5E9aeec708571Fe286c33679c450B',
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
-    arena: '0x3A1c0Fb2618d762586998A5De53E60c1E0b5Da1E',
+    arena: '0x173F63ae500A471d86db16045cb05c13d88afc07',
     escrowFactory: '0x1AE93e93A8B421725F114a27c82237BEF4ada624',
   },
   arbitrum: {

@@ -18,7 +18,7 @@ const {
   OPTIMIZER,
   REPORT_GAS,
   FORKING_NETWORK,
-  // ETHERSCAN_API_KEY,
+  ETHERSCAN_API_KEY,
   ETHERSCAN_API_KEY_SONEIUM,
   ETHERSCAN_API_KEY_SONIC,
   ETHERSCAN_API_KEY_BASE,
@@ -115,6 +115,7 @@ const config: HardhatUserConfig = {
       arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
       'pharos-testnet': ETHERSCAN_API_KEY_ARBITRUM ?? '',
       abstract: ETHERSCAN_API_KEY_ABSTRACT ?? '',
+      monadtestnet: ETHERSCAN_API_KEY ?? '',
     },
     customChains: [
       {
@@ -164,6 +165,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.abscan.org/api',
           browserURL: 'https://abscan.org/',
+        },
+      },
+      {
+        network: 'monadtestnet',
+        chainId: 10143,
+        urls: {
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=10143',
+          browserURL: 'https://testnet.monadscan.com/',
         },
       },
     ],

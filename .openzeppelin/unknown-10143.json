@@ -29,6 +29,11 @@
       "address": "0x3A1c0Fb2618d762586998A5De53E60c1E0b5Da1E",
       "txHash": "0x874525604efa55f26fb031b64c4437c3af969f6d7b50adae61a80cb1dfe9e9f8",
       "kind": "transparent"
+    },
+    {
+      "address": "0x173F63ae500A471d86db16045cb05c13d88afc07",
+      "txHash": "0x698726512b5b68830a777c251599147fcf0812c0e1fdd8dbfeb367e5f1f68861",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -498,6 +503,283 @@
             "numberOfBytes": "352"
           },
           "t_struct(MinMax)10809_storage": {
+            "label": "struct IArkadaPVPArena.MinMax",
+            "members": [
+              {
+                "label": "min",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "max",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "8f7108cebb45057fba92ea0eb10daec07e1917ae9990fe645cf18a14ff4d1e4c": {
+      "address": "0xfA15F981DDCa3A9bFaeE28c35334fC9539E18E9E",
+      "txHash": "0x3b247fb33f39dc451104c51d4bf544b70c5ff97dead0c39b46ebeb4e4c99bed9",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextArenaId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:42"
+          },
+          {
+            "label": "treasury",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:46"
+          },
+          {
+            "label": "feeBPS",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_uint16",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:50"
+          },
+          {
+            "label": "timeLeftToRebuyBPS",
+            "offset": 22,
+            "slot": "1",
+            "type": "t_uint16",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:53"
+          },
+          {
+            "label": "playersConfig",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_struct(MinMax)20586_storage",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:57"
+          },
+          {
+            "label": "intervalToStartConfig",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_struct(MinMax)20586_storage",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:61"
+          },
+          {
+            "label": "durationConfig",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_struct(MinMax)20586_storage",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:65"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:69"
+          },
+          {
+            "label": "arenas",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_uint256,t_struct(ArenaInfo)20615_storage)",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:73"
+          },
+          {
+            "label": "feesByArena",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:77"
+          },
+          {
+            "label": "participants",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:81"
+          },
+          {
+            "label": "paidForParticipate",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:85"
+          },
+          {
+            "label": "claimed",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:89"
+          },
+          {
+            "label": "rootProofByArena",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_mapping(t_uint256,t_bytes32)",
+            "contract": "ArkadaPVPArena",
+            "src": "contracts/ArkadaPVPArena.sol:93"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_enum(ArenaType)20580": {
+            "label": "enum IArkadaPVPArena.ArenaType",
+            "members": [
+              "TIME",
+              "PLACES"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bytes32)": {
+            "label": "mapping(uint256 => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(ArenaInfo)20615_storage)": {
+            "label": "mapping(uint256 => struct IArkadaPVPArena.ArenaInfo)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(ArenaInfo)20615_storage": {
+            "label": "struct IArkadaPVPArena.ArenaInfo",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "entryFee",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "duration",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "startTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "endTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "createdAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "requiredPlayers",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "players",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "initialPrizePool",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "arenaType",
+                "type": "t_enum(ArenaType)20580",
+                "offset": 0,
+                "slot": "10"
+              },
+              {
+                "label": "signatured",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "10"
+              },
+              {
+                "label": "emergencyClosed",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "10"
+              }
+            ],
+            "numberOfBytes": "352"
+          },
+          "t_struct(MinMax)20586_storage": {
             "label": "struct IArkadaPVPArena.MinMax",
             "members": [
               {
