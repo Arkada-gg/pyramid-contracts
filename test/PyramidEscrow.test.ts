@@ -16,7 +16,7 @@ import {
 } from './common/pyramid-escrow.helpers';
 import { setArkadaRewarderTest } from './common/pyramid.helpers';
 
-describe('PyramidEscrow', () => {
+describe.only('PyramidEscrow', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
@@ -384,6 +384,9 @@ describe('PyramidEscrow', () => {
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
       await mintPyramidTest(
         {
@@ -400,10 +403,13 @@ describe('PyramidEscrow', () => {
         treasury.address,
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
 
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
@@ -478,6 +484,10 @@ describe('PyramidEscrow', () => {
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
 
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
       await mintPyramidTest(
         {
           pyramidEscrowContract,
@@ -494,9 +504,13 @@ describe('PyramidEscrow', () => {
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
 
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
@@ -574,6 +588,9 @@ describe('PyramidEscrow', () => {
       const erc20BalanceBefore = await tokens.erc20Token.balanceOf(
         user.address,
       );
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
       await mintPyramidTest(
         {
@@ -591,9 +608,13 @@ describe('PyramidEscrow', () => {
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
       const erc20BalanceAfter = await tokens.erc20Token.balanceOf(user.address);
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
@@ -667,6 +688,10 @@ describe('PyramidEscrow', () => {
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
 
+      const referalBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
       await mintPyramidTest(
         {
           pyramidEscrowContract,
@@ -683,9 +708,13 @@ describe('PyramidEscrow', () => {
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      const referalBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referalBalanceAfter.sub(referalBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
@@ -758,6 +787,9 @@ describe('PyramidEscrow', () => {
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
       await mintPyramidTest(
         {
@@ -774,10 +806,13 @@ describe('PyramidEscrow', () => {
         treasury.address,
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );

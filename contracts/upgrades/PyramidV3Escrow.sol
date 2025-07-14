@@ -8,15 +8,14 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IFactory} from "./escrow/interfaces/IFactory.sol";
+import {IFactory} from "../escrow/interfaces/IFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidEscrow} from "./interfaces/IPyramidEscrow.sol";
-import {IArkadaRewarder} from "./interfaces/IArkadaRewarder.sol";
+import {IPyramidEscrow} from "../interfaces/IPyramidEscrow.sol";
 
-/// @title PyramidEscrow
+/// @title PyramidV2Escrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
-contract PyramidEscrow is
+contract PyramidV3Escrow is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
@@ -62,35 +61,7 @@ contract PyramidEscrow is
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
-        return "1";
-    }
-
-    /// @notice Initializes the Pyramid contract with necessary parameters
-    /// @dev Sets up the ERC721 token with given name and symbol, and grants initial roles.
-    /// @param _tokenName Name of the NFT collection
-    /// @param _tokenSymbol Symbol of the NFT collection
-    /// @param _signingDomain Domain used for EIP712 signing
-    /// @param _signatureVersion Version of the EIP712 signature
-    /// @param _admin Address to be granted the admin roles
-    function initialize(
-        string memory _tokenName,
-        string memory _tokenSymbol,
-        string memory _signingDomain,
-        string memory _signatureVersion,
-        address _admin,
-        address _arkadaRewarder
-    ) external initializer {
-        if (_admin == address(0)) revert Pyramid__InvalidAdminAddress();
-        if (_arkadaRewarder == address(0))
-            revert Pyramid__InvalidAdminAddress();
-        __ERC721_init(_tokenName, _tokenSymbol);
-        __EIP712_init(_signingDomain, _signatureVersion);
-        __AccessControl_init();
-        __ReentrancyGuard_init();
-        s_isMintingActive = true;
-        s_arkadaRewarder = _arkadaRewarder;
-
-        _grantRole(DEFAULT_ADMIN_ROLE, _admin);
+        return "3";
     }
 
     /// @notice Retrieves the URI for a given token
