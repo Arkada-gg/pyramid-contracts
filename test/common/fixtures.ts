@@ -13,6 +13,7 @@ import {
   ERC721Mock,
   // eslint-disable-next-line
   Factory__factory,
+  GlobalEscrow__factory,
   // eslint-disable-next-line
   Pyramid__factory,
   // eslint-disable-next-line
@@ -94,6 +95,45 @@ export async function defaultDeploy() {
     pyramidContract.address,
   );
 
+  // Deploy mock tokens
+  const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
+  const erc20Token = (await ERC20Mock.deploy(
+    'Test Token',
+    'TEST',
+  )) as ERC20Mock;
+  await erc20Token.deployed();
+
+  const ERC721Mock = await ethers.getContractFactory('ERC721Mock');
+  const erc721Token = (await ERC721Mock.deploy(
+    'Test NFT',
+    'TNFT',
+  )) as ERC721Mock;
+  await erc721Token.deployed();
+
+  const ERC1155Mock = await ethers.getContractFactory('ERC1155Mock');
+  const erc1155Token = (await ERC1155Mock.deploy()) as ERC1155Mock;
+  await erc1155Token.deployed();
+
+  const globalEscrowContract = await new GlobalEscrow__factory(owner).deploy();
+  await expect(
+    globalEscrowContract.initialize(
+      ethers.constants.AddressZero,
+      [],
+      treasury.address,
+    ),
+  ).to.be.revertedWithCustomError(globalEscrowContract, 'Escrow__ZeroAddress');
+  await expect(
+    globalEscrowContract.initialize(
+      owner.address,
+      [erc20Token.address, erc721Token.address, erc1155Token.address],
+      treasury.address,
+    ),
+  ).to.not.rejected;
+  await globalEscrowContract.grantRole(
+    await globalEscrowContract.WITHDRAWER_ROLE(),
+    owner.address,
+  );
+
   const pyramidEscrowContract = await new PyramidEscrow__factory(
     owner,
   ).deploy();
@@ -158,25 +198,6 @@ export async function defaultDeploy() {
     pyramidEscrowContract.address,
   );
 
-  // Deploy mock tokens
-  const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
-  const erc20Token = (await ERC20Mock.deploy(
-    'Test Token',
-    'TEST',
-  )) as ERC20Mock;
-  await erc20Token.deployed();
-
-  const ERC721Mock = await ethers.getContractFactory('ERC721Mock');
-  const erc721Token = (await ERC721Mock.deploy(
-    'Test NFT',
-    'TNFT',
-  )) as ERC721Mock;
-  await erc721Token.deployed();
-
-  const ERC1155Mock = await ethers.getContractFactory('ERC1155Mock');
-  const erc1155Token = (await ERC1155Mock.deploy()) as ERC1155Mock;
-  await erc1155Token.deployed();
-
   const QUEST_ID = 'test';
   const QUEST_ID_HASH = ethers.utils.keccak256(
     ethers.utils.toUtf8Bytes(QUEST_ID),
@@ -205,6 +226,13 @@ export async function defaultDeploy() {
   await erc20Token.mint(escrowAddress, ethers.utils.parseEther('1000'));
   await erc721Token.mint(escrowAddress, 1);
   await erc1155Token.mint(escrowAddress, 1, 100, '0x');
+
+  await erc20Token.mint(
+    globalEscrowContract.address,
+    ethers.utils.parseEther('1000'),
+  );
+  await erc721Token.mint(globalEscrowContract.address, 2);
+  await erc1155Token.mint(globalEscrowContract.address, 2, 100, '0x');
 
   // Send native tokens
   await user.sendTransaction({
@@ -333,5 +361,6 @@ export async function defaultDeploy() {
     arenaSigner,
     arenaInitialConfig,
     regularAccounts,
+    globalEscrowContract,
   };
 }

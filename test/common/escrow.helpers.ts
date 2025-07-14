@@ -4,10 +4,10 @@ import { BigNumber } from 'ethers';
 
 import { OptionalCommonParams } from './common.helpers';
 
-import { Escrow } from '../../typechain-types';
+import { Escrow, GlobalEscrow } from '../../typechain-types';
 
 type CommonParams = {
-  escrowContract: Escrow;
+  escrowContract: Escrow | GlobalEscrow;
   owner: SignerWithAddress;
 };
 

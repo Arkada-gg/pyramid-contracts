@@ -16,7 +16,7 @@ import {
 } from './common/pyramid-escrow.helpers';
 import { setArkadaRewarderTest } from './common/pyramid.helpers';
 
-describe.only('PyramidEscrow', () => {
+describe('PyramidEscrow', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
