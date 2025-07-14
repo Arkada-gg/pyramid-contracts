@@ -9,6 +9,7 @@ import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC72
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "../escrow/interfaces/IFactory.sol";
+import {IGlobalEscrow} from "../escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IPyramidEscrow} from "../interfaces/IPyramidEscrow.sol";
 
@@ -54,10 +55,20 @@ contract PyramidV3Escrow is
     bytes4 private constant TRANSFER_ERC20 =
         bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
 
+    bytes32 internal constant GLOBAL_REWARD_DATA_HASH =
+        keccak256(
+            "GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)"
+        );
+
+    bytes32 internal constant _PYRAMID_DATA_HASH_V2 =
+        keccak256(
+            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward,GlobalRewardData globalReward)FeeRecipient(address recipient,uint16 BPS)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)"
+        );
+
     /**
      * @dev leaving a storage gap for futures updates
      */
-    uint256[50] private __gap;
+    uint256[48] private __gap;
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
@@ -181,6 +192,26 @@ contract PyramidV3Escrow is
                 data.reward.amount,
                 data.reward.tokenId,
                 data.reward.tokenType
+            );
+        }
+
+        if (data.globalReward.escrowAddress != address(0)) {
+            IGlobalEscrow(data.globalReward.escrowAddress).distributeRewards(
+                data.globalReward.tokenAddress,
+                data.toAddress,
+                data.globalReward.amount,
+                data.globalReward.tokenId,
+                data.globalReward.tokenType,
+                data.globalReward.rakeBps
+            );
+
+            emit TokenReward(
+                tokenId,
+                data.globalReward.tokenAddress,
+                0,
+                data.globalReward.amount,
+                data.globalReward.tokenId,
+                data.globalReward.tokenType
             );
         }
     }
@@ -336,7 +367,8 @@ contract PyramidV3Escrow is
                 _encodeString(data.embedOrigin),
                 _encodeCompletedTxs(data.transactions),
                 _encodeRecipients(data.recipients),
-                _encodeReward(data.reward)
+                _encodeReward(data.reward),
+                _encodeGlobalReward(data.globalReward)
             );
     }
 
@@ -432,6 +464,26 @@ contract PyramidV3Escrow is
             );
     }
 
+    /// @notice Encodes the reward data for a Pyramid mint
+    /// @param data An array of FeeRecipient structs to be encoded
+    /// @return A bytes32 hash representing the encoded reward data
+    function _encodeGlobalReward(
+        GlobalRewardData calldata data
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    GLOBAL_REWARD_DATA_HASH,
+                    data.tokenAddress,
+                    data.amount,
+                    data.tokenId,
+                    data.tokenType,
+                    data.rakeBps,
+                    data.escrowAddress
+                )
+            );
+    }
+
     /**
      * @inheritdoc IPyramidEscrow
      */
@@ -451,17 +503,6 @@ contract PyramidV3Escrow is
         if (_treasury == address(0)) revert Pyramid__ZeroAddress();
         s_treasury = _treasury;
         emit UpdatedTreasury(_treasury);
-    }
-
-    /**
-     * @inheritdoc IPyramidEscrow
-     */
-    function setArkadaRewarder(
-        address _arkadaRewarder
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (_arkadaRewarder == address(0)) revert Pyramid__ZeroAddress();
-        s_arkadaRewarder = _arkadaRewarder;
-        emit UpdatedArkadaRewarder(_arkadaRewarder);
     }
 
     /**

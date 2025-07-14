@@ -8,14 +8,14 @@ import {ERC721HolderUpgradeable} from "@openzeppelin/contracts-upgradeable/token
 import {ERC1155HolderUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {IEscrow} from "./interfaces/IEscrow.sol";
+import {IGlobalEscrow} from "./interfaces/IGlobalEscrow.sol";
 
 contract GlobalEscrow is
     Initializable,
     AccessControlUpgradeable,
-    IEscrow,
     ERC721HolderUpgradeable,
-    ERC1155HolderUpgradeable
+    ERC1155HolderUpgradeable,
+    IGlobalEscrow
 {
     error Escrow__TokenNotWhitelisted();
     error Escrow__InsufficientEscrowBalance();
@@ -53,6 +53,7 @@ contract GlobalEscrow is
     event TokenWhitelisted(address indexed token);
     event TokenRemovedFromWhitelist(address indexed token);
 
+    bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR");
     bytes32 public constant WITHDRAWER_ROLE = keccak256("WITHDRAWER");
 
     bytes4 private constant _TRANSFER_ERC20 =
@@ -94,7 +95,7 @@ contract GlobalEscrow is
     /// @param token The address of the token to whitelist.
     function addTokenToWhitelist(
         address token
-    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (token == address(0)) {
             revert Escrow__ZeroAddress();
         }
@@ -106,7 +107,7 @@ contract GlobalEscrow is
     /// @param token The address of the token to remove from the whitelist.
     function removeTokenFromWhitelist(
         address token
-    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         s_whitelistedTokens[token] = false;
         emit TokenRemovedFromWhitelist(token);
     }
@@ -114,9 +115,7 @@ contract GlobalEscrow is
     /// @notice Returns the ERC20 token balance held in escrow.
     /// @param token The address of the token.
     /// @return The balance of the specified token held in escrow.
-    function escrowERC20Reserves(
-        address token
-    ) public view override returns (uint256) {
+    function escrowERC20Reserves(address token) public view returns (uint256) {
         return IERC20(token).balanceOf(address(this));
     }
 
@@ -127,34 +126,78 @@ contract GlobalEscrow is
     function escrowERC1155Reserves(
         address token,
         uint256 tokenId
-    ) external view override returns (uint256) {
+    ) public view returns (uint256) {
         return IERC1155(token).balanceOf(address(this), tokenId);
     }
 
     /// @notice Returns the native balance of the escrow smart contract
-    function escrowNativeBalance() public view override returns (uint256) {
+    function escrowNativeBalance() public view returns (uint256) {
         return address(this).balance;
     }
 
     /// @notice Returns the ERC721 token balance held in escrow.
     function escrowERC721BalanceOf(
         address token
-    ) external view override returns (uint256) {
+    ) public view returns (uint256) {
         return IERC721(token).balanceOf(address(this));
     }
 
+    /**
+     * @inheritdoc IGlobalEscrow
+     */
+    function withdrawFunds(
+        address to,
+        address token,
+        uint256 tokenId,
+        TokenType tokenType
+    ) external onlyRole(WITHDRAWER_ROLE) {
+        if (tokenType == TokenType.NATIVE) {
+            uint256 escrowBalance = escrowNativeBalance();
+            _withdrawNative(to, escrowBalance, 0);
+        } else if (tokenType == TokenType.ERC20) {
+            uint256 erc20Amount = escrowERC20Reserves(token);
+            _withdrawERC20(token, to, erc20Amount, 0);
+        } else if (tokenType == TokenType.ERC721) {
+            _withdrawERC721(token, to, tokenId);
+        } else if (tokenType == TokenType.ERC1155) {
+            uint256 erc1155Amount = escrowERC1155Reserves(token, tokenId);
+            _withdrawERC1155(token, to, erc1155Amount, tokenId);
+        }
+    }
+
+    /**
+     * @inheritdoc IGlobalEscrow
+     */
+    function distributeRewards(
+        address token,
+        address to,
+        uint256 amount,
+        uint256 rewardTokenId,
+        TokenType tokenType,
+        uint256 rakeBps
+    ) external onlyRole(DISTRIBUTOR_ROLE) {
+        if (tokenType == TokenType.NATIVE) {
+            _withdrawNative(to, amount, rakeBps);
+        } else if (tokenType == TokenType.ERC20) {
+            _withdrawERC20(token, to, amount, rakeBps);
+        } else if (tokenType == TokenType.ERC721) {
+            _withdrawERC721(token, to, rewardTokenId);
+        } else if (tokenType == TokenType.ERC1155) {
+            _withdrawERC1155(token, to, amount, rewardTokenId);
+        }
+    }
+
     /// @notice Withdraws ERC20 tokens from the escrow to a specified address.
-    /// @dev Can only be called by the owner. Applies a rake before sending to the recipient.
     /// @param token The token address.
     /// @param to The recipient address.
     /// @param amount The amount to withdraw.
     /// @param rakeBps The basis points of the total amount to be taken as rake.
-    function withdrawERC20(
+    function _withdrawERC20(
         address token,
         address to,
         uint256 amount,
         uint256 rakeBps
-    ) external override onlyRole(WITHDRAWER_ROLE) {
+    ) private {
         if (!s_whitelistedTokens[token]) {
             revert Escrow__TokenNotWhitelisted();
         }
@@ -196,15 +239,14 @@ contract GlobalEscrow is
     }
 
     /// @notice Withdraws ERC721 tokens from the escrow to a specified address.
-    /// @dev Can only be called by the owner.
     /// @param token The token address.
     /// @param to The recipient address.
     /// @param tokenId The token ID to withdraw.
-    function withdrawERC721(
+    function _withdrawERC721(
         address token,
         address to,
         uint256 tokenId
-    ) external override onlyRole(WITHDRAWER_ROLE) {
+    ) private {
         if (!s_whitelistedTokens[token]) {
             revert Escrow__TokenNotWhitelisted();
         }
@@ -213,17 +255,16 @@ contract GlobalEscrow is
     }
 
     /// @notice Withdraws ERC1155 tokens from the escrow to a specified address.
-    /// @dev Can only be called by the owner.
     /// @param token The token address.
     /// @param to The recipient address.
     /// @param amount The amount to withdraw.
     /// @param tokenId The token ID to withdraw.
-    function withdrawERC1155(
+    function _withdrawERC1155(
         address token,
         address to,
         uint256 amount,
         uint256 tokenId
-    ) external override onlyRole(WITHDRAWER_ROLE) {
+    ) private {
         if (!s_whitelistedTokens[token]) {
             revert Escrow__TokenNotWhitelisted();
         }
@@ -239,15 +280,14 @@ contract GlobalEscrow is
     }
 
     /// @notice Withdraws native tokens from the escrow to a specified address.
-    /// @dev Can only be called by the owner.
     /// @param to The recipient address.
     /// @param amount The amount to withdraw.
     /// @param rakeBps The basis points of the total amount to be taken as rake.
-    function withdrawNative(
+    function _withdrawNative(
         address to,
         uint256 amount,
         uint256 rakeBps
-    ) external override onlyRole(WITHDRAWER_ROLE) {
+    ) private {
         if (amount > escrowNativeBalance()) {
             revert Escrow__InsufficientEscrowBalance();
         }

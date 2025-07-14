@@ -144,20 +144,6 @@ export async function defaultDeploy() {
       domain.name,
       domain.version,
       ethers.constants.AddressZero,
-      arkadaRewarderContract.address,
-    ),
-  ).to.be.revertedWithCustomError(
-    pyramidEscrowContract,
-    'Pyramid__InvalidAdminAddress',
-  );
-  await expect(
-    pyramidEscrowContract.initialize(
-      'Pyramid',
-      'PYR',
-      domain.name,
-      domain.version,
-      owner.address,
-      ethers.constants.AddressZero,
     ),
   ).to.be.revertedWithCustomError(
     pyramidEscrowContract,
@@ -169,7 +155,6 @@ export async function defaultDeploy() {
     domain.name,
     domain.version,
     owner.address,
-    arkadaRewarderContract.address,
   );
 
   await pyramidEscrowContract.grantRole(

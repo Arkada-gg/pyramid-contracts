@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.22;
 
-import {ITokenType} from "../escrow/interfaces/ITokenType.sol";
+import {ITokenType} from "../../escrow/interfaces/ITokenType.sol";
 
 /// @title IPyramidEscrow
 /// @dev Interface of the PyramidEscrow contract.
-interface IPyramidEscrow is ITokenType {
+interface IPyramidV2Escrow is ITokenType {
     error Pyramid__IsNotSigner();
     error Pyramid__MintingIsNotActive();
     error Pyramid__FeeNotEnough();
@@ -146,7 +146,6 @@ interface IPyramidEscrow is ITokenType {
     /// @param transactions An array of transactions related to the Pyramid
     /// @param recipients An array of recipients for fee payouts
     /// @param reward Data about the reward associated with the Pyramid
-    /// @param globalReward Data about the global reward associated with the Pyramid
     struct PyramidData {
         string questId;
         uint256 nonce;
@@ -158,7 +157,6 @@ interface IPyramidEscrow is ITokenType {
         TransactionData[] transactions;
         FeeRecipient[] recipients;
         RewardData reward;
-        GlobalRewardData globalReward;
     }
 
     /// @dev Represents a recipient for fee distribution.
@@ -185,22 +183,6 @@ interface IPyramidEscrow is ITokenType {
         TokenType tokenType;
         uint256 rakeBps;
         address factoryAddress;
-    }
-
-    /// @dev Contains data about the token rewards associated with a Pyramid.
-    /// @param tokenAddress The token address of the reward
-    /// @param amount The amount of the reward (in ETH for this implementation)
-    /// @param tokenId The token ID of the reward (only applicable for ERC721 and ERC1155)
-    /// @param tokenType The token type (ERC20, ERC721, ERC1155, NATIVE)
-    /// @param rakeBps The rake basis points which will go to the treasury
-    /// @param escrowAddress The global escrow factory
-    struct GlobalRewardData {
-        address tokenAddress;
-        uint256 amount;
-        uint256 tokenId;
-        TokenType tokenType;
-        uint256 rakeBps;
-        address escrowAddress;
     }
 
     /// @dev Contains data about a specific transaction related to a Pyramid
@@ -233,4 +215,9 @@ interface IPyramidEscrow is ITokenType {
     /// @notice Withdraws the contract's balance to the message sender
     /// @dev Can only be called by an account with the default admin role.
     function withdraw() external;
+
+    /// @notice Sets a new Arkada rewarder address
+    /// @dev Can only be called by an account with the default admin role.
+    /// @param _arkadaRewarder Address of the new Arkada rewarder
+    function setArkadaRewarder(address _arkadaRewarder) external;
 }

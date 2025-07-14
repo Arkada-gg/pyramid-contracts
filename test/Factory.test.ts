@@ -63,7 +63,6 @@ describe('Factory', () => {
       'test',
       '1',
       owner.address,
-      owner.address, // Using owner as arkadaRewarder for testing
     );
     await pyramidContract.grantRole(
       await pyramidContract.SIGNER_ROLE(),

@@ -9,9 +9,9 @@ import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC72
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
+import {IGlobalEscrow} from "./escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IPyramidEscrow} from "./interfaces/IPyramidEscrow.sol";
-import {IArkadaRewarder} from "./interfaces/IArkadaRewarder.sol";
 
 /// @title PyramidEscrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
@@ -28,7 +28,6 @@ contract PyramidEscrow is
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
-    address public s_arkadaRewarder;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
 
@@ -40,9 +39,13 @@ contract PyramidEscrow is
         keccak256(
             "RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)"
         );
+    bytes32 internal constant GLOBAL_REWARD_DATA_HASH =
+        keccak256(
+            "GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)"
+        );
     bytes32 internal constant _PYRAMID_DATA_HASH =
         keccak256(
-            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward)FeeRecipient(address recipient,uint16 BPS)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)"
+            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward,GlobalRewardData globalReward)FeeRecipient(address recipient,uint16 BPS)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)"
         );
 
     mapping(bytes32 => uint256) internal s_questIssueNumbers;
@@ -77,18 +80,14 @@ contract PyramidEscrow is
         string memory _tokenSymbol,
         string memory _signingDomain,
         string memory _signatureVersion,
-        address _admin,
-        address _arkadaRewarder
+        address _admin
     ) external initializer {
         if (_admin == address(0)) revert Pyramid__InvalidAdminAddress();
-        if (_arkadaRewarder == address(0))
-            revert Pyramid__InvalidAdminAddress();
         __ERC721_init(_tokenName, _tokenSymbol);
         __EIP712_init(_signingDomain, _signatureVersion);
         __AccessControl_init();
         __ReentrancyGuard_init();
         s_isMintingActive = true;
-        s_arkadaRewarder = _arkadaRewarder;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
     }
@@ -201,15 +200,35 @@ contract PyramidEscrow is
                     data.reward.tokenType,
                     data.reward.rakeBps
                 );
+
+                emit TokenReward(
+                    tokenId,
+                    data.reward.tokenAddress,
+                    data.reward.chainId,
+                    data.reward.amount,
+                    data.reward.tokenId,
+                    data.reward.tokenType
+                );
             }
+        }
+
+        if (data.globalReward.escrowAddress != address(0)) {
+            IGlobalEscrow(data.globalReward.escrowAddress).distributeRewards(
+                data.globalReward.tokenAddress,
+                data.toAddress,
+                data.globalReward.amount,
+                data.globalReward.tokenId,
+                data.globalReward.tokenType,
+                data.globalReward.rakeBps
+            );
 
             emit TokenReward(
                 tokenId,
-                data.reward.tokenAddress,
-                data.reward.chainId,
-                data.reward.amount,
-                data.reward.tokenId,
-                data.reward.tokenType
+                data.globalReward.tokenAddress,
+                0,
+                data.globalReward.amount,
+                data.globalReward.tokenId,
+                data.globalReward.tokenType
             );
         }
     }
@@ -365,7 +384,8 @@ contract PyramidEscrow is
                 _encodeString(data.embedOrigin),
                 _encodeCompletedTxs(data.transactions),
                 _encodeRecipients(data.recipients),
-                _encodeReward(data.reward)
+                _encodeReward(data.reward),
+                _encodeGlobalReward(data.globalReward)
             );
     }
 
@@ -461,6 +481,26 @@ contract PyramidEscrow is
             );
     }
 
+    /// @notice Encodes the reward data for a Pyramid mint
+    /// @param data An array of FeeRecipient structs to be encoded
+    /// @return A bytes32 hash representing the encoded reward data
+    function _encodeGlobalReward(
+        GlobalRewardData calldata data
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    GLOBAL_REWARD_DATA_HASH,
+                    data.tokenAddress,
+                    data.amount,
+                    data.tokenId,
+                    data.tokenType,
+                    data.rakeBps,
+                    data.escrowAddress
+                )
+            );
+    }
+
     /**
      * @inheritdoc IPyramidEscrow
      */
@@ -480,17 +520,6 @@ contract PyramidEscrow is
         if (_treasury == address(0)) revert Pyramid__ZeroAddress();
         s_treasury = _treasury;
         emit UpdatedTreasury(_treasury);
-    }
-
-    /**
-     * @inheritdoc IPyramidEscrow
-     */
-    function setArkadaRewarder(
-        address _arkadaRewarder
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (_arkadaRewarder == address(0)) revert Pyramid__ZeroAddress();
-        s_arkadaRewarder = _arkadaRewarder;
-        emit UpdatedArkadaRewarder(_arkadaRewarder);
     }
 
     /**

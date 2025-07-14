@@ -13,7 +13,7 @@ import {
 } from './common/escrow.helpers';
 import { defaultDeploy } from './common/fixtures';
 
-describe.only('GlobalEscrow', () => {
+describe('GlobalEscrow', () => {
   describe('addTokenToWhitelist', () => {
     it('should add token to whitelist', async () => {
       const { globalEscrowContract, owner, tokens } = await loadFixture(
