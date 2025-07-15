@@ -68,7 +68,7 @@ contract PyramidV3Escrow is
     /**
      * @dev leaving a storage gap for futures updates
      */
-    uint256[48] private __gap;
+    uint256[50] private __gap;
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
@@ -357,7 +357,7 @@ contract PyramidV3Escrow is
     ) internal pure returns (bytes memory) {
         return
             abi.encode(
-                _PYRAMID_DATA_HASH,
+                _PYRAMID_DATA_HASH_V2,
                 _encodeString(data.questId),
                 data.nonce,
                 data.price,

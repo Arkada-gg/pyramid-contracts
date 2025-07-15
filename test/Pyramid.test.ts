@@ -13,7 +13,7 @@ import {
   withdrawTest,
 } from './common/pyramid.helpers';
 
-describe.only('Pyramid', () => {
+describe('Pyramid', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
