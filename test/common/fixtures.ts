@@ -133,6 +133,10 @@ export async function defaultDeploy() {
     await globalEscrowContract.WITHDRAWER_ROLE(),
     owner.address,
   );
+  await globalEscrowContract.grantRole(
+    await globalEscrowContract.DISTRIBUTOR_ROLE(),
+    owner.address,
+  );
 
   const pyramidEscrowContract = await new PyramidEscrow__factory(
     owner,
@@ -223,6 +227,11 @@ export async function defaultDeploy() {
   await user.sendTransaction({
     to: escrowAddress,
     value: ethers.utils.parseEther('1'),
+  });
+
+  await user.sendTransaction({
+    to: globalEscrowContract.address,
+    value: ethers.utils.parseEther('1000'),
   });
 
   const arenaDomain = {

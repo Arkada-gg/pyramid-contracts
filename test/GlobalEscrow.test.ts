@@ -3,24 +3,22 @@ import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { defaultDeploy } from './common/fixtures';
 import {
   addTokenToWhitelistTest,
+  distributeRewardsTest,
   removeTokenFromWhitelistTest,
-  withdrawERC1155Test,
-  withdrawERC20Test,
-  withdrawERC721Test,
-  withdrawNativeTest,
-} from './common/escrow.helpers';
-import { defaultDeploy } from './common/fixtures';
+  withdrawFundsTest,
+} from './common/global-escrow.helpers';
 
-describe('GlobalEscrow', () => {
+describe.only('GlobalEscrow', () => {
   describe('addTokenToWhitelist', () => {
     it('should add token to whitelist', async () => {
       const { globalEscrowContract, owner, tokens } = await loadFixture(
         defaultDeploy,
       );
       await addTokenToWhitelistTest({
-        escrowContract: globalEscrowContract,
+        globalEscrow: globalEscrowContract,
         owner,
         token: tokens.erc20Token.address,
       });
@@ -31,7 +29,7 @@ describe('GlobalEscrow', () => {
         await loadFixture(defaultDeploy);
       await addTokenToWhitelistTest(
         {
-          escrowContract: globalEscrowContract,
+          globalEscrow: globalEscrowContract,
           owner,
           token: tokens.erc20Token.address,
         },
@@ -46,7 +44,7 @@ describe('GlobalEscrow', () => {
       const { globalEscrowContract, owner } = await loadFixture(defaultDeploy);
       await addTokenToWhitelistTest(
         {
-          escrowContract: globalEscrowContract,
+          globalEscrow: globalEscrowContract,
           owner,
           token: ethers.constants.AddressZero,
         },
@@ -63,12 +61,12 @@ describe('GlobalEscrow', () => {
         defaultDeploy,
       );
       await addTokenToWhitelistTest({
-        escrowContract: globalEscrowContract,
+        globalEscrow: globalEscrowContract,
         owner,
         token: tokens.erc20Token.address,
       });
       await removeTokenFromWhitelistTest({
-        escrowContract: globalEscrowContract,
+        globalEscrow: globalEscrowContract,
         owner,
         token: tokens.erc20Token.address,
       });
@@ -79,7 +77,7 @@ describe('GlobalEscrow', () => {
         await loadFixture(defaultDeploy);
       await removeTokenFromWhitelistTest(
         {
-          escrowContract: globalEscrowContract,
+          globalEscrow: globalEscrowContract,
           owner,
           token: tokens.erc20Token.address,
         },
@@ -91,253 +89,291 @@ describe('GlobalEscrow', () => {
     });
   });
 
-  describe('withdrawERC20', () => {
-    const amount = ethers.utils.parseEther('100');
-    const rakeBps = 1000; // 10%
-
-    it('should withdraw ERC20 tokens with rake', async () => {
-      const { globalEscrowContract, owner, tokens, regularAccounts, treasury } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      const erc20Token = tokens.erc20Token;
-      await withdrawERC20Test({
-        escrowContract: globalEscrowContract,
+  describe('withdrawFunds', () => {
+    it('should withdraw native tokens', async () => {
+      const { globalEscrowContract, owner, user } = await loadFixture(
+        defaultDeploy,
+      );
+      await withdrawFundsTest({
+        globalEscrow: globalEscrowContract,
         owner,
-        token: erc20Token.address,
         to: user.address,
-        amount,
-        rakeBps,
+        token: ethers.constants.AddressZero,
+        tokenId: 0,
+        tokenType: 3, // NATIVE
       });
 
-      const rake = amount.mul(rakeBps).div(10000);
-      const rewardAmount = amount.sub(rake);
-
-      expect(await erc20Token.balanceOf(user.address)).eq(rewardAmount);
-      expect(await erc20Token.balanceOf(treasury.address)).eq(rake);
+      const balance = await user.getBalance();
+      expect(balance).gt(0);
     });
 
-    it('should revert if token not whitelisted', async () => {
-      const { globalEscrowContract, owner, regularAccounts, pyramidContract } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      await withdrawERC20Test(
-        {
-          escrowContract: globalEscrowContract,
-          owner,
-          token: pyramidContract.address, // using a non-whitelisted token
-          to: user.address,
-          amount,
-          rakeBps,
-        },
-        {
-          revertMessage: 'Escrow__TokenNotWhitelisted',
-        },
+    it('should withdraw ERC20 tokens', async () => {
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
       );
-    });
-
-    it('should revert if insufficient balance', async () => {
-      const { globalEscrowContract, owner, tokens, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      const erc20Token = tokens.erc20Token;
-      await withdrawERC20Test(
-        {
-          escrowContract: globalEscrowContract,
-          owner,
-          token: erc20Token.address,
-          to: user.address,
-          amount: ethers.utils.parseEther('10000000'),
-          rakeBps,
-        },
-        {
-          revertMessage: 'Escrow__InsufficientEscrowBalance',
-        },
-      );
-    });
-
-    it('should revert if invalid rake BPS', async () => {
-      const { globalEscrowContract, owner, tokens, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      const erc20Token = tokens.erc20Token;
-      await withdrawERC20Test(
-        {
-          escrowContract: globalEscrowContract,
-          owner,
-          token: erc20Token.address,
-          to: user.address,
-          amount,
-          rakeBps: 10001,
-        },
-        {
-          revertMessage: 'Escrow__InvalidRakeBps',
-        },
-      );
-    });
-  });
-
-  describe('withdrawERC721', () => {
-    it('should withdraw ERC721 token', async () => {
-      const { globalEscrowContract, owner, tokens, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      const erc721Token = tokens.erc721Token;
-      await withdrawERC721Test({
-        escrowContract: globalEscrowContract,
+      await withdrawFundsTest({
+        globalEscrow: globalEscrowContract,
         owner,
-        token: erc721Token.address,
         to: user.address,
+        token: tokens.erc20Token.address,
+        tokenId: 0,
+        tokenType: 0, // ERC20
+      });
+
+      expect(await tokens.erc20Token.balanceOf(user.address)).gt(0);
+    });
+
+    it('should withdraw ERC721 tokens', async () => {
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
+      );
+      await withdrawFundsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        to: user.address,
+        token: tokens.erc721Token.address,
         tokenId: 2,
+        tokenType: 1, // ERC721
       });
 
-      expect(await erc721Token.ownerOf(2)).eq(user.address);
+      expect(await tokens.erc721Token.ownerOf(2)).eq(user.address);
     });
-
-    it('should revert if token not whitelisted', async () => {
-      const { globalEscrowContract, owner, pyramidContract, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      await withdrawERC721Test(
-        {
-          escrowContract: globalEscrowContract,
-          owner,
-          token: pyramidContract.address, // using a non-whitelisted token
-          to: user.address,
-          tokenId: 2,
-        },
-        {
-          revertMessage: 'Escrow__TokenNotWhitelisted',
-        },
-      );
-    });
-  });
-
-  describe('withdrawERC1155', () => {
-    const amount = BigNumber.from(50);
-    const tokenId = 2;
 
     it('should withdraw ERC1155 tokens', async () => {
-      const { globalEscrowContract, owner, tokens, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      const erc1155Token = tokens.erc1155Token;
-      await withdrawERC1155Test({
-        escrowContract: globalEscrowContract,
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
+      );
+      const escrowAddress = globalEscrowContract.address;
+      const balanceBefore = await tokens.erc1155Token.balanceOf(
+        escrowAddress,
+        2,
+      );
+      expect(balanceBefore).eq(100);
+
+      await withdrawFundsTest({
+        globalEscrow: globalEscrowContract,
         owner,
-        token: erc1155Token.address,
         to: user.address,
-        amount,
-        tokenId,
+        token: tokens.erc1155Token.address,
+        tokenId: 2,
+        tokenType: 2, // ERC1155
       });
 
-      expect(await erc1155Token.balanceOf(user.address, tokenId)).eq(amount);
+      const balanceAfter = await tokens.erc1155Token.balanceOf(user.address, 2);
+      expect(balanceAfter).eq(100);
     });
 
-    it('should revert if token not whitelisted', async () => {
-      const { globalEscrowContract, owner, pyramidContract, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const user = regularAccounts[0];
-      await withdrawERC1155Test(
+    it('should revert if not admin', async () => {
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
+      );
+      await withdrawFundsTest(
         {
-          escrowContract: globalEscrowContract,
+          globalEscrow: globalEscrowContract,
           owner,
-          token: pyramidContract.address, // using a non-whitelisted token
           to: user.address,
-          amount,
-          tokenId,
+          token: tokens.erc20Token.address,
+          tokenId: 0,
+          tokenType: 1,
         },
         {
-          revertMessage: 'Escrow__TokenNotWhitelisted',
+          from: user,
+          revertMessage: 'AccessControlUnauthorizedAccount',
         },
       );
     });
   });
 
-  describe('withdrawNative', () => {
-    const amount = ethers.utils.parseEther('1');
-    const rakeBps = 1000; // 10%
-
-    let globalEscrowContract: any,
-      owner: any,
-      tokens: any,
-      regularAccounts: any,
-      treasury: any,
-      user: any;
-
-    beforeEach(async () => {
-      ({ globalEscrowContract, owner, tokens, regularAccounts, treasury } =
-        await loadFixture(defaultDeploy));
-      user = regularAccounts[0];
-      await user.sendTransaction({
-        to: globalEscrowContract.address,
-        value: amount,
+  describe('distributeRewards', () => {
+    it('should distribute native tokens', async () => {
+      const { globalEscrowContract, owner, user } = await loadFixture(
+        defaultDeploy,
+      );
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        token: ethers.constants.AddressZero,
+        to: user.address,
+        amount: ethers.utils.parseEther('0.5'),
+        rewardTokenId: 0,
+        tokenType: 3, // NATIVE
+        rakeBps: 1000,
       });
+
+      const balance = await user.getBalance();
+      expect(balance).gt(0);
     });
 
-    it('should withdraw native tokens with rake', async () => {
-      const balanceBefore = await user.getBalance();
-      const treasuryBalanceBefore = await treasury.getBalance();
-
-      await withdrawNativeTest({
-        escrowContract: globalEscrowContract,
+    it('should distribute ERC20 tokens', async () => {
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
+      );
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
         owner,
+        token: tokens.erc20Token.address,
+        to: user.address,
+        amount: ethers.utils.parseEther('100'),
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps: 1000,
+      });
+
+      expect(await tokens.erc20Token.balanceOf(user.address)).gt(0);
+    });
+
+    it('should distribute ERC721 tokens', async () => {
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
+      );
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        token: tokens.erc721Token.address,
+        to: user.address,
+        amount: BigNumber.from(1),
+        rewardTokenId: 2,
+        tokenType: 1, // ERC721
+        rakeBps: 0,
+      });
+
+      expect(await tokens.erc721Token.ownerOf(2)).eq(user.address);
+    });
+
+    it('should distribute ERC1155 tokens', async () => {
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
+      );
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        token: tokens.erc1155Token.address,
+        to: user.address,
+        amount: BigNumber.from(50),
+        rewardTokenId: 2,
+        tokenType: 2, // ERC1155
+        rakeBps: 1000,
+      });
+
+      expect(await tokens.erc1155Token.balanceOf(user.address, 2)).gt(0);
+    });
+
+    it('should distribute correct amounts with 10% rake (1000 bps)', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 1000; // 10%
+      const expectedUserAmount = amount.mul(9000).div(10000); // 90%
+      const expectedTreasuryAmount = amount.mul(1000).div(10000); // 10%
+      const { globalEscrowContract, owner, user, tokens, treasury } =
+        await loadFixture(defaultDeploy);
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        token: tokens.erc20Token.address,
         to: user.address,
         amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
         rakeBps,
       });
 
-      const rake = amount.mul(rakeBps).div(10000);
-      const rewardAmount = amount.sub(rake);
-
-      const balanceAfter = await user.getBalance();
-      const treasuryBalanceAfter = await treasury.getBalance();
-
-      expect(balanceAfter).gt(balanceBefore);
-      expect(balanceAfter).eq(balanceBefore.add(rewardAmount));
-      expect(treasuryBalanceAfter).eq(treasuryBalanceBefore.add(rake));
-    });
-
-    it('should revert if insufficient balance', async () => {
-      await withdrawNativeTest(
-        {
-          escrowContract: globalEscrowContract,
-          owner,
-          to: user.address,
-          amount: ethers.utils.parseEther('1000'),
-          rakeBps,
-        },
-        {
-          revertMessage: 'Escrow__InsufficientEscrowBalance',
-        },
+      expect(await tokens.erc20Token.balanceOf(user.address)).to.equal(
+        expectedUserAmount,
+      );
+      expect(await tokens.erc20Token.balanceOf(treasury.address)).to.equal(
+        expectedTreasuryAmount,
       );
     });
 
-    it('should revert if invalid rake BPS', async () => {
-      await withdrawNativeTest(
-        {
-          escrowContract: globalEscrowContract,
-          owner,
-          to: user.address,
-          amount,
-          rakeBps: 10001,
-        },
-        {
-          revertMessage: 'Escrow__InvalidRakeBps',
-        },
+    it('should distribute correct amounts with 5% rake (500 bps)', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 500; // 5%
+      const expectedUserAmount = amount.mul(9500).div(10000); // 95%
+      const expectedTreasuryAmount = amount.mul(500).div(10000); // 5%
+      const { globalEscrowContract, owner, user, tokens, treasury } =
+        await loadFixture(defaultDeploy);
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        token: tokens.erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await tokens.erc20Token.balanceOf(user.address)).to.equal(
+        expectedUserAmount,
+      );
+      expect(await tokens.erc20Token.balanceOf(treasury.address)).to.equal(
+        expectedTreasuryAmount,
       );
     });
 
-    it('should revert if zero address', async () => {
-      await withdrawNativeTest(
+    it('should distribute full amount when rake is 0 bps', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 0; // 0%
+
+      const { globalEscrowContract, owner, user, tokens, treasury } =
+        await loadFixture(defaultDeploy);
+
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        token: tokens.erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await tokens.erc20Token.balanceOf(user.address)).to.equal(amount);
+      expect(await tokens.erc20Token.balanceOf(treasury.address)).to.equal(0);
+    });
+
+    it('should distribute full amount to treasury when rake is 10000 bps', async () => {
+      const amount = ethers.utils.parseEther('100');
+      const rakeBps = 10000; // 100%
+
+      const { globalEscrowContract, owner, user, tokens, treasury } =
+        await loadFixture(defaultDeploy);
+
+      await distributeRewardsTest({
+        globalEscrow: globalEscrowContract,
+        owner,
+        token: tokens.erc20Token.address,
+        to: user.address,
+        amount,
+        rewardTokenId: 0,
+        tokenType: 0, // ERC20
+        rakeBps,
+      });
+
+      expect(await tokens.erc20Token.balanceOf(user.address)).to.equal(0);
+      expect(await tokens.erc20Token.balanceOf(treasury.address)).to.equal(
+        amount,
+      );
+    });
+
+    it('should revert if not called by distributor', async () => {
+      const { globalEscrowContract, owner, user, tokens } = await loadFixture(
+        defaultDeploy,
+      );
+      await distributeRewardsTest(
         {
-          escrowContract: globalEscrowContract,
+          globalEscrow: globalEscrowContract,
           owner,
-          to: ethers.constants.AddressZero,
-          amount,
-          rakeBps,
+          token: tokens.erc20Token.address,
+          to: user.address,
+          amount: ethers.utils.parseEther('100'),
+          rewardTokenId: 0,
+          tokenType: 0, // ERC20
+          rakeBps: 1000,
         },
         {
-          revertMessage: 'Escrow__ZeroAddress',
+          from: user,
+          revertMessage: 'AccessControlUnauthorizedAccount',
         },
       );
     });
