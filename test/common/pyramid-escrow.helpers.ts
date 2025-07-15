@@ -117,6 +117,8 @@ export const mintPyramidTest = async (
     return;
   }
 
+  // await pyramidContract.connect(sender).mintPyramid(data, signature, { value })
+
   await expect(
     pyramidContract.connect(sender).mintPyramid(data, signature, { value }),
   ).to.emit(

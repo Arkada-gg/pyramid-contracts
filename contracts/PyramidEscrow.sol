@@ -45,7 +45,7 @@ contract PyramidEscrow is
         );
     bytes32 internal constant _PYRAMID_DATA_HASH =
         keccak256(
-            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward,GlobalRewardData globalReward)FeeRecipient(address recipient,uint16 BPS)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)"
+            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward,GlobalRewardData globalReward)FeeRecipient(address recipient,uint16 BPS)GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)"
         );
 
     mapping(bytes32 => uint256) internal s_questIssueNumbers;
@@ -362,7 +362,7 @@ contract PyramidEscrow is
     function _computeDigest(
         PyramidData calldata data
     ) internal view returns (bytes32) {
-        return _hashTypedDataV4(keccak256(_getStructHash(data)));
+        return _hashTypedDataV4(_getStructHash(data));
     }
 
     /// @notice Internal function to generate the struct hash for PyramidData
@@ -371,21 +371,23 @@ contract PyramidEscrow is
     /// @return A hash representing the encoded PyramidData
     function _getStructHash(
         PyramidData calldata data
-    ) internal pure returns (bytes memory) {
+    ) internal pure returns (bytes32) {
         return
-            abi.encode(
-                _PYRAMID_DATA_HASH,
-                _encodeString(data.questId),
-                data.nonce,
-                data.price,
-                data.toAddress,
-                _encodeString(data.walletProvider),
-                _encodeString(data.tokenURI),
-                _encodeString(data.embedOrigin),
-                _encodeCompletedTxs(data.transactions),
-                _encodeRecipients(data.recipients),
-                _encodeReward(data.reward),
-                _encodeGlobalReward(data.globalReward)
+            keccak256(
+                abi.encode(
+                    _PYRAMID_DATA_HASH,
+                    _encodeString(data.questId),
+                    data.nonce,
+                    data.price,
+                    data.toAddress,
+                    _encodeString(data.walletProvider),
+                    _encodeString(data.tokenURI),
+                    _encodeString(data.embedOrigin),
+                    _encodeCompletedTxs(data.transactions),
+                    _encodeRecipients(data.recipients),
+                    _encodeReward(data.reward),
+                    _encodeGlobalReward(data.globalReward)
+                )
             );
     }
 

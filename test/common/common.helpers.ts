@@ -29,6 +29,15 @@ export interface IRewardData {
   factoryAddress: string;
 }
 
+export interface IGlobalRewardData {
+  tokenAddress: string;
+  amount: BigNumberish;
+  tokenId: number;
+  tokenType: number;
+  rakeBps: number;
+  escrowAddress: string;
+}
+
 export interface ITransactionData {
   txHash: string;
   networkChainId: string;
@@ -39,7 +48,7 @@ export interface IFeeRecipient {
   BPS: number;
 }
 
-export interface IMintPyramidEscrowData {
+export interface IMintPyramidDataV1 {
   questId: string;
   nonce: number;
   price: BigNumberish;
@@ -63,13 +72,14 @@ export interface IMintPyramidData {
   transactions: ITransactionData[];
   recipients: IFeeRecipient[];
   reward: IRewardData;
+  globalReward: IGlobalRewardData;
 }
 
 // Encode string values using keccak256
 export const encodeString = (str: string): string =>
   ethers.utils.keccak256(ethers.utils.toUtf8Bytes(str));
 
-const TYPES = {
+const TYPES_V1 = {
   PyramidData: [
     { name: 'questId', type: 'string' },
     { name: 'nonce', type: 'uint256' },
@@ -101,6 +111,61 @@ const TYPES = {
   ],
 };
 
+export const signMintDataTypedV1 = async (
+  data: IMintPyramidDataV1,
+  signer: SignerWithAddress,
+  domain: {
+    name: string;
+    version: string;
+    chainId: number;
+    verifyingContract: string;
+  },
+) => {
+  // Sign the hash directly
+  return await signer._signTypedData(domain, TYPES_V1, data);
+};
+
+const TYPES_V2 = {
+  PyramidData: [
+    { name: 'questId', type: 'string' },
+    { name: 'nonce', type: 'uint256' },
+    { name: 'price', type: 'uint256' },
+    { name: 'toAddress', type: 'address' },
+    { name: 'walletProvider', type: 'string' },
+    { name: 'tokenURI', type: 'string' },
+    { name: 'embedOrigin', type: 'string' },
+    { name: 'transactions', type: 'TransactionData[]' },
+    { name: 'recipients', type: 'FeeRecipient[]' },
+    { name: 'reward', type: 'RewardData' },
+    { name: 'globalReward', type: 'GlobalRewardData' },
+  ],
+  TransactionData: [
+    { name: 'txHash', type: 'string' },
+    { name: 'networkChainId', type: 'string' },
+  ],
+  FeeRecipient: [
+    { name: 'recipient', type: 'address' },
+    { name: 'BPS', type: 'uint16' },
+  ],
+  RewardData: [
+    { name: 'tokenAddress', type: 'address' },
+    { name: 'chainId', type: 'uint256' },
+    { name: 'amount', type: 'uint256' },
+    { name: 'tokenId', type: 'uint256' },
+    { name: 'tokenType', type: 'uint8' },
+    { name: 'rakeBps', type: 'uint256' },
+    { name: 'factoryAddress', type: 'address' },
+  ],
+  GlobalRewardData: [
+    { name: 'tokenAddress', type: 'address' },
+    { name: 'amount', type: 'uint256' },
+    { name: 'tokenId', type: 'uint256' },
+    { name: 'tokenType', type: 'uint8' },
+    { name: 'rakeBps', type: 'uint256' },
+    { name: 'escrowAddress', type: 'address' },
+  ],
+};
+
 export const signMintDataTyped = async (
   data: IMintPyramidData,
   signer: SignerWithAddress,
@@ -112,7 +177,7 @@ export const signMintDataTyped = async (
   },
 ) => {
   // Sign the hash directly
-  return await signer._signTypedData(domain, TYPES, data);
+  return await signer._signTypedData(domain, TYPES_V2, data);
 };
 
 /**

@@ -11,7 +11,7 @@ import {
   withdrawFundsTest,
 } from './common/global-escrow.helpers';
 
-describe.only('GlobalEscrow', () => {
+describe('GlobalEscrow', () => {
   describe('addTokenToWhitelist', () => {
     it('should add token to whitelist', async () => {
       const { globalEscrowContract, owner, tokens } = await loadFixture(

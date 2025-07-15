@@ -14,8 +14,8 @@ import {
   PyramidV2Escrow,
 } from '../../typechain-types';
 import {
-  IMintPyramidEscrowData,
-  signMintDataTyped,
+  IMintPyramidDataV1,
+  signMintDataTypedV1,
 } from '../common/common.helpers';
 import { createEscrowTest } from '../common/factory.helpers';
 import {
@@ -308,7 +308,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         isActive: false,
       });
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -339,7 +339,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, user, domain);
+      const signature = await signMintDataTypedV1(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -363,7 +363,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         domain,
       } = await loadFixture(upgradeFixture);
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -394,7 +394,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, user, domain);
+      const signature = await signMintDataTypedV1(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -419,7 +419,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         domain,
       } = await loadFixture(upgradeFixture);
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -450,7 +450,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -494,7 +494,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -525,7 +525,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -583,7 +583,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
 
       const rewards = parseEther('0');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -614,7 +614,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -673,7 +673,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -704,7 +704,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -762,7 +762,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
 
       const rewards = 1;
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -793,7 +793,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -850,7 +850,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
 
       const rewards = 1;
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -881,7 +881,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -936,7 +936,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidDataV1 = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -967,7 +967,7 @@ describe('UPGRADE: Pyramid -> PyramidV2Escrow', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {

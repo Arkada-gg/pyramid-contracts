@@ -161,6 +161,11 @@ export async function defaultDeploy() {
     owner.address,
   );
 
+  await globalEscrowContract.grantRole(
+    await globalEscrowContract.DISTRIBUTOR_ROLE(),
+    pyramidEscrowContract.address,
+  );
+
   await pyramidEscrowContract.grantRole(
     await pyramidEscrowContract.SIGNER_ROLE(),
     questSigner.address,
