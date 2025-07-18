@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { PYRAMID_ESCROW_CONTRACT_NAME } from '../../config';
+import { GLOBAL_ESCROW_CONTRACT_NAME } from '../../config';
 import { getCurrentAddresses } from '../../config/constants/addresses';
 import {
   logDeployProxy,
@@ -16,20 +16,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log('Deploying Pyramid...');
+  console.log('Deploying GlobalEscrow...');
 
   // initialise params <=========
-  const TOKEN_NAME = 'Pyramid';
-  const TOKEN_SYMBOL = 'PYR';
-  const SIGNING_DOMAIN = 'Pyramid';
-  const SIGNATURE_VERSION = '1';
+  const WHITELISTED_TOKENS: string[] = [];
   // const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
   const ADMIN = '0xd0623f1fC15d9cb59D0dc81f3498F30bcaE6B97C'; // Set admin address here
+  const TREASURY = ADMIN;
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(
-    await hre.ethers.getContractFactory(PYRAMID_ESCROW_CONTRACT_NAME, owner),
-    [TOKEN_NAME, TOKEN_SYMBOL, SIGNING_DOMAIN, SIGNATURE_VERSION, ADMIN],
+    await hre.ethers.getContractFactory(GLOBAL_ESCROW_CONTRACT_NAME, owner),
+    [ADMIN, WHITELISTED_TOKENS, TREASURY],
     {
       unsafeAllow: ['constructor'],
       timeout: 5000,
@@ -42,7 +40,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log('Waited.');
   }
 
-  await logDeployProxy(hre, PYRAMID_ESCROW_CONTRACT_NAME, deployment.address);
+  await logDeployProxy(hre, GLOBAL_ESCROW_CONTRACT_NAME, deployment.address);
   await tryEtherscanVerifyImplementation(hre, deployment.address);
 };
 

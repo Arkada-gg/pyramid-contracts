@@ -6,6 +6,7 @@ export interface ArkadaAddresses {
   pyramid?: string;
   arena?: string;
   escrowFactory?: string;
+  globalEscrow?: string;
 }
 
 export const arkadaAddressesPerNetwork: ConfigPerNetwork<
@@ -34,6 +35,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
     arena: '0x173F63ae500A471d86db16045cb05c13d88afc07',
     escrowFactory: '0x1AE93e93A8B421725F114a27c82237BEF4ada624',
+    globalEscrow: '0xb49F921292a3cEe16b6F23e64374103f237CF2e3',
   },
   arbitrum: {
     arkadaRewarder: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
