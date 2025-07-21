@@ -319,6 +319,9 @@ export async function defaultDeploy() {
     ),
   ).to.not.reverted;
 
+  const operatorRole = await arenaContract.OPERATOR_ROLE();
+  await arenaContract.grantRole(operatorRole, owner.address);
+
   return {
     owner,
     user,

@@ -30,7 +30,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     [ADMIN, WHITELISTED_TOKENS, TREASURY],
     {
       unsafeAllow: ['constructor'],
-      timeout: 5000,
     },
   );
 

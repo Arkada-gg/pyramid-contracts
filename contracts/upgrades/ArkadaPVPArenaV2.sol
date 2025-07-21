@@ -8,14 +8,14 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IArkadaPVPArena} from "./interfaces/IArkadaPVPArena.sol";
+import {IArkadaPVPArena} from "../interfaces/IArkadaPVPArena.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /// @title ArkadaPVPArena
 /// @dev Implementation of a PVP Arena smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's proxy pattern.
 /// Allows users to create and join battle arenas, with different types of competition mechanics.
-contract ArkadaPVPArena is
+contract ArkadaPVPArenaV2 is
     Initializable,
     AccessControlUpgradeable,
     ReentrancyGuardUpgradeable,
@@ -26,7 +26,6 @@ contract ArkadaPVPArena is
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @notice Type hash for join data according to EIP-712
     /// @dev Used in typed signature recovery for arena joining
@@ -93,53 +92,7 @@ contract ArkadaPVPArena is
     /// @dev Used to verify reward claims with merkle proofs
     mapping(uint256 => bytes32) public rootProofByArena;
 
-    /// @notice Initializes the ArkadaPVPArena contract with necessary parameters
-    /// @dev Sets up contract with configuration parameters and grants initial roles
-    /// @param _signingDomain Domain used for EIP712 signing
-    /// @param _signatureVersion Version of the EIP712 signature
-    /// @param _treasury Address that will receive protocol fees
-    /// @param _signer Address that will be granted the signer role
-    /// @param _admin Address that will be granted the admin role
-    /// @param _feeBPS Fee percentage in basis points to be sent to treasury
-    /// @param _playersConfig Min/Max configuration for player counts
-    /// @param _intervalToStartConfig Min/Max configuration for start time intervals
-    /// @param _durationConfig Min/Max configuration for arena durations
-    function initialize(
-        string memory _signingDomain,
-        string memory _signatureVersion,
-        address _treasury,
-        address _signer,
-        address _admin,
-        uint16 _feeBPS,
-        uint16 _timeLeftToRebuyBPS,
-        MinMax memory _playersConfig,
-        MinMax memory _intervalToStartConfig,
-        MinMax memory _durationConfig
-    ) public initializer {
-        if (_treasury == address(0)) revert PVPArena__InvalidAddress();
-        if (_admin == address(0)) revert PVPArena__InvalidAddress();
-        if (_signer == address(0)) revert PVPArena__InvalidAddress();
-
-        __AccessControl_init();
-        __ReentrancyGuard_init();
-        __EIP712_init(_signingDomain, _signatureVersion);
-
-        _grantRole(DEFAULT_ADMIN_ROLE, _admin);
-        _grantRole(ADMIN_ROLE, _admin);
-        _grantRole(SIGNER_ROLE, _signer);
-
-        treasury = _treasury;
-        feeBPS = _feeBPS;
-        playersConfig = _playersConfig;
-        intervalToStartConfig = _intervalToStartConfig;
-        durationConfig = _durationConfig;
-        timeLeftToRebuyBPS = _timeLeftToRebuyBPS;
-
-        // Increasing _nextArenaId to start ids from 1
-        unchecked {
-            ++s_nextArenaId;
-        }
-    }
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /**
      * @inheritdoc IArkadaPVPArena

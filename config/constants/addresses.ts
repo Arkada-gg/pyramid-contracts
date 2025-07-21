@@ -17,6 +17,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
     arena: '0xAEDF46Add9A2f466565AA2b4f20C3C21e334E1e3',
     escrowFactory: '0xfA15F981DDCa3A9bFaeE28c35334fC9539E18E9E',
+    globalEscrow: '0x020C9f0Bc8d5EA35Aa10F8c3A172d870422F369F',
   },
   sonic: {
     arkadaRewarder: '0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617',
@@ -33,7 +34,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   monadtestnet: {
     arkadaRewarder: '0x360ecC5bf4E5E9aeec708571Fe286c33679c450B',
     pyramid: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
-    arena: '0x173F63ae500A471d86db16045cb05c13d88afc07',
+    arena: '0xaFE0b6447c308561AA17f05280a86ff27de8286c',
     escrowFactory: '0x1AE93e93A8B421725F114a27c82237BEF4ada624',
     globalEscrow: '0xb49F921292a3cEe16b6F23e64374103f237CF2e3',
   },

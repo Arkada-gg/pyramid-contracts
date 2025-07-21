@@ -123,6 +123,12 @@ interface IArkadaPVPArena {
     /// @param max Maximum duration allowed
     event DurationConfigSet(address indexed caller, uint256 min, uint256 max);
 
+    /// @notice Emitted when the duration configuration is updated
+    /// @param caller Address that called the function
+    /// @param arenaId Arena id
+    /// @param newRoot new merkle root
+    event RootUpdated(address indexed caller, uint256 arenaId, bytes32 newRoot);
+
     /// @notice Defines the types of arenas available
     /// @dev TIME: Arena starts at a specific time, PLACES: Arena starts when filled with required players
     enum ArenaType {
@@ -280,4 +286,10 @@ interface IArkadaPVPArena {
     /// @dev Only callable by admin
     /// @param _arenaId Arena id
     function emergencyClose(uint256 _arenaId) external;
+
+    /// @notice Update merkle root for arena by id
+    /// @dev Only callable by admin
+    /// @param _arenaId Arena id
+    /// @param _root new merkle root
+    function updateMerkleRoot(uint256 _arenaId, bytes32 _root) external;
 }

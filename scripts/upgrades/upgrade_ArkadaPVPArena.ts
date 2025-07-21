@@ -2,7 +2,6 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { ARENA_CONTRACT_NAME } from '../../config';
 import { getCurrentAddresses } from '../../config/constants/addresses';
 import {
   logDeployProxy,
@@ -16,11 +15,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log('Upgrading ArkadaPVPArena...');
+  console.log('Upgrading ArkadaPVPArena to ArkadaPVPArenaV2...');
 
   const deployment = await hre.upgrades.upgradeProxy(
     addresses?.arena ?? '',
-    await hre.ethers.getContractFactory(ARENA_CONTRACT_NAME, owner),
+    await hre.ethers.getContractFactory('ArkadaPVPArenaV2', owner),
     {
       unsafeAllow: ['constructor'],
     },
@@ -32,7 +31,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log('Waited.');
   }
 
-  await logDeployProxy(hre, ARENA_CONTRACT_NAME, deployment.address);
+  await logDeployProxy(hre, 'ArkadaPVPArenaV2', deployment.address);
   await tryEtherscanVerifyImplementation(hre, deployment.address);
 };
 

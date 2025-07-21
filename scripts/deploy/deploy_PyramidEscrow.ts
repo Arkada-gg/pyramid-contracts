@@ -32,7 +32,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     [TOKEN_NAME, TOKEN_SYMBOL, SIGNING_DOMAIN, SIGNATURE_VERSION, ADMIN],
     {
       unsafeAllow: ['constructor'],
-      timeout: 5000,
+      // timeout: 5000,
     },
   );
 

@@ -14,7 +14,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   // pre-requisites
   const WITHDRAWER_ADDRESS = deployer;
-  const DISTRIBUTOR_ADDRESS = '0x4aFbbc312cf1D94f9FD7Ca4086AF6B210b9d7139';
+  const DISTRIBUTOR_ADDRESS = '0xecB880DD8a970f347f93b87335FC5172500f2beE';
 
   const globalEscrow = await hre.ethers.getContractAt(
     GLOBAL_ESCROW_CONTRACT_NAME,
