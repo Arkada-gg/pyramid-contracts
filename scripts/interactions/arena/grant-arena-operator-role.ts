@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     owner,
   );
 
-  const ACCOUNT = '';
+  const ACCOUNT = '0xDE91c31f1b9c3dc4270cADaec8ab4C4C5aCAD93f';
 
   const operatorRole = await arenaContract.OPERATOR_ROLE();
   await arenaContract.grantRole(operatorRole, ACCOUNT);
