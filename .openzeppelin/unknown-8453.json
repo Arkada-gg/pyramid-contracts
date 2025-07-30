@@ -29,6 +29,11 @@
       "address": "0x84E5c76f4152E7b463BDa5Ded10559732Ac649C0",
       "txHash": "0x32b611301ae2a61b1efeb8e36569442729a62c6551c41d2663b64fcbe6a2e484",
       "kind": "transparent"
+    },
+    {
+      "address": "0x922E6aE68dF456b12b88502B4863dF54a9da9E39",
+      "txHash": "0x3c68a016e4dd3fb340a8a35a422ccd3a1f40a4ff1a0f119e0f3a86ba52362d43",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -367,6 +372,45 @@
           },
           "t_uint256": {
             "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "ae8ba06959b0d5b1fa03ce5be2e0ec85b97a498a063f6950243c7abb1e58b9b6": {
+      "address": "0x2AA3CF1839FA7273B9981c807FAc4246767d8031",
+      "txHash": "0x5c97dee921a79e0c1d9e80dea37ae139caa8208cd3a11a95bfcbe6f7e4f3f67a",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "i_treasury",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "GlobalEscrow",
+            "src": "contracts/escrow/GlobalEscrow.sol:62"
+          },
+          {
+            "label": "s_whitelistedTokens",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "GlobalEscrow",
+            "src": "contracts/escrow/GlobalEscrow.sol:67"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
             "numberOfBytes": "32"
           }
         }
