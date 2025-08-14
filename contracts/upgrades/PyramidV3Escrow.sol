@@ -28,7 +28,6 @@ contract PyramidV3Escrow is
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
-    address public s_arkadaRewarder;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
 

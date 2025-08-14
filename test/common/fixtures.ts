@@ -319,6 +319,25 @@ export async function defaultDeploy() {
     ),
   ).to.not.reverted;
 
+  // let topic0 = arenaContract.interface.getEventTopic('EmergencyClosed');
+  // console.log('EmergencyClosed topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('ArenaCreated');
+  // console.log('ArenaCreated topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('ArenaDeleted');
+  // console.log('ArenaDeleted topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('PlayerJoined');
+  // console.log('PlayerJoined topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('PlayerRebuy');
+  // console.log('PlayerRebuy topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('PlayerLeft');
+  // console.log('PlayerLeft topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('ArenaEnded');
+  // console.log('ArenaEnded topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('RewardsClaimed');
+  // console.log('RewardsClaimed topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('FeeBpsSet');
+  // console.log('FeeBpsSet topic0:', topic0);
+
   const operatorRole = await arenaContract.OPERATOR_ROLE();
   await arenaContract.grantRole(operatorRole, owner.address);
 
