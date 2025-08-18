@@ -18,12 +18,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     owner,
   );
 
-  const ARENA_ID = 102;
-
-  await arenaContract.emergencyClose(ARENA_ID);
+  const ARENA_ID = 96;
 
   const arenaInfo = await arenaContract.arenas(ARENA_ID);
-  console.log('Arena info: ', arenaInfo);
+  console.log(arenaInfo);
+
+  await arenaContract['joinArena(uint256)'](ARENA_ID, {
+    value: arenaInfo.entryFee,
+  });
 };
 
 func(hre).then(console.log).catch(console.error);
