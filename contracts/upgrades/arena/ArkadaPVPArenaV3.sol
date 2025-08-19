@@ -8,19 +8,19 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IArkadaPVPArena} from "../interfaces/IArkadaPVPArena.sol";
+import {IArkadaPVPArenaV3} from "../interfaces/IArkadaPVPArenaV3.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-/// @title ArkadaPVPArena
+/// @title ArkadaPVPArenaV3
 /// @dev Implementation of a PVP Arena smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's proxy pattern.
 /// Allows users to create and join battle arenas, with different types of competition mechanics.
-contract ArkadaPVPArenaV2 is
+contract ArkadaPVPArenaV3 is
     Initializable,
     AccessControlUpgradeable,
     ReentrancyGuardUpgradeable,
     EIP712Upgradeable,
-    IArkadaPVPArena
+    IArkadaPVPArenaV3
 {
     using ECDSA for bytes32;
 
@@ -95,7 +95,7 @@ contract ArkadaPVPArenaV2 is
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function createArena(
         ArenaType _type,
@@ -103,7 +103,8 @@ contract ArkadaPVPArenaV2 is
         uint256 _duration,
         uint256 _startTime,
         uint256 _requiredPlayers,
-        bool _signatured
+        bool _signatured,
+        bool _lockArenaOnStart
     ) external payable returns (uint256 arenaId) {
         if (_signatured) _checkRole(ADMIN_ROLE);
 
@@ -152,7 +153,8 @@ contract ArkadaPVPArenaV2 is
             players: 0,
             initialPrizePool: initialPrizePool,
             signatured: _signatured,
-            emergencyClosed: false
+            emergencyClosed: false,
+            lockArenaOnStart: _lockArenaOnStart
         });
 
         arenas[arenaId] = newArena;
@@ -163,7 +165,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function joinArena(uint256 _arenaId) external payable nonReentrant {
         ArenaInfo memory arena = arenas[_arenaId];
@@ -174,7 +176,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function joinArena(
         JoinData calldata data,
@@ -189,7 +191,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function leaveArena(uint256 _arenaId) external nonReentrant {
         ArenaInfo memory arena = arenas[_arenaId];
@@ -239,7 +241,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function endArenaAndDistributeRewards(
         uint256 _arenaId,
@@ -282,7 +284,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function claimRewards(
         uint256 _arenaId,
@@ -313,7 +315,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function rebuy(uint256 _arenaId) external payable nonReentrant {
         ArenaInfo memory arena = arenas[_arenaId];
@@ -326,6 +328,8 @@ contract ArkadaPVPArenaV2 is
             block.timestamp < arena.startTime ||
             arena.players < arena.requiredPlayers
         ) revert PVPArena__ArenaNotStarted();
+
+        if (arena.lockArenaOnStart) revert PVPArena__ArenaLocked();
 
         if (msg.value < arena.entryFee) revert PVPArena__InvalidFeeAmount();
 
@@ -343,12 +347,13 @@ contract ArkadaPVPArenaV2 is
             revert PVPArena__ArenaRebuyTimeExeeded();
 
         feesByArena[_arenaId] += arena.entryFee;
+        paidForParticipate[arenaIdAndAddressHash] += arena.entryFee;
 
         emit PlayerRebuy(_arenaId, msg.sender);
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function setTreasury(address _treasury) external onlyRole(ADMIN_ROLE) {
         if (_treasury == address(0)) revert PVPArena__InvalidAddress();
@@ -357,7 +362,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function setFeeBPS(uint16 _feeBPS) external onlyRole(ADMIN_ROLE) {
         feeBPS = _feeBPS;
@@ -365,7 +370,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function setTimeLeftToRebuyBPS(
         uint16 _timeLeftToRebuyBPS
@@ -375,7 +380,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function setPlayersConfig(
         MinMax calldata _config
@@ -386,7 +391,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function setIntervalToStartConfig(
         MinMax calldata _config
@@ -397,7 +402,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function updateMerkleRoot(
         uint256 _arenaId,
@@ -409,7 +414,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function setDurationConfig(
         MinMax calldata _config
@@ -420,7 +425,7 @@ contract ArkadaPVPArenaV2 is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV3
      */
     function emergencyClose(uint256 _arenaId) external onlyRole(ADMIN_ROLE) {
         ArenaInfo memory arena = arenas[_arenaId];
@@ -531,6 +536,8 @@ contract ArkadaPVPArenaV2 is
             block.timestamp >= _arena.startTime &&
             _arena.players >= _arena.requiredPlayers
         ) {
+            if (_arena.lockArenaOnStart) revert PVPArena__ArenaLocked();
+
             uint256 rebuyEndTime = _arena.startTime +
                 (_arena.duration -
                     ((_arena.duration * timeLeftToRebuyBPS) / MAX_BPS));

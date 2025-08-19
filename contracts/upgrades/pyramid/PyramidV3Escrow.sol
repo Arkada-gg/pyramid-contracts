@@ -8,12 +8,12 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IFactory} from "../escrow/interfaces/IFactory.sol";
-import {IGlobalEscrow} from "../escrow/interfaces/IGlobalEscrow.sol";
+import {IFactory} from "../../escrow/interfaces/IFactory.sol";
+import {IGlobalEscrow} from "../../escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidEscrow} from "../interfaces/IPyramidEscrow.sol";
+import {IPyramidEscrow} from "../../interfaces/IPyramidEscrow.sol";
 
-/// @title PyramidV2Escrow
+/// @title PyramidV3Escrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
 contract PyramidV3Escrow is
@@ -28,6 +28,7 @@ contract PyramidV3Escrow is
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
+    address public s_arkadaRewarder;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
 

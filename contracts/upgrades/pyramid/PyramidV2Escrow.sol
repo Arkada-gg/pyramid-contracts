@@ -8,10 +8,10 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IFactory} from "../escrow/interfaces/IFactory.sol";
+import {IFactory} from "../../escrow/interfaces/IFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidV2Escrow} from "./interfaces/IPyramidV2Escrow.sol";
-import {IArkadaRewarder} from "../interfaces/IArkadaRewarder.sol";
+import {IPyramidV2Escrow} from "../interfaces/IPyramidV2Escrow.sol";
+import {IArkadaRewarder} from "../../interfaces/IArkadaRewarder.sol";
 
 /// @title PyramidV2Escrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.

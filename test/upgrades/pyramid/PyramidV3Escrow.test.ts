@@ -14,15 +14,18 @@ import {
   Pyramid,
   PyramidV2Escrow,
   PyramidV3Escrow,
-} from '../../typechain-types';
-import { IMintPyramidData, signMintDataTyped } from '../common/common.helpers';
-import { createEscrowTest } from '../common/factory.helpers';
+} from '../../../typechain-types';
+import {
+  IMintPyramidData,
+  signMintDataTyped,
+} from '../../common/common.helpers';
+import { createEscrowTest } from '../../common/factory.helpers';
 import {
   mintPyramidTest,
   setIsMintingActiveTest,
   setTreasuryTest,
   withdrawTest,
-} from '../common/pyramid-escrow.helpers';
+} from '../../common/pyramid-escrow.helpers';
 
 const upgradeFixture = async () => {
   const [owner, user, treasury, questSigner, admin] = await ethers.getSigners();
