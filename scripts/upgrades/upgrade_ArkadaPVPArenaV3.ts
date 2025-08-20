@@ -15,7 +15,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log('Upgrading ArkadaPVPArenaV2 to ArkadaPVPArenaV3...');
+  console.log('Upgrading ArkadaPVPArena to ArkadaPVPArenaV3...');
 
   const deployment = await hre.upgrades.upgradeProxy(
     addresses?.arena ?? '',
