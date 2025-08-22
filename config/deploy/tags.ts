@@ -16,4 +16,7 @@ export const FACTORY_CONTRACT_NAME = 'Factory';
 export const ARENA_DEPLOY_TAG = 'ArkadaPVPArena';
 export const ARENA_CONTRACT_NAME = 'ArkadaPVPArena';
 
+export const ARENA_V3_DEPLOY_TAG = 'ArkadaPVPArenaV3';
+export const ARENA_V3_CONTRACT_NAME = 'ArkadaPVPArenaV3';
+
 export const POST_DEPLOY_TAG = 'POST_DEPLOY';

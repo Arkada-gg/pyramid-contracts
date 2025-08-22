@@ -3,9 +3,8 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { OptionalCommonParams } from './common.helpers';
-
 import { ArkadaPVPArena, ArkadaPVPArenaV3 } from '../../typechain-types';
+import { OptionalCommonParams } from './common.helpers';
 
 export enum ArenaType {
   TIME,
@@ -265,8 +264,12 @@ interface ICreateArenaV3Test extends CommonParams {
   duration: BigNumberish;
   startTime: BigNumberish;
   requiredPlayers: BigNumberish;
-  signatured?: boolean;
-  lockOnStart?: boolean;
+  boolParams: {
+    signatured: boolean;
+    lockArenaOnStart: boolean;
+    lockRebuy: boolean;
+  };
+  name: string;
   arenaContract: ArkadaPVPArenaV3;
 }
 export const createArenaV3Test = async (
@@ -277,9 +280,9 @@ export const createArenaV3Test = async (
     duration,
     entryFee,
     requiredPlayers,
-    signatured,
+    boolParams,
+    name,
     startTime,
-    lockOnStart,
   }: ICreateArenaV3Test,
   opt?: OptionalCommonParams,
 ) => {
@@ -295,8 +298,8 @@ export const createArenaV3Test = async (
           duration,
           startTime,
           requiredPlayers,
-          signatured ?? false,
-          lockOnStart ?? false,
+          name,
+          boolParams,
           { value: opt?.value },
         ),
     ).revertedWithCustomError(arenaContract, opt?.revertMessage);
@@ -311,8 +314,8 @@ export const createArenaV3Test = async (
       duration,
       startTime,
       requiredPlayers,
-      signatured ?? false,
-      lockOnStart ?? false,
+      name,
+      boolParams,
       { value: opt?.value },
     );
 
@@ -325,8 +328,8 @@ export const createArenaV3Test = async (
         duration,
         startTime,
         requiredPlayers,
-        signatured ?? false,
-        lockOnStart ?? false,
+        name,
+        boolParams,
         { value: opt?.value },
       ),
   ).to.emit(
@@ -360,8 +363,10 @@ export const createArenaV3Test = async (
       ? opt?.value ?? 0
       : BigNumber.from(opt?.value ?? 0).sub(arenaData.entryFee),
   );
-  expect(arenaData.signatured).eq(signatured);
-  expect(arenaData.lockArenaOnStart).eq(lockOnStart ?? false);
+  expect(arenaData.boolParams.signatured).eq(boolParams.signatured);
+  expect(arenaData.boolParams.lockArenaOnStart).eq(boolParams.lockArenaOnStart);
+  expect(arenaData.boolParams.lockRebuy).eq(boolParams.lockRebuy);
+  expect(arenaData.name).eq(name);
 };
 
 interface IJoinArenaTest extends CommonParams {

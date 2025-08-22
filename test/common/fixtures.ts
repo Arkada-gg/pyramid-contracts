@@ -6,6 +6,7 @@ import { createEscrowTest } from './factory.helpers';
 import {
   // eslint-disable-next-line
   ArkadaPVPArena__factory,
+  ArkadaPVPArenaV3__factory,
   // eslint-disable-next-line
   ArkadaRewarder__factory,
   ERC1155Mock,
@@ -341,6 +342,93 @@ export async function defaultDeploy() {
   const operatorRole = await arenaContract.OPERATOR_ROLE();
   await arenaContract.grantRole(operatorRole, owner.address);
 
+  const arenaContractV3 = await new ArkadaPVPArenaV3__factory(owner).deploy();
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: ethers.constants.AddressZero,
+        admin: admin.address,
+        signer: arenaSigner.address,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: ethers.constants.AddressZero,
+        signer: arenaSigner.address,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: admin.address,
+        signer: ethers.constants.AddressZero,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: admin.address,
+        signer: arenaSigner.address,
+        operator: ethers.constants.AddressZero,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: owner.address,
+        signer: arenaSigner.address,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.not.reverted;
+
   return {
     owner,
     user,
@@ -364,6 +452,11 @@ export async function defaultDeploy() {
       chainId,
       verifyingContract: arenaContract.address,
     },
+    domainArenaV3: {
+      ...arenaDomain,
+      chainId,
+      verifyingContract: arenaContractV3.address,
+    },
     QUEST_ID,
     QUEST_ID_HASH,
     COMMUNITIES,
@@ -379,6 +472,7 @@ export async function defaultDeploy() {
     pyramidEscrowContract,
     arkadaRewarderContract,
     arenaContract,
+    arenaContractV3,
     arenaSigner,
     arenaInitialConfig,
     regularAccounts,
