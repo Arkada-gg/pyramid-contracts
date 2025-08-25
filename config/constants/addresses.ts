@@ -29,7 +29,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   base: {
     arkadaRewarder: '0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617',
     pyramid: '0xC909A19E3cE11841d46E9206f5FD9fe2Bc9B36b5',
-    arena: '0xa4e6101e26BD7d2C418aDb3bbF3189375678eb99',
+    arena: '0x436De6acD08d955127e3c8D858E79CdFbA8E6C77',
     escrowFactory: '0x84E5c76f4152E7b463BDa5Ded10559732Ac649C0',
     globalEscrow: '0x922E6aE68dF456b12b88502B4863dF54a9da9E39',
   },
