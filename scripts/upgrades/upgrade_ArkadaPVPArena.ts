@@ -15,11 +15,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log('Upgrading ArkadaPVPArena to ArkadaPVPArenaV2...');
+  console.log('Upgrading ArkadaPVPArenaV3 to ArkadaPVPArenaV4...');
 
   const deployment = await hre.upgrades.upgradeProxy(
     addresses?.arena ?? '',
-    await hre.ethers.getContractFactory('ArkadaPVPArenaV2', owner),
+    await hre.ethers.getContractFactory('ArkadaPVPArenaV4', owner),
     {
       unsafeAllow: ['constructor'],
     },
@@ -31,7 +31,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log('Waited.');
   }
 
-  await logDeployProxy(hre, 'ArkadaPVPArenaV2', deployment.address);
+  await logDeployProxy(hre, 'ArkadaPVPArenaV4', deployment.address);
   await tryEtherscanVerifyImplementation(hre, deployment.address);
 };
 

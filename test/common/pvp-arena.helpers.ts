@@ -3,7 +3,11 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { ArkadaPVPArena, ArkadaPVPArenaV3 } from '../../typechain-types';
+import {
+  ArkadaPVPArena,
+  ArkadaPVPArenaV3,
+  ArkadaPVPArenaV4,
+} from '../../typechain-types';
 import { OptionalCommonParams } from './common.helpers';
 
 export enum ArenaType {
@@ -258,6 +262,7 @@ export const createArenaTest = async (
   expect(arenaData.signatured).eq(signatured);
 };
 
+// @ts-ignore
 interface ICreateArenaV3Test extends CommonParams {
   type: ArenaType;
   entryFee: BigNumberish;
@@ -270,7 +275,8 @@ interface ICreateArenaV3Test extends CommonParams {
     lockRebuy: boolean;
   };
   name: string;
-  arenaContract: ArkadaPVPArenaV3;
+  arenaContract: ArkadaPVPArenaV3 | ArkadaPVPArenaV4;
+  isV4?: boolean;
 }
 export const createArenaV3Test = async (
   {
@@ -283,6 +289,7 @@ export const createArenaV3Test = async (
     boolParams,
     name,
     startTime,
+    isV4,
   }: ICreateArenaV3Test,
   opt?: OptionalCommonParams,
 ) => {
@@ -341,7 +348,9 @@ export const createArenaV3Test = async (
   const arenaData = await arenaContract.arenas(arenaId);
 
   const hasAdminRole = await arenaContract.hasRole(
-    await arenaContract.ADMIN_ROLE(),
+    isV4
+      ? await arenaContract.OPERATOR_ROLE()
+      : await arenaContract.ADMIN_ROLE(),
     sender.address,
   );
   const playersConfig = await arenaContract.playersConfig();
@@ -767,6 +776,38 @@ export const emergencyCloseTest = async (
 
   // Participant status should be false
   expect(arena.emergencyClosed).to.equal(true);
+};
+
+interface ISetMinEntryFeeTest extends Omit<CommonParams, 'arenaContract'> {
+  arenaContract: ArkadaPVPArenaV4;
+  newFee: BigNumberish;
+}
+
+export const setMinEntryFeeTest = async (
+  { arenaContract, owner, newFee }: ISetMinEntryFeeTest,
+  opt?: OptionalCommonParams,
+) => {
+  const sender = opt?.from ?? owner;
+
+  if (opt?.revertMessage) {
+    await expect(
+      arenaContract.connect(sender).setMinEntryFee(newFee),
+    ).revertedWithCustomError(arenaContract, opt?.revertMessage);
+    return;
+  }
+
+  // Check event emission
+  await expect(arenaContract.connect(sender).setMinEntryFee(newFee))
+    .to.emit(
+      arenaContract,
+      arenaContract.interface.events['MinEntryFeeUpdated(address,uint256)']
+        .name,
+    )
+    .withArgs(sender.address, newFee);
+
+  const minEntryFee = await arenaContract.minEntryFee();
+
+  expect(minEntryFee).to.equal(newFee);
 };
 
 interface IRebuyTest extends CommonParams {
