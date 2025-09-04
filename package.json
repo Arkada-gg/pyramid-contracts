@@ -35,6 +35,7 @@
     "verify:main": "hardhat verify --network soneium",
     "deploy:rewarder": "yarn hh:run scripts/deploy/deploy_ArkadaRewarder.ts",
     "deploy:pyramid": "yarn hh:run scripts/deploy/deploy_Pyramid.ts --network base",
+    "deploy:arena": "yarn hh:run scripts/deploy/deploy_ArkadaPVPArena.ts --network monadtestnet",
     "post-deploy:pyr": "yarn hh:run scripts/deploy/post-deploy-pyr.ts --network base"
   },
   "devDependencies": {

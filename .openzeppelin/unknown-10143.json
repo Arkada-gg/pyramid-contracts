@@ -36,6 +36,11 @@
       "kind": "transparent"
     },
     {
+      "address": "0xaFE0b6447c308561AA17f05280a86ff27de8286c",
+      "txHash": "0x669b82d9a035bc530064036283783095af22f21468a42fe2cf91c70a1bc72eab",
+      "kind": "transparent"
+    },
+    {
       "address": "0x4aFbbc312cf1D94f9FD7Ca4086AF6B210b9d7139",
       "txHash": "0x46662b2dd4abc124ebcefecbc7d03f1ed3fde934e19e313a1d2f80af3663ac30",
       "kind": "transparent"
@@ -398,10 +403,7 @@
           },
           "t_enum(ArenaType)10803": {
             "label": "enum IArkadaPVPArena.ArenaType",
-            "members": [
-              "TIME",
-              "PLACES"
-            ],
+            "members": ["TIME", "PLACES"],
             "numberOfBytes": "1"
           },
           "t_mapping(t_bytes32,t_bool)": {
@@ -675,10 +677,7 @@
           },
           "t_enum(ArenaType)10797": {
             "label": "enum IArkadaPVPArena.ArenaType",
-            "members": [
-              "TIME",
-              "PLACES"
-            ],
+            "members": ["TIME", "PLACES"],
             "numberOfBytes": "1"
           },
           "t_mapping(t_bytes32,t_bool)": {
@@ -1106,10 +1105,7 @@
           },
           "t_enum(ArenaType)9229": {
             "label": "enum IArkadaPVPArena.ArenaType",
-            "members": [
-              "TIME",
-              "PLACES"
-            ],
+            "members": ["TIME", "PLACES"],
             "numberOfBytes": "1"
           },
           "t_mapping(t_bytes32,t_bool)": {
@@ -1383,10 +1379,7 @@
           },
           "t_enum(ArenaType)9229": {
             "label": "enum IArkadaPVPArena.ArenaType",
-            "members": [
-              "TIME",
-              "PLACES"
-            ],
+            "members": ["TIME", "PLACES"],
             "numberOfBytes": "1"
           },
           "t_mapping(t_bytes32,t_bool)": {
@@ -1660,10 +1653,7 @@
           },
           "t_enum(ArenaType)10756": {
             "label": "enum IArkadaPVPArenaV3.ArenaType",
-            "members": [
-              "TIME",
-              "PLACES"
-            ],
+            "members": ["TIME", "PLACES"],
             "numberOfBytes": "1"
           },
           "t_mapping(t_bytes32,t_bool)": {
