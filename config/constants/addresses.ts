@@ -44,9 +44,10 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
   },
   arbitrum: {
     arkadaRewarder: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
-    pyramid: '0xF668DDa15336129BC9977e36d60c14220cdc63Ec',
+    pyramid: '0xa4e6101e26BD7d2C418aDb3bbF3189375678eb99',
     arena: '',
     escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
+    globalEscrow: '0x52440733017f0546C16B5c61ac0c270D3d3E95F3',
   },
   hyperevm: {
     arkadaRewarder: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
