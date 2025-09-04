@@ -3,10 +3,7 @@ import { expect } from 'chai';
 import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 
-import {
-  IMintPyramidEscrowData,
-  signMintDataTyped,
-} from './common/common.helpers';
+import { IMintPyramidData, signMintDataTyped } from './common/common.helpers';
 import { defaultDeploy } from './common/fixtures';
 import {
   mintPyramidTest,
@@ -14,7 +11,6 @@ import {
   setTreasuryTest,
   withdrawTest,
 } from './common/pyramid-escrow.helpers';
-import { setArkadaRewarderTest } from './common/pyramid.helpers';
 
 describe('PyramidEscrow', () => {
   it('deployment', async () => {
@@ -108,31 +104,6 @@ describe('PyramidEscrow', () => {
     });
   });
 
-  describe('Arkada Rewarder Management', () => {
-    it('Should allow owner to set Arkada rewarder', async () => {
-      const { pyramidEscrowContract, owner, arkadaRewarderContract } =
-        await loadFixture(defaultDeploy);
-      await setArkadaRewarderTest({
-        pyramidContract: pyramidEscrowContract,
-        owner,
-        arkadaRewarder: arkadaRewarderContract.address,
-      });
-    });
-
-    it('Should not allow non-owner to set Arkada rewarder', async () => {
-      const { pyramidEscrowContract, owner, user, arkadaRewarderContract } =
-        await loadFixture(defaultDeploy);
-      await setArkadaRewarderTest(
-        {
-          pyramidContract: pyramidEscrowContract,
-          owner,
-          arkadaRewarder: arkadaRewarderContract.address,
-        },
-        { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
-      );
-    });
-  });
-
   describe('Minting', () => {
     it('Should not allow minting when inactive', async () => {
       const {
@@ -149,7 +120,7 @@ describe('PyramidEscrow', () => {
         isActive: false,
       });
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -177,6 +148,14 @@ describe('PyramidEscrow', () => {
           tokenType: 3,
           rakeBps: 10000,
           factoryAddress: factoryContract.address,
+        },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: factoryContract.address,
         },
       };
 
@@ -204,7 +183,7 @@ describe('PyramidEscrow', () => {
         domain,
       } = await loadFixture(defaultDeploy);
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -232,6 +211,14 @@ describe('PyramidEscrow', () => {
           tokenType: 3,
           rakeBps: 10000,
           factoryAddress: factoryContract.address,
+        },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: factoryContract.address,
         },
       };
 
@@ -260,7 +247,7 @@ describe('PyramidEscrow', () => {
         domainEscrow,
       } = await loadFixture(defaultDeploy);
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price: parseEther('0.1'),
@@ -288,6 +275,14 @@ describe('PyramidEscrow', () => {
           tokenType: 3,
           rakeBps: 10000,
           factoryAddress: factoryContract.address,
+        },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
         },
       };
 
@@ -330,7 +325,6 @@ describe('PyramidEscrow', () => {
         factoryContract,
         domainEscrow,
         treasury,
-        arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -339,7 +333,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -368,6 +362,14 @@ describe('PyramidEscrow', () => {
           rakeBps: 0,
           factoryAddress: factoryContract.address,
         },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
+        },
       };
 
       const signature = await signMintDataTyped(
@@ -384,6 +386,9 @@ describe('PyramidEscrow', () => {
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
       await mintPyramidTest(
         {
@@ -400,10 +405,119 @@ describe('PyramidEscrow', () => {
         treasury.address,
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
+
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(
+        userBalanceBefore.sub(price).add(rewards),
+      );
+    });
+
+    it('Should allow successful minting with native token global rewards', async () => {
+      const {
+        pyramidEscrowContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        globalEscrowContract,
+        domainEscrow,
+        treasury,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = parseEther('0.01');
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 0,
+          factoryAddress: ethers.constants.AddressZero,
+        },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 0,
+          escrowAddress: globalEscrowContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      await mintPyramidTest(
+        {
+          pyramidEscrowContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
 
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
@@ -432,7 +546,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = parseEther('0');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -461,6 +575,14 @@ describe('PyramidEscrow', () => {
           rakeBps: 0,
           factoryAddress: ethers.constants.AddressZero,
         },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
+        },
       };
 
       const signature = await signMintDataTyped(
@@ -478,6 +600,10 @@ describe('PyramidEscrow', () => {
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
 
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
       await mintPyramidTest(
         {
           pyramidEscrowContract,
@@ -494,9 +620,13 @@ describe('PyramidEscrow', () => {
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
 
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
@@ -526,7 +656,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -555,6 +685,14 @@ describe('PyramidEscrow', () => {
           rakeBps: 0,
           factoryAddress: factoryContract.address,
         },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
+        },
       };
 
       const signature = await signMintDataTyped(
@@ -574,6 +712,9 @@ describe('PyramidEscrow', () => {
       const erc20BalanceBefore = await tokens.erc20Token.balanceOf(
         user.address,
       );
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
       await mintPyramidTest(
         {
@@ -591,9 +732,122 @@ describe('PyramidEscrow', () => {
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
       const erc20BalanceAfter = await tokens.erc20Token.balanceOf(user.address);
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
+      expect(erc20BalanceAfter).to.equal(erc20BalanceBefore.add(rewards));
+    });
+
+    it('Should allow successful minting with erc20 token global rewards', async () => {
+      const {
+        pyramidEscrowContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        globalEscrowContract,
+        domainEscrow,
+        treasury,
+        tokens,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = parseEther('0.01');
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: tokens.erc20Token.address,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 0,
+          rakeBps: 0,
+          factoryAddress: ethers.constants.AddressZero,
+        },
+        globalReward: {
+          tokenAddress: tokens.erc20Token.address,
+          amount: rewards,
+          tokenId: 0,
+          tokenType: 0,
+          rakeBps: 0,
+          escrowAddress: globalEscrowContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const erc20BalanceBefore = await tokens.erc20Token.balanceOf(
+        user.address,
+      );
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      await mintPyramidTest(
+        {
+          pyramidEscrowContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const erc20BalanceAfter = await tokens.erc20Token.balanceOf(user.address);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
@@ -621,7 +875,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = 1;
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -650,6 +904,14 @@ describe('PyramidEscrow', () => {
           rakeBps: 0,
           factoryAddress: factoryContract.address,
         },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
+        },
       };
 
       const signature = await signMintDataTyped(
@@ -667,6 +929,10 @@ describe('PyramidEscrow', () => {
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
 
+      const referalBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
       await mintPyramidTest(
         {
           pyramidEscrowContract,
@@ -683,14 +949,125 @@ describe('PyramidEscrow', () => {
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      const referalBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referalBalanceAfter.sub(referalBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
       expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
       expect(await tokens.erc721Token.ownerOf(1)).eq(user.address);
+    });
+
+    it('Should allow successful minting with erc721 token global rewards', async () => {
+      const {
+        pyramidEscrowContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        globalEscrowContract,
+        domainEscrow,
+        treasury,
+        tokens,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = 1;
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: tokens.erc721Token.address,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 1,
+          tokenType: 1,
+          rakeBps: 0,
+          factoryAddress: ethers.constants.AddressZero,
+        },
+        globalReward: {
+          tokenAddress: tokens.erc721Token.address,
+          amount: rewards,
+          tokenId: 2,
+          tokenType: 1,
+          rakeBps: 0,
+          escrowAddress: globalEscrowContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+
+      const referalBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      await mintPyramidTest(
+        {
+          pyramidEscrowContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+
+      const referalBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referalBalanceAfter.sub(referalBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
+      expect(await tokens.erc721Token.ownerOf(2)).eq(user.address);
     });
 
     it('Should allow successful minting with erc1155 token rewards', async () => {
@@ -713,7 +1090,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = 1;
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -742,6 +1119,14 @@ describe('PyramidEscrow', () => {
           rakeBps: 0,
           factoryAddress: factoryContract.address,
         },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
+        },
       };
 
       const signature = await signMintDataTyped(
@@ -758,6 +1143,9 @@ describe('PyramidEscrow', () => {
       );
 
       const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
       await mintPyramidTest(
         {
@@ -774,15 +1162,123 @@ describe('PyramidEscrow', () => {
         treasury.address,
       );
       const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
 
-      expect(
-        await arkadaRewarderContract.userRewards(questSigner.address),
-      ).to.equal(expectedRecipientPayout);
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
       expect(treasuryBalanceAfter).to.equal(
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
       expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
       expect(await tokens.erc1155Token.balanceOf(user.address, 1)).eq(rewards);
+    });
+
+    it('Should allow successful minting with erc1155 token rewards', async () => {
+      const {
+        pyramidEscrowContract,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        globalEscrowContract,
+        domainEscrow,
+        treasury,
+        tokens,
+      } = await loadFixture(defaultDeploy);
+
+      const price = parseEther('0.1');
+      const BPS = 100;
+      const MAX_BPS = 10000;
+
+      const rewards = 1;
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID,
+        nonce: 1,
+        price,
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: questSigner.address,
+            BPS,
+          },
+        ],
+        reward: {
+          tokenAddress: tokens.erc1155Token.address,
+          chainId: 1,
+          amount: rewards,
+          tokenId: 1,
+          tokenType: 2,
+          rakeBps: 0,
+          factoryAddress: ethers.constants.AddressZero,
+        },
+        globalReward: {
+          tokenAddress: tokens.erc1155Token.address,
+          amount: rewards,
+          tokenId: 2,
+          tokenType: 2,
+          rakeBps: 0,
+          escrowAddress: globalEscrowContract.address,
+        },
+      };
+
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrow,
+      );
+
+      const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
+      const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(
+        treasury.address,
+      );
+
+      const userBalanceBefore = await ethers.provider.getBalance(user.address);
+      const referralBalanceBefore = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      await mintPyramidTest(
+        {
+          pyramidEscrowContract,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(
+        treasury.address,
+      );
+      const userBalanceAfter = await ethers.provider.getBalance(user.address);
+      const referralBalanceAfter = await ethers.provider.getBalance(
+        questSigner.address,
+      );
+
+      expect(referralBalanceAfter.sub(referralBalanceBefore)).to.equal(
+        expectedRecipientPayout,
+      );
+      expect(treasuryBalanceAfter).to.equal(
+        treasuryBalanceBefore.add(expectedTreasuryPayout),
+      );
+      expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
+      expect(await tokens.erc1155Token.balanceOf(user.address, 2)).eq(rewards);
     });
   });
 
@@ -803,7 +1299,7 @@ describe('PyramidEscrow', () => {
 
       const rewards = parseEther('0.01');
 
-      const data: IMintPyramidEscrowData = {
+      const data: IMintPyramidData = {
         questId: QUEST_ID,
         nonce: 1,
         price,
@@ -831,6 +1327,14 @@ describe('PyramidEscrow', () => {
           tokenType: 3,
           rakeBps: 0,
           factoryAddress: factoryContract.address,
+        },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.1'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
         },
       };
 

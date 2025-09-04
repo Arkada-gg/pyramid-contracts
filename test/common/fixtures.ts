@@ -6,6 +6,7 @@ import { createEscrowTest } from './factory.helpers';
 import {
   // eslint-disable-next-line
   ArkadaPVPArena__factory,
+  ArkadaPVPArenaV3__factory,
   // eslint-disable-next-line
   ArkadaRewarder__factory,
   ERC1155Mock,
@@ -13,6 +14,7 @@ import {
   ERC721Mock,
   // eslint-disable-next-line
   Factory__factory,
+  GlobalEscrow__factory,
   // eslint-disable-next-line
   Pyramid__factory,
   // eslint-disable-next-line
@@ -94,6 +96,49 @@ export async function defaultDeploy() {
     pyramidContract.address,
   );
 
+  // Deploy mock tokens
+  const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
+  const erc20Token = (await ERC20Mock.deploy(
+    'Test Token',
+    'TEST',
+  )) as ERC20Mock;
+  await erc20Token.deployed();
+
+  const ERC721Mock = await ethers.getContractFactory('ERC721Mock');
+  const erc721Token = (await ERC721Mock.deploy(
+    'Test NFT',
+    'TNFT',
+  )) as ERC721Mock;
+  await erc721Token.deployed();
+
+  const ERC1155Mock = await ethers.getContractFactory('ERC1155Mock');
+  const erc1155Token = (await ERC1155Mock.deploy()) as ERC1155Mock;
+  await erc1155Token.deployed();
+
+  const globalEscrowContract = await new GlobalEscrow__factory(owner).deploy();
+  await expect(
+    globalEscrowContract.initialize(
+      ethers.constants.AddressZero,
+      [],
+      treasury.address,
+    ),
+  ).to.be.revertedWithCustomError(globalEscrowContract, 'Escrow__ZeroAddress');
+  await expect(
+    globalEscrowContract.initialize(
+      owner.address,
+      [erc20Token.address, erc721Token.address, erc1155Token.address],
+      treasury.address,
+    ),
+  ).to.not.rejected;
+  await globalEscrowContract.grantRole(
+    await globalEscrowContract.WITHDRAWER_ROLE(),
+    owner.address,
+  );
+  await globalEscrowContract.grantRole(
+    await globalEscrowContract.DISTRIBUTOR_ROLE(),
+    owner.address,
+  );
+
   const pyramidEscrowContract = await new PyramidEscrow__factory(
     owner,
   ).deploy();
@@ -103,20 +148,6 @@ export async function defaultDeploy() {
       'PYR',
       domain.name,
       domain.version,
-      ethers.constants.AddressZero,
-      arkadaRewarderContract.address,
-    ),
-  ).to.be.revertedWithCustomError(
-    pyramidEscrowContract,
-    'Pyramid__InvalidAdminAddress',
-  );
-  await expect(
-    pyramidEscrowContract.initialize(
-      'Pyramid',
-      'PYR',
-      domain.name,
-      domain.version,
-      owner.address,
       ethers.constants.AddressZero,
     ),
   ).to.be.revertedWithCustomError(
@@ -129,7 +160,11 @@ export async function defaultDeploy() {
     domain.name,
     domain.version,
     owner.address,
-    arkadaRewarderContract.address,
+  );
+
+  await globalEscrowContract.grantRole(
+    await globalEscrowContract.DISTRIBUTOR_ROLE(),
+    pyramidEscrowContract.address,
   );
 
   await pyramidEscrowContract.grantRole(
@@ -157,25 +192,6 @@ export async function defaultDeploy() {
     owner.address,
     pyramidEscrowContract.address,
   );
-
-  // Deploy mock tokens
-  const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
-  const erc20Token = (await ERC20Mock.deploy(
-    'Test Token',
-    'TEST',
-  )) as ERC20Mock;
-  await erc20Token.deployed();
-
-  const ERC721Mock = await ethers.getContractFactory('ERC721Mock');
-  const erc721Token = (await ERC721Mock.deploy(
-    'Test NFT',
-    'TNFT',
-  )) as ERC721Mock;
-  await erc721Token.deployed();
-
-  const ERC1155Mock = await ethers.getContractFactory('ERC1155Mock');
-  const erc1155Token = (await ERC1155Mock.deploy()) as ERC1155Mock;
-  await erc1155Token.deployed();
 
   const QUEST_ID = 'test';
   const QUEST_ID_HASH = ethers.utils.keccak256(
@@ -206,10 +222,22 @@ export async function defaultDeploy() {
   await erc721Token.mint(escrowAddress, 1);
   await erc1155Token.mint(escrowAddress, 1, 100, '0x');
 
+  await erc20Token.mint(
+    globalEscrowContract.address,
+    ethers.utils.parseEther('1000'),
+  );
+  await erc721Token.mint(globalEscrowContract.address, 2);
+  await erc1155Token.mint(globalEscrowContract.address, 2, 100, '0x');
+
   // Send native tokens
   await user.sendTransaction({
     to: escrowAddress,
     value: ethers.utils.parseEther('1'),
+  });
+
+  await user.sendTransaction({
+    to: globalEscrowContract.address,
+    value: ethers.utils.parseEther('1000'),
   });
 
   const arenaDomain = {
@@ -292,6 +320,115 @@ export async function defaultDeploy() {
     ),
   ).to.not.reverted;
 
+  // let topic0 = arenaContract.interface.getEventTopic('EmergencyClosed');
+  // console.log('EmergencyClosed topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('ArenaCreated');
+  // console.log('ArenaCreated topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('ArenaDeleted');
+  // console.log('ArenaDeleted topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('PlayerJoined');
+  // console.log('PlayerJoined topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('PlayerRebuy');
+  // console.log('PlayerRebuy topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('PlayerLeft');
+  // console.log('PlayerLeft topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('ArenaEnded');
+  // console.log('ArenaEnded topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('RewardsClaimed');
+  // console.log('RewardsClaimed topic0:', topic0);
+  // topic0 = arenaContract.interface.getEventTopic('FeeBpsSet');
+  // console.log('FeeBpsSet topic0:', topic0);
+
+  const operatorRole = await arenaContract.OPERATOR_ROLE();
+  await arenaContract.grantRole(operatorRole, owner.address);
+
+  const arenaContractV3 = await new ArkadaPVPArenaV3__factory(owner).deploy();
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: ethers.constants.AddressZero,
+        admin: admin.address,
+        signer: arenaSigner.address,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: ethers.constants.AddressZero,
+        signer: arenaSigner.address,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: admin.address,
+        signer: ethers.constants.AddressZero,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: admin.address,
+        signer: arenaSigner.address,
+        operator: ethers.constants.AddressZero,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.be.revertedWithCustomError(arenaContract, 'PVPArena__InvalidAddress');
+  await expect(
+    arenaContractV3.initialize(
+      arenaDomain.name,
+      arenaDomain.version,
+      {
+        treasury: treasury.address,
+        admin: owner.address,
+        signer: arenaSigner.address,
+        operator: owner.address,
+      },
+      arenaInitialConfig.feeBPS,
+      arenaInitialConfig.timeLeftForRebuyBPS,
+      arenaInitialConfig.playersConfig,
+      arenaInitialConfig.intervalToStartConfig,
+      arenaInitialConfig.durationConfig,
+    ),
+  ).to.not.reverted;
+
   return {
     owner,
     user,
@@ -315,6 +452,11 @@ export async function defaultDeploy() {
       chainId,
       verifyingContract: arenaContract.address,
     },
+    domainArenaV3: {
+      ...arenaDomain,
+      chainId,
+      verifyingContract: arenaContractV3.address,
+    },
     QUEST_ID,
     QUEST_ID_HASH,
     COMMUNITIES,
@@ -330,8 +472,10 @@ export async function defaultDeploy() {
     pyramidEscrowContract,
     arkadaRewarderContract,
     arenaContract,
+    arenaContractV3,
     arenaSigner,
     arenaInitialConfig,
     regularAccounts,
+    globalEscrowContract,
   };
 }

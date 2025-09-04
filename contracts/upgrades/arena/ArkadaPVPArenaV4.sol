@@ -8,19 +8,19 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IArkadaPVPArena} from "./interfaces/IArkadaPVPArena.sol";
+import {IArkadaPVPArenaV4} from "../interfaces/IArkadaPVPArenaV4.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-/// @title ArkadaPVPArena
+/// @title ArkadaPVPArenaV4
 /// @dev Implementation of a PVP Arena smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's proxy pattern.
 /// Allows users to create and join battle arenas, with different types of competition mechanics.
-contract ArkadaPVPArena is
+contract ArkadaPVPArenaV4 is
     Initializable,
     AccessControlUpgradeable,
     ReentrancyGuardUpgradeable,
     EIP712Upgradeable,
-    IArkadaPVPArena
+    IArkadaPVPArenaV4
 {
     using ECDSA for bytes32;
 
@@ -93,56 +93,12 @@ contract ArkadaPVPArena is
     /// @dev Used to verify reward claims with merkle proofs
     mapping(uint256 => bytes32) public rootProofByArena;
 
-    /// @notice Initializes the ArkadaPVPArena contract with necessary parameters
-    /// @dev Sets up contract with configuration parameters and grants initial roles
-    /// @param _signingDomain Domain used for EIP712 signing
-    /// @param _signatureVersion Version of the EIP712 signature
-    /// @param _treasury Address that will receive protocol fees
-    /// @param _signer Address that will be granted the signer role
-    /// @param _admin Address that will be granted the admin role
-    /// @param _feeBPS Fee percentage in basis points to be sent to treasury
-    /// @param _playersConfig Min/Max configuration for player counts
-    /// @param _intervalToStartConfig Min/Max configuration for start time intervals
-    /// @param _durationConfig Min/Max configuration for arena durations
-    function initialize(
-        string memory _signingDomain,
-        string memory _signatureVersion,
-        address _treasury,
-        address _signer,
-        address _admin,
-        uint16 _feeBPS,
-        uint16 _timeLeftToRebuyBPS,
-        MinMax memory _playersConfig,
-        MinMax memory _intervalToStartConfig,
-        MinMax memory _durationConfig
-    ) public initializer {
-        if (_treasury == address(0)) revert PVPArena__InvalidAddress();
-        if (_admin == address(0)) revert PVPArena__InvalidAddress();
-        if (_signer == address(0)) revert PVPArena__InvalidAddress();
-
-        __AccessControl_init();
-        __ReentrancyGuard_init();
-        __EIP712_init(_signingDomain, _signatureVersion);
-
-        _grantRole(DEFAULT_ADMIN_ROLE, _admin);
-        _grantRole(ADMIN_ROLE, _admin);
-        _grantRole(SIGNER_ROLE, _signer);
-
-        treasury = _treasury;
-        feeBPS = _feeBPS;
-        playersConfig = _playersConfig;
-        intervalToStartConfig = _intervalToStartConfig;
-        durationConfig = _durationConfig;
-        timeLeftToRebuyBPS = _timeLeftToRebuyBPS;
-
-        // Increasing _nextArenaId to start ids from 1
-        unchecked {
-            ++s_nextArenaId;
-        }
-    }
+    /// @notice Stores the minimal entry fee amount
+    /// @dev Used to prevent creation of small arenas
+    uint256 public minEntryFee;
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function createArena(
         ArenaType _type,
@@ -150,10 +106,64 @@ contract ArkadaPVPArena is
         uint256 _duration,
         uint256 _startTime,
         uint256 _requiredPlayers,
-        bool _signatured
+        string calldata _name,
+        ArenaBoolParams calldata _boolParams
     ) external payable returns (uint256 arenaId) {
-        if (_signatured) _checkRole(ADMIN_ROLE);
+        if (_boolParams.signatured) _checkRole(OPERATOR_ROLE);
+        if (_entryFee < minEntryFee) revert PVPArena__InvalidFeeAmount();
 
+        _validateArenaParams(
+            _type,
+            _entryFee,
+            _duration,
+            _startTime,
+            _requiredPlayers
+        );
+
+        arenaId = s_nextArenaId++;
+
+        bool hasOperatorRole = hasRole(OPERATOR_ROLE, msg.sender);
+
+        if (!hasOperatorRole && msg.value < _entryFee)
+            revert PVPArena__InvalidFeeAmount();
+
+        uint256 initialPrizePool = hasOperatorRole
+            ? msg.value
+            : msg.value - _entryFee;
+
+        ArenaInfo memory newArena = ArenaInfo({
+            id: arenaId,
+            creator: msg.sender,
+            entryFee: _entryFee,
+            duration: _duration,
+            startTime: _startTime,
+            endTime: _type == ArenaType.TIME ? _startTime + _duration : 0,
+            createdAt: block.timestamp,
+            arenaType: _type,
+            requiredPlayers: _requiredPlayers < playersConfig.min
+                ? playersConfig.min
+                : _requiredPlayers,
+            players: 0,
+            initialPrizePool: initialPrizePool,
+            emergencyClosed: false,
+            boolParams: _boolParams,
+            name: _name
+        });
+
+        arenas[arenaId] = newArena;
+
+        emit ArenaCreated(arenaId, msg.sender, _type, _boolParams.signatured);
+
+        if (!hasOperatorRole) _joinArena(newArena, msg.sender, false, 0);
+    }
+
+    function _validateArenaParams(
+        ArenaType _type,
+        uint256 _entryFee,
+        uint256 _duration,
+        uint256 _startTime,
+        uint256 _requiredPlayers
+    ) internal view {
         if (_duration < durationConfig.min || _duration > durationConfig.max)
             revert PVPArena__InvalidDuration();
 
@@ -172,56 +182,21 @@ contract ArkadaPVPArena is
                 _requiredPlayers > playersConfig.max
             ) revert PVPArena__InvalidPlayersRequired();
         }
-
-        arenaId = s_nextArenaId++;
-
-        bool hasAdminRole = hasRole(ADMIN_ROLE, msg.sender);
-
-        if (!hasAdminRole && msg.value < _entryFee)
-            revert PVPArena__InvalidFeeAmount();
-
-        uint256 initialPrizePool = hasAdminRole
-            ? msg.value
-            : msg.value - _entryFee;
-
-        ArenaInfo memory newArena = ArenaInfo({
-            id: arenaId,
-            creator: msg.sender,
-            entryFee: _entryFee,
-            duration: _duration,
-            startTime: _startTime,
-            endTime: _type == ArenaType.TIME ? _startTime + _duration : 0,
-            createdAt: block.timestamp,
-            arenaType: _type,
-            requiredPlayers: _requiredPlayers < playersConfig.min
-                ? playersConfig.min
-                : _requiredPlayers,
-            players: 0,
-            initialPrizePool: initialPrizePool,
-            signatured: _signatured,
-            emergencyClosed: false
-        });
-
-        arenas[arenaId] = newArena;
-
-        emit ArenaCreated(arenaId, msg.sender, _type, _signatured);
-
-        if (!hasAdminRole) _joinArena(newArena, msg.sender, false, 0);
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function joinArena(uint256 _arenaId) external payable nonReentrant {
         ArenaInfo memory arena = arenas[_arenaId];
 
-        if (arena.signatured) revert PVPArena__ArenaIsSignatured();
+        if (arena.boolParams.signatured) revert PVPArena__ArenaIsSignatured();
 
         _joinArena(arena, msg.sender, false, 0);
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function joinArena(
         JoinData calldata data,
@@ -236,7 +211,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function leaveArena(uint256 _arenaId) external nonReentrant {
         ArenaInfo memory arena = arenas[_arenaId];
@@ -286,7 +261,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function endArenaAndDistributeRewards(
         uint256 _arenaId,
@@ -329,7 +304,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function claimRewards(
         uint256 _arenaId,
@@ -360,7 +335,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function rebuy(uint256 _arenaId) external payable nonReentrant {
         ArenaInfo memory arena = arenas[_arenaId];
@@ -373,6 +348,8 @@ contract ArkadaPVPArena is
             block.timestamp < arena.startTime ||
             arena.players < arena.requiredPlayers
         ) revert PVPArena__ArenaNotStarted();
+
+        if (arena.boolParams.lockRebuy) revert PVPArena__ArenaRebuyLocked();
 
         if (msg.value < arena.entryFee) revert PVPArena__InvalidFeeAmount();
 
@@ -390,12 +367,13 @@ contract ArkadaPVPArena is
             revert PVPArena__ArenaRebuyTimeExeeded();
 
         feesByArena[_arenaId] += arena.entryFee;
+        paidForParticipate[arenaIdAndAddressHash] += arena.entryFee;
 
         emit PlayerRebuy(_arenaId, msg.sender);
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function setTreasury(address _treasury) external onlyRole(ADMIN_ROLE) {
         if (_treasury == address(0)) revert PVPArena__InvalidAddress();
@@ -404,7 +382,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function setFeeBPS(uint16 _feeBPS) external onlyRole(ADMIN_ROLE) {
         feeBPS = _feeBPS;
@@ -412,7 +390,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function setTimeLeftToRebuyBPS(
         uint16 _timeLeftToRebuyBPS
@@ -422,7 +400,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function setPlayersConfig(
         MinMax calldata _config
@@ -433,7 +411,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function setIntervalToStartConfig(
         MinMax calldata _config
@@ -444,7 +422,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function updateMerkleRoot(
         uint256 _arenaId,
@@ -456,7 +434,15 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
+     */
+    function setMinEntryFee(uint256 _newFee) external onlyRole(ADMIN_ROLE) {
+        minEntryFee = _newFee;
+        emit MinEntryFeeUpdated(msg.sender, _newFee);
+    }
+
+    /**
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function setDurationConfig(
         MinMax calldata _config
@@ -467,7 +453,7 @@ contract ArkadaPVPArena is
     }
 
     /**
-     * @inheritdoc IArkadaPVPArena
+     * @inheritdoc IArkadaPVPArenaV4
      */
     function emergencyClose(uint256 _arenaId) external onlyRole(ADMIN_ROLE) {
         ArenaInfo memory arena = arenas[_arenaId];
@@ -578,6 +564,9 @@ contract ArkadaPVPArena is
             block.timestamp >= _arena.startTime &&
             _arena.players >= _arena.requiredPlayers
         ) {
+            if (_arena.boolParams.lockArenaOnStart)
+                revert PVPArena__ArenaLockedOnStart();
+
             uint256 rebuyEndTime = _arena.startTime +
                 (_arena.duration -
                     ((_arena.duration * timeLeftToRebuyBPS) / MAX_BPS));

@@ -8,26 +8,27 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IFactory} from "./escrow/interfaces/IFactory.sol";
-import {IGlobalEscrow} from "./escrow/interfaces/IGlobalEscrow.sol";
+import {IFactory} from "../../escrow/interfaces/IFactory.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidEscrow} from "./interfaces/IPyramidEscrow.sol";
+import {IPyramidV2Escrow} from "../interfaces/IPyramidV2Escrow.sol";
+import {IArkadaRewarder} from "../../interfaces/IArkadaRewarder.sol";
 
-/// @title PyramidEscrow
+/// @title PyramidV2Escrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
-contract PyramidEscrow is
+contract PyramidV2Escrow is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
-    IPyramidEscrow
+    IPyramidV2Escrow
 {
     using ECDSA for bytes32;
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
+    address public s_arkadaRewarder;
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
 
@@ -39,13 +40,9 @@ contract PyramidEscrow is
         keccak256(
             "RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)"
         );
-    bytes32 internal constant GLOBAL_REWARD_DATA_HASH =
-        keccak256(
-            "GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)"
-        );
     bytes32 internal constant _PYRAMID_DATA_HASH =
         keccak256(
-            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward,GlobalRewardData globalReward)FeeRecipient(address recipient,uint16 BPS)GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)"
+            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward)FeeRecipient(address recipient,uint16 BPS)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)"
         );
 
     mapping(bytes32 => uint256) internal s_questIssueNumbers;
@@ -65,31 +62,7 @@ contract PyramidEscrow is
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
-        return "1";
-    }
-
-    /// @notice Initializes the Pyramid contract with necessary parameters
-    /// @dev Sets up the ERC721 token with given name and symbol, and grants initial roles.
-    /// @param _tokenName Name of the NFT collection
-    /// @param _tokenSymbol Symbol of the NFT collection
-    /// @param _signingDomain Domain used for EIP712 signing
-    /// @param _signatureVersion Version of the EIP712 signature
-    /// @param _admin Address to be granted the admin roles
-    function initialize(
-        string memory _tokenName,
-        string memory _tokenSymbol,
-        string memory _signingDomain,
-        string memory _signatureVersion,
-        address _admin
-    ) external initializer {
-        if (_admin == address(0)) revert Pyramid__InvalidAdminAddress();
-        __ERC721_init(_tokenName, _tokenSymbol);
-        __EIP712_init(_signingDomain, _signatureVersion);
-        __AccessControl_init();
-        __ReentrancyGuard_init();
-        s_isMintingActive = true;
-
-        _grantRole(DEFAULT_ADMIN_ROLE, _admin);
+        return "2";
     }
 
     /// @notice Retrieves the URI for a given token
@@ -103,7 +76,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidV2Escrow
      */
     function mintPyramid(
         PyramidData calldata pyramidData,
@@ -200,35 +173,15 @@ contract PyramidEscrow is
                     data.reward.tokenType,
                     data.reward.rakeBps
                 );
-
-                emit TokenReward(
-                    tokenId,
-                    data.reward.tokenAddress,
-                    data.reward.chainId,
-                    data.reward.amount,
-                    data.reward.tokenId,
-                    data.reward.tokenType
-                );
             }
-        }
-
-        if (data.globalReward.escrowAddress != address(0)) {
-            IGlobalEscrow(data.globalReward.escrowAddress).distributeRewards(
-                data.globalReward.tokenAddress,
-                data.toAddress,
-                data.globalReward.amount,
-                data.globalReward.tokenId,
-                data.globalReward.tokenType,
-                data.globalReward.rakeBps
-            );
 
             emit TokenReward(
                 tokenId,
-                data.globalReward.tokenAddress,
-                0,
-                data.globalReward.amount,
-                data.globalReward.tokenId,
-                data.globalReward.tokenType
+                data.reward.tokenAddress,
+                data.reward.chainId,
+                data.reward.amount,
+                data.reward.tokenId,
+                data.reward.tokenType
             );
         }
     }
@@ -291,6 +244,10 @@ contract PyramidEscrow is
     /// @param data The PyramidData struct containing payout details
     function _processNativePayouts(PyramidData calldata data) internal {
         uint256 totalReferrals;
+        uint256 arrayLength = data.recipients.length;
+
+        address[] memory recipients = new address[](arrayLength);
+        uint256[] memory amounts = new uint256[](arrayLength);
 
         if (data.recipients.length > 0) {
             // max basis points is 10k (100%)
@@ -317,13 +274,8 @@ contract PyramidEscrow is
                 // Transfer the referral amount to the recipient
                 address recipient = data.recipients[i].recipient;
                 if (recipient != address(0)) {
-                    // Transfer the referrals amount and user rewards to the ArkadaRewarder
-                    (bool success, ) = payable(recipient).call{
-                        value: referralAmount
-                    }("");
-                    if (!success) {
-                        revert Pyramid__TransferFailed();
-                    }
+                    recipients[i] = recipient;
+                    amounts[i] = referralAmount;
                     emit FeePayout(recipient, referralAmount);
                 }
                 unchecked {
@@ -332,10 +284,21 @@ contract PyramidEscrow is
             }
         }
 
+        // Add payouts of referrals and user rewards to the ArkadaRewarder
+        IArkadaRewarder(s_arkadaRewarder).addRewards(recipients, amounts);
+
+        // Transfer the referrals amount and user rewards to the ArkadaRewarder
+        (bool success, ) = payable(s_arkadaRewarder).call{
+            value: totalReferrals
+        }("");
+        if (!success) {
+            revert Pyramid__TransferFailed();
+        }
+
         uint256 treasuryPayout = data.price - totalReferrals;
 
         // Transfer the remaining amount to the treasury
-        (bool success, ) = payable(s_treasury).call{value: treasuryPayout}("");
+        (success, ) = payable(s_treasury).call{value: treasuryPayout}("");
         if (!success) {
             revert Pyramid__NativePaymentFailed();
         }
@@ -362,7 +325,7 @@ contract PyramidEscrow is
     function _computeDigest(
         PyramidData calldata data
     ) internal view returns (bytes32) {
-        return _hashTypedDataV4(_getStructHash(data));
+        return _hashTypedDataV4(keccak256(_getStructHash(data)));
     }
 
     /// @notice Internal function to generate the struct hash for PyramidData
@@ -371,23 +334,20 @@ contract PyramidEscrow is
     /// @return A hash representing the encoded PyramidData
     function _getStructHash(
         PyramidData calldata data
-    ) internal pure returns (bytes32) {
+    ) internal pure returns (bytes memory) {
         return
-            keccak256(
-                abi.encode(
-                    _PYRAMID_DATA_HASH,
-                    _encodeString(data.questId),
-                    data.nonce,
-                    data.price,
-                    data.toAddress,
-                    _encodeString(data.walletProvider),
-                    _encodeString(data.tokenURI),
-                    _encodeString(data.embedOrigin),
-                    _encodeCompletedTxs(data.transactions),
-                    _encodeRecipients(data.recipients),
-                    _encodeReward(data.reward),
-                    _encodeGlobalReward(data.globalReward)
-                )
+            abi.encode(
+                _PYRAMID_DATA_HASH,
+                _encodeString(data.questId),
+                data.nonce,
+                data.price,
+                data.toAddress,
+                _encodeString(data.walletProvider),
+                _encodeString(data.tokenURI),
+                _encodeString(data.embedOrigin),
+                _encodeCompletedTxs(data.transactions),
+                _encodeRecipients(data.recipients),
+                _encodeReward(data.reward)
             );
     }
 
@@ -483,28 +443,8 @@ contract PyramidEscrow is
             );
     }
 
-    /// @notice Encodes the reward data for a Pyramid mint
-    /// @param data An array of FeeRecipient structs to be encoded
-    /// @return A bytes32 hash representing the encoded reward data
-    function _encodeGlobalReward(
-        GlobalRewardData calldata data
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    GLOBAL_REWARD_DATA_HASH,
-                    data.tokenAddress,
-                    data.amount,
-                    data.tokenId,
-                    data.tokenType,
-                    data.rakeBps,
-                    data.escrowAddress
-                )
-            );
-    }
-
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidV2Escrow
      */
     function setIsMintingActive(
         bool _isMintingActive
@@ -514,7 +454,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidV2Escrow
      */
     function setTreasury(
         address _treasury
@@ -525,7 +465,18 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidV2Escrow
+     */
+    function setArkadaRewarder(
+        address _arkadaRewarder
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_arkadaRewarder == address(0)) revert Pyramid__ZeroAddress();
+        s_arkadaRewarder = _arkadaRewarder;
+        emit UpdatedArkadaRewarder(_arkadaRewarder);
+    }
+
+    /**
+     * @inheritdoc IPyramidV2Escrow
      */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 withdrawAmount = address(this).balance;

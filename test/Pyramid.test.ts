@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { parseEther } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
 
-import { IMintPyramidData, signMintDataTyped } from './common/common.helpers';
+import { IMintPyramidData, signMintDataTypedV1 } from './common/common.helpers';
 import { defaultDeploy } from './common/fixtures';
 import {
   mintPyramidTest,
@@ -176,7 +176,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, user, domain);
+      const signature = await signMintDataTypedV1(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -231,7 +231,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, user, domain);
+      const signature = await signMintDataTypedV1(data, user, domain);
 
       await mintPyramidTest(
         {
@@ -287,7 +287,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -354,7 +354,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -368,7 +368,7 @@ describe('Pyramid', () => {
       );
 
       const data2 = { ...data, nonce: 2 };
-      const signature2 = await signMintDataTyped(data2, questSigner, domain);
+      const signature2 = await signMintDataTypedV1(data2, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -432,7 +432,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
       const expectedTreasuryPayout = price.sub(expectedRecipientPayout);
@@ -539,7 +539,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -600,7 +600,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -661,7 +661,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {
@@ -721,7 +721,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest({
         pyramidContract,
@@ -781,7 +781,7 @@ describe('Pyramid', () => {
         },
       };
 
-      const signature = await signMintDataTyped(data, questSigner, domain);
+      const signature = await signMintDataTypedV1(data, questSigner, domain);
 
       await mintPyramidTest(
         {

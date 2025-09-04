@@ -2,13 +2,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-import { IMintPyramidEscrowData, OptionalCommonParams } from './common.helpers';
+import { IMintPyramidData, OptionalCommonParams } from './common.helpers';
 
-import { PyramidEscrow } from '../../typechain-types';
+import { PyramidEscrow, PyramidV3Escrow } from '../../typechain-types';
 import { PyramidV2Escrow } from '../../typechain-types/contracts/upgrades/PyramidV2Escrow';
 
 type CommonParams = {
-  pyramidEscrowContract: PyramidEscrow | PyramidV2Escrow;
+  pyramidEscrowContract: PyramidEscrow | PyramidV2Escrow | PyramidV3Escrow;
   owner: SignerWithAddress;
 };
 
@@ -94,7 +94,7 @@ export const withdrawTest = async (
   expect(balanceAfter).gt(balanceBefore);
 };
 interface IMintPyramidTest extends CommonParams {
-  data: IMintPyramidEscrowData;
+  data: IMintPyramidData;
   signature: string;
   value?: BigNumber;
 }
@@ -116,6 +116,8 @@ export const mintPyramidTest = async (
     ).revertedWithCustomError(pyramidContract, opt?.revertMessage);
     return;
   }
+
+  // await pyramidContract.connect(sender).mintPyramid(data, signature, { value })
 
   await expect(
     pyramidContract.connect(sender).mintPyramid(data, signature, { value }),

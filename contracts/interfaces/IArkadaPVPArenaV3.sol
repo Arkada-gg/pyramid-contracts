@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.22;
 
-/// @title IArkadaPVPArena
-/// @dev Interface of the ArkadaPVPArena contract.
+/// @title IArkadaPVPArenaV3
+/// @dev Interface of the ArkadaPVPArenaV3 contract.
 /// @notice Defines the interface for creating and managing PVP battle arenas with different competition mechanics.
-interface IArkadaPVPArena {
+interface IArkadaPVPArenaV3 {
     error PVPArena__InvalidAddress();
     /// @notice Thrown when an invalid timestamp is provided for arena start time
     error PVPArena__InvalidTimestamp();
@@ -31,6 +31,8 @@ interface IArkadaPVPArena {
     error PVPArena__InvalidDuration();
     error PVPArena__InvalidMinMax();
     error PVPArena__EmergencyClosed();
+    error PVPArena__ArenaLockedOnStart();
+    error PVPArena__ArenaRebuyLocked();
 
     /// @notice Emitted when a new arena is created
     /// @param arenaId Unique identifier for the created arena
@@ -143,6 +145,14 @@ interface IArkadaPVPArena {
         uint256 max;
     }
 
+    /// @notice Structure for initialize addresses and roles
+    struct AddressesInitParams {
+        address treasury;
+        address signer;
+        address admin;
+        address operator;
+    }
+
     /// @notice Structure for storing arena information
     /// @dev Contains all details about an arena including its state and configuration
     /// @param id Unique identifier for the arena, auto-incremented ID starting from 1
@@ -157,6 +167,8 @@ interface IArkadaPVPArena {
     /// @param players Current number of players in the arena, incremented when players join, decremented when they leave
     /// @param signatured Whether the arena requires signatures to join, if true, only players with valid signatures can join
     /// @param emergencyClosed Flag to close arena operations, exclude leaveArena to make refund
+    /// @param lockParams Lock params
+
     struct ArenaInfo {
         uint256 id;
         address creator;
@@ -169,8 +181,9 @@ interface IArkadaPVPArena {
         uint256 players;
         uint256 initialPrizePool;
         ArenaType arenaType;
-        bool signatured;
         bool emergencyClosed;
+        ArenaBoolParams boolParams;
+        string name;
     }
 
     /// @notice Structure for joining an arena with a signature
@@ -188,6 +201,15 @@ interface IArkadaPVPArena {
         uint256 nonce;
     }
 
+    /// @notice Structure for lock params
+    /// @param lockArenaOnStart Flag to lock arena on start
+    /// @param lockRebuy Flag to lock rebuy
+    struct ArenaBoolParams {
+        bool lockArenaOnStart;
+        bool lockRebuy;
+        bool signatured;
+    }
+
     /// @notice Creates a new battle arena with specified parameters
     /// @dev Creates either TIME-based or PLACES-based arenas with different mechanics
     /// @dev Payable, rest msg.value - entryFee goes to initial prize pool,
@@ -197,7 +219,8 @@ interface IArkadaPVPArena {
     /// @param _duration Duration of the arena in seconds
     /// @param _startTime Timestamp when the arena will start (for TIME type)
     /// @param _requiredPlayers Number of players required to start (for PLACES type)
-    /// @param _signatured Whether the arena requires signatures to join
+    /// @param _boolParams Params of bool options
+    /// @param _name Name of Arena
     /// @return arenaId Unique identifier for the created arena
     function createArena(
         ArenaType _type,
@@ -205,7 +228,8 @@ interface IArkadaPVPArena {
         uint256 _duration,
         uint256 _startTime,
         uint256 _requiredPlayers,
-        bool _signatured
+        string calldata _name,
+        ArenaBoolParams calldata _boolParams
     ) external payable returns (uint256);
 
     /// @notice Allows a user to join an arena by paying the entry fee

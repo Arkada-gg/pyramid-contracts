@@ -3,9 +3,12 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
+import {
+  ArkadaPVPArena,
+  ArkadaPVPArenaV3,
+  ArkadaPVPArenaV4,
+} from '../../typechain-types';
 import { OptionalCommonParams } from './common.helpers';
-
-import { ArkadaPVPArena } from '../../typechain-types';
 
 export enum ArenaType {
   TIME,
@@ -18,7 +21,7 @@ export interface MinMax {
 }
 
 type CommonParams = {
-  arenaContract: ArkadaPVPArena;
+  arenaContract: ArkadaPVPArena | ArkadaPVPArenaV3;
   owner: SignerWithAddress;
 };
 
@@ -167,6 +170,7 @@ interface ICreateArenaTest extends CommonParams {
   startTime: BigNumberish;
   requiredPlayers: BigNumberish;
   signatured?: boolean;
+  arenaContract: ArkadaPVPArena;
 }
 export const createArenaTest = async (
   {
@@ -256,6 +260,122 @@ export const createArenaTest = async (
       : BigNumber.from(opt?.value ?? 0).sub(arenaData.entryFee),
   );
   expect(arenaData.signatured).eq(signatured);
+};
+
+// @ts-ignore
+interface ICreateArenaV3Test extends CommonParams {
+  type: ArenaType;
+  entryFee: BigNumberish;
+  duration: BigNumberish;
+  startTime: BigNumberish;
+  requiredPlayers: BigNumberish;
+  boolParams: {
+    signatured: boolean;
+    lockArenaOnStart: boolean;
+    lockRebuy: boolean;
+  };
+  name: string;
+  arenaContract: ArkadaPVPArenaV3 | ArkadaPVPArenaV4;
+  isV4?: boolean;
+}
+export const createArenaV3Test = async (
+  {
+    arenaContract,
+    owner,
+    type,
+    duration,
+    entryFee,
+    requiredPlayers,
+    boolParams,
+    name,
+    startTime,
+    isV4,
+  }: ICreateArenaV3Test,
+  opt?: OptionalCommonParams,
+) => {
+  const sender = opt?.from ?? owner;
+
+  if (opt?.revertMessage) {
+    await expect(
+      arenaContract
+        .connect(sender)
+        .createArena(
+          type,
+          entryFee,
+          duration,
+          startTime,
+          requiredPlayers,
+          name,
+          boolParams,
+          { value: opt?.value },
+        ),
+    ).revertedWithCustomError(arenaContract, opt?.revertMessage);
+    return;
+  }
+
+  const arenaId = await arenaContract
+    .connect(sender)
+    .callStatic.createArena(
+      type,
+      entryFee,
+      duration,
+      startTime,
+      requiredPlayers,
+      name,
+      boolParams,
+      { value: opt?.value },
+    );
+
+  await expect(
+    arenaContract
+      .connect(sender)
+      .createArena(
+        type,
+        entryFee,
+        duration,
+        startTime,
+        requiredPlayers,
+        name,
+        boolParams,
+        { value: opt?.value },
+      ),
+  ).to.emit(
+    arenaContract,
+    arenaContract.interface.events['ArenaCreated(uint256,address,uint8,bool)']
+      .name,
+  ).to.not.reverted;
+
+  const arenaData = await arenaContract.arenas(arenaId);
+
+  const hasAdminRole = await arenaContract.hasRole(
+    isV4
+      ? await arenaContract.OPERATOR_ROLE()
+      : await arenaContract.ADMIN_ROLE(),
+    sender.address,
+  );
+  const playersConfig = await arenaContract.playersConfig();
+
+  expect(arenaData.id).eq(arenaId);
+  expect(arenaData.creator).eq(sender.address);
+  expect(arenaData.entryFee).eq(entryFee);
+  expect(arenaData.duration).eq(duration);
+  if (type === ArenaType.TIME) expect(arenaData.startTime).eq(startTime);
+  if (type === ArenaType.TIME)
+    expect(arenaData.endTime).eq(Number(startTime) + Number(duration));
+  expect(arenaData.arenaType).eq(type);
+  expect(arenaData.requiredPlayers).eq(
+    requiredPlayers === 0 ? playersConfig.min : requiredPlayers,
+  );
+  expect(arenaData.players).eq(hasAdminRole ? 0 : 1);
+  expect(arenaData.initialPrizePool).eq(
+    hasAdminRole
+      ? opt?.value ?? 0
+      : BigNumber.from(opt?.value ?? 0).sub(arenaData.entryFee),
+  );
+  expect(arenaData.boolParams.signatured).eq(boolParams.signatured);
+  expect(arenaData.boolParams.lockArenaOnStart).eq(boolParams.lockArenaOnStart);
+  expect(arenaData.boolParams.lockRebuy).eq(boolParams.lockRebuy);
+  expect(arenaData.name).eq(name);
 };
 
 interface IJoinArenaTest extends CommonParams {
@@ -656,6 +776,38 @@ export const emergencyCloseTest = async (
 
   // Participant status should be false
   expect(arena.emergencyClosed).to.equal(true);
+};
+
+interface ISetMinEntryFeeTest extends Omit<CommonParams, 'arenaContract'> {
+  arenaContract: ArkadaPVPArenaV4;
+  newFee: BigNumberish;
+}
+
+export const setMinEntryFeeTest = async (
+  { arenaContract, owner, newFee }: ISetMinEntryFeeTest,
+  opt?: OptionalCommonParams,
+) => {
+  const sender = opt?.from ?? owner;
+
+  if (opt?.revertMessage) {
+    await expect(
+      arenaContract.connect(sender).setMinEntryFee(newFee),
+    ).revertedWithCustomError(arenaContract, opt?.revertMessage);
+    return;
+  }
+
+  // Check event emission
+  await expect(arenaContract.connect(sender).setMinEntryFee(newFee))
+    .to.emit(
+      arenaContract,
+      arenaContract.interface.events['MinEntryFeeUpdated(address,uint256)']
+        .name,
+    )
+    .withArgs(sender.address, newFee);
+
+  const minEntryFee = await arenaContract.minEntryFee();
+
+  expect(minEntryFee).to.equal(newFee);
 };
 
 interface IRebuyTest extends CommonParams {

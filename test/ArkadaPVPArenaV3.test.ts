@@ -10,7 +10,7 @@ import { defaultDeploy } from './common/fixtures';
 import {
   ArenaType,
   claimRewardsTest,
-  createArenaTest,
+  createArenaV3Test,
   emergencyCloseTest,
   endArenaAndDistributeRewardsTest,
   joinArenaTest,
@@ -50,48 +50,50 @@ function createRewardsMerkleTree(
   };
 }
 
-describe('ArkadaPVPArena', () => {
+describe('ArkadaPVPArenaV3', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
 
   describe('Deployment', () => {
     it('Should set the right roles', async () => {
-      const { arenaContract, owner, arenaSigner } = await loadFixture(
+      const { arenaContractV3, owner, arenaSigner } = await loadFixture(
         defaultDeploy,
       );
       expect(
-        await arenaContract.hasRole(
-          await arenaContract.DEFAULT_ADMIN_ROLE(),
+        await arenaContractV3.hasRole(
+          await arenaContractV3.DEFAULT_ADMIN_ROLE(),
           owner.address,
         ),
       ).to.equal(true);
       expect(
-        await arenaContract.hasRole(
-          await arenaContract.ADMIN_ROLE(),
+        await arenaContractV3.hasRole(
+          await arenaContractV3.ADMIN_ROLE(),
           owner.address,
         ),
       ).to.equal(true);
       expect(
-        await arenaContract.hasRole(
-          await arenaContract.SIGNER_ROLE(),
+        await arenaContractV3.hasRole(
+          await arenaContractV3.SIGNER_ROLE(),
           arenaSigner.address,
         ),
       ).to.equal(true);
     });
 
     it('Should set correct treasury, feeBPS, playersConfig, intervalToStartConfig and durationConfig', async () => {
-      const { arenaContract, treasury, arenaInitialConfig } = await loadFixture(
-        defaultDeploy,
+      const { arenaContractV3, treasury, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+      expect(await arenaContractV3.treasury()).to.equal(treasury.address);
+      expect(await arenaContractV3.feeBPS()).to.equal(
+        arenaInitialConfig.feeBPS,
       );
-      expect(await arenaContract.treasury()).to.equal(treasury.address);
-      expect(await arenaContract.feeBPS()).to.equal(arenaInitialConfig.feeBPS);
 
-      const playersConfig = await arenaContract.playersConfig();
+      const playersConfig = await arenaContractV3.playersConfig();
       expect(playersConfig.min).to.equal(arenaInitialConfig.playersConfig.min);
       expect(playersConfig.max).to.equal(arenaInitialConfig.playersConfig.max);
 
-      const intervalToStartConfig = await arenaContract.intervalToStartConfig();
+      const intervalToStartConfig =
+        await arenaContractV3.intervalToStartConfig();
       expect(intervalToStartConfig.min).to.equal(
         arenaInitialConfig.intervalToStartConfig.min,
       );
@@ -99,7 +101,7 @@ describe('ArkadaPVPArena', () => {
         arenaInitialConfig.intervalToStartConfig.max,
       );
 
-      const durationConfig = await arenaContract.durationConfig();
+      const durationConfig = await arenaContractV3.durationConfig();
       expect(durationConfig.min).to.equal(
         arenaInitialConfig.durationConfig.min,
       );
@@ -111,33 +113,41 @@ describe('ArkadaPVPArena', () => {
 
   describe('Treasury Control', () => {
     it('Should allow owner to set treasury address', async () => {
-      const { arenaContract, owner, regularAccounts } = await loadFixture(
+      const { arenaContractV3, owner, regularAccounts } = await loadFixture(
         defaultDeploy,
       );
       await setTreasuryTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newTreasuryAddress: regularAccounts[0].address,
       });
       await setTreasuryTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newTreasuryAddress: regularAccounts[1].address,
       });
     });
 
     it('Should not allow non-owner to set treasury address', async () => {
-      const { arenaContract, owner, user } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner, user } = await loadFixture(defaultDeploy);
       await setTreasuryTest(
-        { arenaContract, owner, newTreasuryAddress: user.address },
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          newTreasuryAddress: user.address,
+        },
         { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
       );
     });
 
     it('Should not allow to set treasury address to ZeroAddress', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setTreasuryTest(
-        { arenaContract, owner, newTreasuryAddress: ADDRESS_ZERO },
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          newTreasuryAddress: ADDRESS_ZERO,
+        },
         { revertMessage: 'PVPArena__InvalidAddress' },
       );
     });
@@ -145,24 +155,24 @@ describe('ArkadaPVPArena', () => {
 
   describe('feeBPS Control', () => {
     it('Should allow owner to set feeBPS', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setFeeBPSTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newFeeBPS: 200,
       });
       await setFeeBPSTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newFeeBPS: 400,
       });
     });
 
     it('Should not allow non-owner to set feeBPS', async () => {
-      const { arenaContract, owner, user } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner, user } = await loadFixture(defaultDeploy);
       await setFeeBPSTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           newFeeBPS: 400,
         },
@@ -173,9 +183,9 @@ describe('ArkadaPVPArena', () => {
 
   describe('playersCount Control', () => {
     it('Should allow owner to set playersCount', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setPlayersConfigTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newConfig: {
           max: 10,
@@ -183,7 +193,7 @@ describe('ArkadaPVPArena', () => {
         },
       });
       await setPlayersConfigTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newConfig: {
           max: 10,
@@ -192,10 +202,10 @@ describe('ArkadaPVPArena', () => {
       });
     });
     it('Should revert if max < min', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setPlayersConfigTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           newConfig: {
             max: 2,
@@ -207,10 +217,10 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should not allow non-owner to set playersCount', async () => {
-      const { arenaContract, owner, user } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner, user } = await loadFixture(defaultDeploy);
       await setPlayersConfigTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           newConfig: {
             max: 10,
@@ -224,9 +234,9 @@ describe('ArkadaPVPArena', () => {
 
   describe('intervalToStart Control', () => {
     it('Should allow owner to set intervalToStart', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setIntervalToStartConfigTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newConfig: {
           max: 10,
@@ -234,7 +244,7 @@ describe('ArkadaPVPArena', () => {
         },
       });
       await setIntervalToStartConfigTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newConfig: {
           max: 10,
@@ -244,10 +254,10 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should revert if max < min', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setIntervalToStartConfigTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           newConfig: {
             max: 2,
@@ -259,10 +269,10 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should not allow non-owner to set intervalToStart', async () => {
-      const { arenaContract, owner, user } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner, user } = await loadFixture(defaultDeploy);
       await setIntervalToStartConfigTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           newConfig: {
             max: 10,
@@ -276,9 +286,9 @@ describe('ArkadaPVPArena', () => {
 
   describe('duration Control', () => {
     it('Should allow owner to set duration', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setDurationConfigTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newConfig: {
           max: 10,
@@ -286,7 +296,7 @@ describe('ArkadaPVPArena', () => {
         },
       });
       await setDurationConfigTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newConfig: {
           max: 10,
@@ -296,10 +306,10 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should revert if max < min', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
       await setDurationConfigTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           newConfig: {
             max: 2,
@@ -311,10 +321,10 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should not allow non-owner to set duration', async () => {
-      const { arenaContract, owner, user } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner, user } = await loadFixture(defaultDeploy);
       await setDurationConfigTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           newConfig: {
             max: 10,
@@ -328,19 +338,24 @@ describe('ArkadaPVPArena', () => {
 
   describe('createArena', () => {
     it('Should be reverted if _entryFee zero', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.min + 1,
           entryFee: 0,
           requiredPlayers: 10,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__ZeroValue',
@@ -349,34 +364,49 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if duration not in config range', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max + 1,
           entryFee: 10,
           requiredPlayers: 10,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__InvalidDuration',
         },
       );
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.min - 1,
           entryFee: 10,
           requiredPlayers: 10,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            boolParams: {
+              signatured: false,
+              lockArenaOnStart: false,
+              lockRebuy: false,
+            },
+            name: 'arena',
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__InvalidDuration',
@@ -385,31 +415,36 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if type TIME and startTime not in config range', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
 
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: 10,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__InvalidTimestamp',
         },
       );
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -417,23 +452,33 @@ describe('ArkadaPVPArena', () => {
           requiredPlayers: 10,
           startTime:
             blockTimestamp + arenaInitialConfig.intervalToStartConfig.min - 1,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__InvalidTimestamp',
         },
       );
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: 10,
           startTime:
-            blockTimestamp + arenaInitialConfig.intervalToStartConfig.max + 2,
-          signatured: false,
+            blockTimestamp + arenaInitialConfig.intervalToStartConfig.max + 5,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__InvalidTimestamp',
@@ -442,34 +487,44 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if type PLACES and requiredPlayers not in config range', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: arenaInitialConfig.playersConfig.max + 1,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__InvalidPlayersRequired',
         },
       );
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: arenaInitialConfig.playersConfig.min - 1,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           revertMessage: 'PVPArena__InvalidPlayersRequired',
@@ -478,18 +533,23 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if not owner try to create signatured arena', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: arenaInitialConfig.playersConfig.min,
           startTime: 0,
-          signatured: true,
+          boolParams: {
+            signatured: true,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           from: regularAccounts[0],
@@ -499,18 +559,23 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if user try to create arena, but not send entryFee to enter', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: arenaInitialConfig.playersConfig.min,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         {
           from: regularAccounts[0],
@@ -520,59 +585,74 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be created signatured arena and owner not join automaticaly', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.PLACES,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
         requiredPlayers: arenaInitialConfig.playersConfig.min,
         startTime: 0,
-        signatured: true,
+        boolParams: {
+          signatured: false,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
     });
 
     it('Should be created arena with type PLACES', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.PLACES,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
         requiredPlayers: arenaInitialConfig.playersConfig.min,
         startTime: 0,
-        signatured: true,
+        boolParams: {
+          signatured: false,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: arenaInitialConfig.playersConfig.min,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
     });
 
     it('Should be created arena with type TIME', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
 
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
@@ -581,11 +661,16 @@ describe('ArkadaPVPArena', () => {
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-        signatured: true,
+        boolParams: {
+          signatured: false,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -594,7 +679,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
@@ -603,30 +693,35 @@ describe('ArkadaPVPArena', () => {
 
   describe('default arena: joinArena', () => {
     it('Should be reverted if entryFee invalid', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
+          requiredPlayers: 5,
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.05'), // Wrong fee amount
@@ -636,11 +731,11 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if arena does not exist', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
 
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 999, // Non-existent arena
           value: parseEther('0.1'),
@@ -650,24 +745,29 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if TIME arena start time reached, but players not', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
+          requiredPlayers: 5,
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
@@ -678,7 +778,7 @@ describe('ArkadaPVPArena', () => {
       // Try to join after start time
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -688,28 +788,33 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if player tried to join signatured arena', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
-        requiredPlayers: 0,
+        requiredPlayers: 5,
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-        signatured: true,
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
 
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -722,31 +827,36 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if player already joined', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
+          requiredPlayers: 5,
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // First join succeeds
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -755,7 +865,7 @@ describe('ArkadaPVPArena', () => {
       // Second join by same player fails
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -766,19 +876,19 @@ describe('ArkadaPVPArena', () => {
 
     it('Should be reverted if join time exceeded for TIME arena', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -787,14 +897,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // User joins successfully
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: user,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -803,7 +918,7 @@ describe('ArkadaPVPArena', () => {
       // User joins successfully
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -814,7 +929,7 @@ describe('ArkadaPVPArena', () => {
       // User joins successfully
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -830,7 +945,7 @@ describe('ArkadaPVPArena', () => {
       // User joins successfully
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -844,33 +959,38 @@ describe('ArkadaPVPArena', () => {
 
     it('Should be reverted if join time exceeded for PLACES arena', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: 3,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // User joins successfully
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: user,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -879,7 +999,7 @@ describe('ArkadaPVPArena', () => {
       // User joins successfully
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -890,7 +1010,7 @@ describe('ArkadaPVPArena', () => {
       // User joins successfully
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -905,7 +1025,7 @@ describe('ArkadaPVPArena', () => {
       // User joins successfully
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -917,152 +1037,102 @@ describe('ArkadaPVPArena', () => {
       );
     });
 
-    it('Should successfully join TIME arena', async () => {
+    it('Should be reverted if join PLACES arena when started and lockArenaOnStart true', async () => {
       const {
-        arenaContract,
-        owner,
-        user,
-        arenaInitialConfig,
-        regularAccounts,
-      } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
-        .timestamp;
-
-      // Create a TIME arena
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.TIME,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
-          startTime:
-            blockTimestamp +
-            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
-        },
-        { from: regularAccounts[0], value: parseEther('0.1') },
-      );
-
-      // User joins successfully
-      await joinArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-    });
-
-    it('Should successfully join PLACES arena', async () => {
-      const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
 
-      // Create a PLACES arena with requiredPlayers = 3
-      await createArenaTest(
+      await setPlayersConfigTest({
+        arenaContract: arenaContractV3,
+        owner,
+        newConfig: {
+          max: 5,
+          min: 1,
+        },
+      });
+
+      // Create a PLACES arena with requiredPlayers = 1
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
-          requiredPlayers: 3,
+          requiredPlayers: 1, // Only 1 player needed to fill arena
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: true,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
-      // First user joins
-      await joinArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-    });
-
-    it('Should start PLACES arena when required players join', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
-        await loadFixture(defaultDeploy);
-
-      // Create a PLACES arena with requiredPlayers = 3
-      await createArenaTest(
+      // Second join should fail as arena is full
+      await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 3,
-          startTime: 0,
-          signatured: false,
+          arenaId: 1,
+          value: parseEther('0.1'),
         },
-        { from: regularAccounts[0], value: parseEther('0.1') },
+        {
+          revertMessage: 'PVPArena__ArenaLockedOnStart',
+        },
       );
-
-      // Get current block timestamp for later comparison
-      const blockTimestampBefore = (
-        await arenaContract.provider.getBlock('latest')
-      ).timestamp;
-
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[1],
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      // Verify arena not started yet
-      let arena = await arenaContract.arenas(1);
-      expect(arena.players).to.equal(2);
-      expect(arena.startTime).to.equal(0);
-      expect(arena.endTime).to.equal(0);
-
-      // Third user joins, should trigger arena start
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[2],
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      // Verify arena started
-      arena = await arenaContract.arenas(1);
-      expect(arena.startTime).to.be.at.least(blockTimestampBefore);
-      expect(arena.endTime).to.equal(arena.startTime.add(arena.duration));
     });
 
-    it('Should successfully join TIME arena when started', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+    it('Should be reverted if join TIME arena when started and lockArenaOnStart true', async () => {
+      const {
+        arenaContractV3,
+        owner,
+        user,
+        arenaInitialConfig,
+        regularAccounts,
+      } = await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
+      await setPlayersConfigTest({
+        arenaContract: arenaContractV3,
+        owner,
+        newConfig: {
+          max: 5,
+          min: 1,
+        },
+      });
+
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
+          requiredPlayers: 1,
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: true,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -1070,7 +1140,7 @@ describe('ArkadaPVPArena', () => {
 
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -1080,7 +1150,7 @@ describe('ArkadaPVPArena', () => {
 
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -1095,7 +1165,226 @@ describe('ArkadaPVPArena', () => {
 
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        {
+          from: regularAccounts[3],
+          revertMessage: 'PVPArena__ArenaLockedOnStart',
+        },
+      );
+    });
+
+    it('Should successfully join TIME arena', async () => {
+      const {
+        arenaContractV3,
+        owner,
+        user,
+        arenaInitialConfig,
+        regularAccounts,
+      } = await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 5,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // User joins successfully
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner: user,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+    });
+
+    it('Should successfully join PLACES arena', async () => {
+      const {
+        arenaContractV3,
+        owner,
+        user,
+        arenaInitialConfig,
+        regularAccounts,
+      } = await loadFixture(defaultDeploy);
+
+      // Create a PLACES arena with requiredPlayers = 3
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.PLACES,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 3,
+          startTime: 0,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // First user joins
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner: user,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+    });
+
+    it('Should start PLACES arena when required players join', async () => {
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+
+      // Create a PLACES arena with requiredPlayers = 3
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.PLACES,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 3,
+          startTime: 0,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // Get current block timestamp for later comparison
+      const blockTimestampBefore = (
+        await arenaContractV3.provider.getBlock('latest')
+      ).timestamp;
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner: regularAccounts[1],
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      // Verify arena not started yet
+      let arena = await arenaContractV3.arenas(1);
+      expect(arena.players).to.equal(2);
+      expect(arena.startTime).to.equal(0);
+      expect(arena.endTime).to.equal(0);
+
+      // Third user joins, should trigger arena start
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner: regularAccounts[2],
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      // Verify arena started
+      arena = await arenaContractV3.arenas(1);
+      expect(arena.startTime).to.be.at.least(blockTimestampBefore);
+      expect(arena.endTime).to.equal(arena.startTime.add(arena.duration));
+    });
+
+    it('Should successfully join TIME arena when started', async () => {
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
+        .timestamp;
+
+      await setPlayersConfigTest({
+        arenaContract: arenaContractV3,
+        owner,
+        newConfig: {
+          max: 5,
+          min: 1,
+        },
+      });
+
+      // Create a TIME arena
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 1,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[1] },
+      );
+
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[2] },
+      );
+
+      // Forward time to after arena starts
+      await increaseTime(arenaInitialConfig.intervalToStartConfig.min + 20);
+
+      // Try to join after start time
+
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -1105,11 +1394,11 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should successfully join PLACES arena when started', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
 
       await setPlayersConfigTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         newConfig: {
           max: 5,
@@ -1118,23 +1407,28 @@ describe('ArkadaPVPArena', () => {
       });
 
       // Create a PLACES arena with requiredPlayers = 1
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: 1, // Only 1 player needed to fill arena
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // Second join should fail as arena is full
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -1144,29 +1438,34 @@ describe('ArkadaPVPArena', () => {
 
   describe('signature-based arena: joinArena', () => {
     it('Should be reverted if signature is invalid', async () => {
-      const { arenaContract, owner, user, arenaInitialConfig } =
+      const { arenaContractV3, owner, user, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a signatured arena
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
-        requiredPlayers: 0,
+        requiredPlayers: 5,
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-        signatured: true, // Requires signature
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena', // Requires signature
       });
 
       // Try to join with signature from non-signer (user)
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           player: owner,
@@ -1180,28 +1479,33 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if nonce already used', async () => {
-      const { arenaContract, owner, arenaSigner, arenaInitialConfig } =
+      const { arenaContractV3, owner, arenaSigner, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a signatured arena
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
-        requiredPlayers: 0,
+        requiredPlayers: 5,
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-        signatured: true, // Requires signature
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena', // Requires signature
       });
 
       // First join with nonce = 1 succeeds
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: owner,
@@ -1214,7 +1518,7 @@ describe('ArkadaPVPArena', () => {
       // Second join with same nonce should fail
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           player: owner,
@@ -1228,13 +1532,13 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if arena does not exist', async () => {
-      const { arenaContract, owner, arenaSigner } = await loadFixture(
+      const { arenaContractV3, owner, arenaSigner } = await loadFixture(
         defaultDeploy,
       );
 
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 999, // Non-existent arena
           freeFromFee: true,
@@ -1249,27 +1553,32 @@ describe('ArkadaPVPArena', () => {
 
     it('Should be reverted if arena canceled', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         arenaSigner,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a signatured TIME arena
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
-        requiredPlayers: 0,
+        requiredPlayers: 5,
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-        signatured: true,
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
 
       // Forward time to after arena starts
@@ -1278,7 +1587,7 @@ describe('ArkadaPVPArena', () => {
       // Try to join after start time
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           player: owner,
@@ -1292,28 +1601,33 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if player already joined', async () => {
-      const { arenaContract, owner, arenaSigner, arenaInitialConfig } =
+      const { arenaContractV3, owner, arenaSigner, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a signatured TIME arena
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
-        requiredPlayers: 0,
+        requiredPlayers: 5,
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-        signatured: true,
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
 
       // First join succeeds with nonce 1
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: owner,
@@ -1326,7 +1640,7 @@ describe('ArkadaPVPArena', () => {
       // Second join by same player fails, even with different nonce
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           player: owner,
@@ -1340,14 +1654,14 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should successfully join with valid signature', async () => {
-      const { arenaContract, owner, user, arenaSigner, arenaInitialConfig } =
+      const { arenaContractV3, owner, user, arenaSigner, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a signatured TIME arena
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
@@ -1356,12 +1670,17 @@ describe('ArkadaPVPArena', () => {
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-        signatured: true,
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
 
       // User joins with signature (free join)
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: user,
@@ -1372,7 +1691,7 @@ describe('ArkadaPVPArena', () => {
       });
 
       // Verify arena state
-      const arena = await arenaContract.arenas(1);
+      const arena = await arenaContractV3.arenas(1);
       expect(arena.players).to.equal(1);
 
       // Verify user is a participant
@@ -1381,28 +1700,28 @@ describe('ArkadaPVPArena', () => {
         ['bytes32', 'address'],
         [arenaIdHash, user.address],
       );
-      expect(await arenaContract.participants(arenaIdAndAddressHash)).to.equal(
-        true,
-      );
+      expect(
+        await arenaContractV3.participants(arenaIdAndAddressHash),
+      ).to.equal(true);
 
       // Verify fees NOT collected (signature join is free)
-      expect(await arenaContract.feesByArena(1)).to.equal(0);
+      expect(await arenaContractV3.feesByArena(1)).to.equal(0);
     });
 
     it('Should successfully join arena when started', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         arenaSigner,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a signatured TIME arena
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.TIME,
         duration: arenaInitialConfig.durationConfig.max,
@@ -1411,11 +1730,16 @@ describe('ArkadaPVPArena', () => {
         startTime:
           blockTimestamp +
           Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-        signatured: true,
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
 
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: regularAccounts[0],
@@ -1426,7 +1750,7 @@ describe('ArkadaPVPArena', () => {
       });
 
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: regularAccounts[1],
@@ -1437,7 +1761,7 @@ describe('ArkadaPVPArena', () => {
       });
 
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: regularAccounts[2],
@@ -1452,7 +1776,7 @@ describe('ArkadaPVPArena', () => {
 
       // Try to join after start time
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: owner,
@@ -1465,7 +1789,7 @@ describe('ArkadaPVPArena', () => {
 
     it('Should successfully start PLACES arena when required players join with signatures', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         regularAccounts,
         arenaSigner,
@@ -1473,25 +1797,30 @@ describe('ArkadaPVPArena', () => {
       } = await loadFixture(defaultDeploy);
 
       // Create a signatured PLACES arena with requiredPlayers = 3
-      await createArenaTest({
-        arenaContract,
+      await createArenaV3Test({
+        arenaContract: arenaContractV3,
         owner,
         type: ArenaType.PLACES,
         duration: arenaInitialConfig.durationConfig.max,
         entryFee: parseEther('0.1'),
         requiredPlayers: 3,
         startTime: 0,
-        signatured: true,
+        boolParams: {
+          signatured: true,
+          lockArenaOnStart: false,
+          lockRebuy: false,
+        },
+        name: 'arena',
       });
 
       // Get current block timestamp for later comparison
       const blockTimestampBefore = (
-        await arenaContract.provider.getBlock('latest')
+        await arenaContractV3.provider.getBlock('latest')
       ).timestamp;
 
       // First two users join with signature
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: regularAccounts[0],
@@ -1502,7 +1831,7 @@ describe('ArkadaPVPArena', () => {
       });
 
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: regularAccounts[1],
@@ -1513,14 +1842,14 @@ describe('ArkadaPVPArena', () => {
       });
 
       // Verify arena not started yet
-      let arena = await arenaContract.arenas(1);
+      let arena = await arenaContractV3.arenas(1);
       expect(arena.players).to.equal(2);
       expect(arena.startTime).to.equal(0);
       expect(arena.endTime).to.equal(0);
 
       // Third user joins, should trigger arena start
       await joinArenaWithSignatureTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         player: regularAccounts[2],
@@ -1531,7 +1860,7 @@ describe('ArkadaPVPArena', () => {
       });
 
       // Verify arena started
-      arena = await arenaContract.arenas(1);
+      arena = await arenaContractV3.arenas(1);
       expect(arena.players).to.equal(3);
       expect(arena.startTime).to.be.at.least(blockTimestampBefore);
       expect(arena.endTime).to.equal(arena.startTime.add(arena.duration));
@@ -1541,23 +1870,23 @@ describe('ArkadaPVPArena', () => {
   describe('default arena: joinArena with discount using signature', () => {
     it('Should revert if join with valid signature and discount 10%, but with invalid amount to send', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaSigner,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       const entryFee = parseEther('0.1');
       const discountBps = 100; // 10%
 
       // Create a signatured TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -1566,7 +1895,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: entryFee },
       );
@@ -1576,7 +1910,7 @@ describe('ArkadaPVPArena', () => {
       // User joins with signature (free join)
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           player: user,
@@ -1594,23 +1928,23 @@ describe('ArkadaPVPArena', () => {
 
     it('Should successfully join with valid signature and discount 10%', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaSigner,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       const entryFee = parseEther('0.1');
       const discountBps = 100; // 10%
 
       // Create a signatured TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -1619,7 +1953,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: entryFee },
       );
@@ -1629,7 +1968,7 @@ describe('ArkadaPVPArena', () => {
       // User joins with signature (free join)
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           player: user,
@@ -1644,7 +1983,7 @@ describe('ArkadaPVPArena', () => {
       );
 
       // Verify arena state
-      const arena = await arenaContract.arenas(1);
+      const arena = await arenaContractV3.arenas(1);
       expect(arena.players).to.equal(2);
 
       // Verify user is a participant
@@ -1653,30 +1992,30 @@ describe('ArkadaPVPArena', () => {
         ['bytes32', 'address'],
         [arenaIdHash, user.address],
       );
-      expect(await arenaContract.participants(arenaIdAndAddressHash)).to.equal(
-        true,
-      );
+      expect(
+        await arenaContractV3.participants(arenaIdAndAddressHash),
+      ).to.equal(true);
     });
 
     it('Should successfully join with valid signature and no discount', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaSigner,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       const entryFee = parseEther('0.1');
       const discountBps = 0;
 
       // Create a signatured TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -1685,7 +2024,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: entryFee },
       );
@@ -1695,7 +2039,7 @@ describe('ArkadaPVPArena', () => {
       // User joins with signature (free join)
       await joinArenaWithSignatureTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           player: user,
@@ -1710,7 +2054,7 @@ describe('ArkadaPVPArena', () => {
       );
 
       // Verify arena state
-      const arena = await arenaContract.arenas(1);
+      const arena = await arenaContractV3.arenas(1);
       expect(arena.players).to.equal(2);
 
       // Verify user is a participant
@@ -1719,19 +2063,19 @@ describe('ArkadaPVPArena', () => {
         ['bytes32', 'address'],
         [arenaIdHash, user.address],
       );
-      expect(await arenaContract.participants(arenaIdAndAddressHash)).to.equal(
-        true,
-      );
+      expect(
+        await arenaContractV3.participants(arenaIdAndAddressHash),
+      ).to.equal(true);
     });
   });
 
   describe('leaveArena', () => {
     it('Should be reverted if arena does not exist', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
 
       await leaveArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 999, // Non-existent arena
         },
@@ -1740,15 +2084,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if TIME arena has already started', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -1757,12 +2101,652 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // Join arena
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[1] },
+      );
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[2] },
+      );
+
+      // Forward time to after arena starts
+      await increaseTime(arenaInitialConfig.intervalToStartConfig.min + 20);
+
+      // Try to leave after start time
+      await leaveArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        { revertMessage: 'PVPArena__ArenaStarted' },
+      );
+    });
+
+    it('Should be reverted if PLACES arena has reached required players', async () => {
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
+        await loadFixture(defaultDeploy);
+
+      await setPlayersConfigTest({
+        arenaContract: arenaContractV3,
+        owner,
+        newConfig: {
+          max: 5,
+          min: 1,
+        },
+      });
+
+      // Create a PLACES arena with requiredPlayers = 1
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.PLACES,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 2, // Only 2 players needed to fill arena
+          startTime: 0,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // Both players join
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      // Second join should fail as arena is full
+      await leaveArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        { revertMessage: 'PVPArena__ArenaStarted' },
+      );
+    });
+
+    it('Should be reverted if player has not joined', async () => {
+      const {
+        arenaContractV3,
+        owner,
+        user,
+        arenaInitialConfig,
+        regularAccounts,
+      } = await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // User hasn't joined
+      await leaveArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner: user, // User hasn't joined
+          arenaId: 1,
+        },
+        { revertMessage: 'PVPArena__NotJoined' },
+      );
+    });
+
+    it('Should successfully leave a TIME arena', async () => {
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // Join the arena
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      // Leave the arena
+      await leaveArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+      });
+    });
+
+    it('Should paid back 0 amount if user joined arena by signature with freeFromFee', async () => {
+      const {
+        arenaContractV3,
+        owner,
+        arenaInitialConfig,
+        regularAccounts,
+        arenaSigner,
+      } = await loadFixture(defaultDeploy);
+
+      await setPlayersConfigTest({
+        arenaContract: arenaContractV3,
+        owner,
+        newConfig: {
+          max: 5,
+          min: 1,
+        },
+      });
+
+      // Create a PLACES arena with requiredPlayers = 2
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.PLACES,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 4,
+          startTime: 0,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // Join the arena
+      // User joins with signature
+      await joinArenaWithSignatureTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        player: owner,
+        freeFromFee: true,
+        discountBps: 0,
+        nonce: 1,
+        signer: arenaSigner,
+      });
+
+      const balanceBeforeLeave = await ethers.provider.getBalance(
+        owner.address,
+      );
+
+      // Leave the arena
+      await leaveArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+      });
+
+      const balanceAfterLeave = await ethers.provider.getBalance(owner.address);
+      expect(balanceAfterLeave).eq(balanceBeforeLeave);
+    });
+
+    it('Should successfully leave a PLACES arena', async () => {
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
+        await loadFixture(defaultDeploy);
+
+      await setPlayersConfigTest({
+        arenaContract: arenaContractV3,
+        owner,
+        newConfig: {
+          max: 5,
+          min: 1,
+        },
+      });
+
+      // Create a PLACES arena with requiredPlayers = 2
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.PLACES,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 4,
+          startTime: 0,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { from: regularAccounts[0], value: parseEther('0.1') },
+      );
+
+      // Join the arena
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      // Leave the arena
+      await leaveArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+      });
+    });
+
+    it('Should delete arena when last player leaves', async () => {
+      const { arenaContractV3, owner, user, arenaInitialConfig } =
+        await loadFixture(defaultDeploy);
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
+        .timestamp;
+
+      // Create a TIME arena
+      await createArenaV3Test(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          type: ArenaType.TIME,
+          duration: arenaInitialConfig.durationConfig.max,
+          entryFee: parseEther('0.1'),
+          requiredPlayers: 0,
+          startTime:
+            blockTimestamp +
+            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
+        },
+        { value: parseEther('0.1') },
+      );
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner: user,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+
+      // First player leaves
+      await leaveArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+      });
+
+      // Arena should still exist
+      let arena = await arenaContractV3.arenas(1);
+      expect(arena.id).to.equal(1);
+      expect(arena.players).to.equal(1);
+
+      // Last player leaves, arena should be deleted
+      await leaveArenaTest({
+        arenaContract: arenaContractV3,
+        owner: user,
+        arenaId: 1,
+      });
+
+      // Arena should be deleted
+      arena = await arenaContractV3.arenas(1);
+      expect(arena.id).to.equal(0);
+    });
+  });
+
+  describe('rebuy', () => {
+    const rebuyFixture = async (
+      type: 'Places' | 'Time',
+      withLockRebuy: boolean = false,
+      withLockOnStart: boolean = false,
+    ) => {
+      const fixture = await loadFixture(defaultDeploy);
+
+      const blockTimestamp = (
+        await fixture.arenaContractV3.provider.getBlock('latest')
+      ).timestamp;
+
+      if (type === 'Places') {
+        await createArenaV3Test(
+          {
+            arenaContract: fixture.arenaContractV3,
+            owner: fixture.owner,
+            type: ArenaType.PLACES,
+            duration: fixture.arenaInitialConfig.durationConfig.max,
+            entryFee: parseEther('0.1'),
+            requiredPlayers: 3,
+            startTime: 0,
+            boolParams: {
+              signatured: false,
+              lockArenaOnStart: withLockOnStart,
+              lockRebuy: withLockRebuy,
+            },
+            name: 'arena',
+          },
+          { from: fixture.regularAccounts[0], value: parseEther('0.1') },
+        );
+      } else {
+        await createArenaV3Test(
+          {
+            arenaContract: fixture.arenaContractV3,
+            owner: fixture.owner,
+            type: ArenaType.TIME,
+            duration: fixture.arenaInitialConfig.durationConfig.max,
+            entryFee: parseEther('0.1'),
+            requiredPlayers: 0,
+            startTime:
+              blockTimestamp +
+              Math.floor(
+                fixture.arenaInitialConfig.intervalToStartConfig.max / 2,
+              ),
+            boolParams: {
+              signatured: false,
+              lockArenaOnStart: withLockOnStart,
+              lockRebuy: withLockRebuy,
+            },
+            name: 'arena',
+          },
+          { from: fixture.regularAccounts[0], value: parseEther('0.1') },
+        );
+      }
+
+      return { ...fixture, blockTimestamp };
+    };
+
+    it('Should be reverted if arena does not exist', async () => {
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 999, // Non-existent arena
+        },
+        { revertMessage: 'PVPArena__InvalidArenaID' },
+      );
+    });
+
+    it('Should be reverted if arena emergency closed', async () => {
+      const { arenaContractV3, owner } = await rebuyFixture('Places');
+
+      await emergencyCloseTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+      });
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        { revertMessage: 'PVPArena__EmergencyClosed' },
+      );
+    });
+
+    it('Should be reverted if PLACES arena not started', async () => {
+      const { arenaContractV3, owner } = await rebuyFixture('Places');
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        { revertMessage: 'PVPArena__ArenaNotStarted' },
+      );
+    });
+
+    it('Should be reverted if TIME arena not started', async () => {
+      const { arenaContractV3, owner } = await rebuyFixture('Time');
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        { revertMessage: 'PVPArena__ArenaNotStarted' },
+      );
+    });
+
+    it('Should be reverted if sent insufficient ether to entry', async () => {
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
+        await rebuyFixture('Time');
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[1] },
+      );
+
+      await increaseTime(
+        Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+      );
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        {
+          revertMessage: 'PVPArena__InvalidFeeAmount',
+          value: parseEther('0.05'),
+        },
+      );
+    });
+
+    it('Should be reverted if not joined arena', async () => {
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
+        await rebuyFixture('Time');
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[1] },
+      );
+
+      await increaseTime(
+        Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
+      );
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        {
+          revertMessage: 'PVPArena__NotJoined',
+          from: regularAccounts[5],
+          value: parseEther('0.1'),
+        },
+      );
+    });
+
+    it('Should be reverted if rebuy time exceeded', async () => {
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
+        await rebuyFixture('Time');
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[1] },
+      );
+
+      await increaseTime(
+        Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2) +
+          Math.floor(arenaInitialConfig.durationConfig.max * 0.991),
+      );
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        {
+          revertMessage: 'PVPArena__ArenaRebuyTimeExeeded',
+          value: parseEther('0.1'),
+        },
+      );
+    });
+
+    it('Should successfully rebuy', async () => {
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
+        await rebuyFixture('Time');
+
+      await joinArenaTest({
+        arenaContract: arenaContractV3,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+      await joinArenaTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[1] },
+      );
+
+      await increaseTime(
+        Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2) +
+          Math.floor(arenaInitialConfig.durationConfig.max * 0.5),
+      );
+
+      await rebuyTest(
+        {
+          arenaContract: arenaContractV3,
+          owner,
+          arenaId: 1,
+        },
+        {
+          value: parseEther('0.1'),
+        },
+      );
+    });
+
+    it('Should revert if lockRebuy true', async () => {
+      const {
+        arenaContractV3: arenaContract,
+        owner,
+        regularAccounts,
+      } = await rebuyFixture('Places', true);
+
       await joinArenaTest({
         arenaContract,
         owner,
@@ -1788,541 +2772,32 @@ describe('ArkadaPVPArena', () => {
         { from: regularAccounts[2] },
       );
 
-      // Forward time to after arena starts
-      await increaseTime(arenaInitialConfig.intervalToStartConfig.min + 20);
-
-      // Try to leave after start time
-      await leaveArenaTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-        },
-        { revertMessage: 'PVPArena__ArenaStarted' },
-      );
-    });
-
-    it('Should be reverted if PLACES arena has reached required players', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
-        await loadFixture(defaultDeploy);
-
-      await setPlayersConfigTest({
-        arenaContract,
-        owner,
-        newConfig: {
-          max: 5,
-          min: 1,
-        },
-      });
-
-      // Create a PLACES arena with requiredPlayers = 1
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 2, // Only 2 players needed to fill arena
-          startTime: 0,
-          signatured: false,
-        },
-        { from: regularAccounts[0], value: parseEther('0.1') },
-      );
-
-      // Both players join
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      // Second join should fail as arena is full
-      await leaveArenaTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-        },
-        { revertMessage: 'PVPArena__ArenaStarted' },
-      );
-    });
-
-    it('Should be reverted if player has not joined', async () => {
-      const {
-        arenaContract,
-        owner,
-        user,
-        arenaInitialConfig,
-        regularAccounts,
-      } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
-        .timestamp;
-
-      // Create a TIME arena
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.TIME,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
-          startTime:
-            blockTimestamp +
-            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
-        },
-        { from: regularAccounts[0], value: parseEther('0.1') },
-      );
-
-      // User hasn't joined
-      await leaveArenaTest(
-        {
-          arenaContract,
-          owner: user, // User hasn't joined
-          arenaId: 1,
-        },
-        { revertMessage: 'PVPArena__NotJoined' },
-      );
-    });
-
-    it('Should successfully leave a TIME arena', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
-        await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
-        .timestamp;
-
-      // Create a TIME arena
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.TIME,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
-          startTime:
-            blockTimestamp +
-            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
-        },
-        { from: regularAccounts[0], value: parseEther('0.1') },
-      );
-
-      // Join the arena
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      // Leave the arena
-      await leaveArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-      });
-    });
-
-    it('Should paid back 0 amount if user joined arena by signature with freeFromFee', async () => {
-      const {
-        arenaContract,
-        owner,
-        arenaInitialConfig,
-        regularAccounts,
-        arenaSigner,
-      } = await loadFixture(defaultDeploy);
-
-      await setPlayersConfigTest({
-        arenaContract,
-        owner,
-        newConfig: {
-          max: 5,
-          min: 1,
-        },
-      });
-
-      // Create a PLACES arena with requiredPlayers = 2
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 4,
-          startTime: 0,
-          signatured: false,
-        },
-        { from: regularAccounts[0], value: parseEther('0.1') },
-      );
-
-      // Join the arena
-      // User joins with signature
-      await joinArenaWithSignatureTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        player: owner,
-        freeFromFee: true,
-        discountBps: 0,
-        nonce: 1,
-        signer: arenaSigner,
-      });
-
-      const balanceBeforeLeave = await ethers.provider.getBalance(
-        owner.address,
-      );
-
-      // Leave the arena
-      await leaveArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-      });
-
-      const balanceAfterLeave = await ethers.provider.getBalance(owner.address);
-      expect(balanceAfterLeave).eq(balanceBeforeLeave);
-    });
-
-    it('Should successfully leave a PLACES arena', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
-        await loadFixture(defaultDeploy);
-
-      await setPlayersConfigTest({
-        arenaContract,
-        owner,
-        newConfig: {
-          max: 5,
-          min: 1,
-        },
-      });
-
-      // Create a PLACES arena with requiredPlayers = 2
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 4,
-          startTime: 0,
-          signatured: false,
-        },
-        { from: regularAccounts[0], value: parseEther('0.1') },
-      );
-
-      // Join the arena
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      // Leave the arena
-      await leaveArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-      });
-    });
-
-    it('Should delete arena when last player leaves', async () => {
-      const { arenaContract, owner, user, arenaInitialConfig } =
-        await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
-        .timestamp;
-
-      // Create a TIME arena
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.TIME,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: 0,
-          startTime:
-            blockTimestamp +
-            Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
-        },
-        { value: parseEther('0.1') },
-      );
-
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      await joinArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      // First player leaves
-      await leaveArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-      });
-
-      // Arena should still exist
-      let arena = await arenaContract.arenas(1);
-      expect(arena.id).to.equal(1);
-      expect(arena.players).to.equal(1);
-
-      // Last player leaves, arena should be deleted
-      await leaveArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-      });
-
-      // Arena should be deleted
-      arena = await arenaContract.arenas(1);
-      expect(arena.id).to.equal(0);
-    });
-  });
-
-  describe('rebuy', () => {
-    const rebuyFixture = async (type: 'Places' | 'Time') => {
-      const fixture = await loadFixture(defaultDeploy);
-
-      const blockTimestamp = (
-        await fixture.arenaContract.provider.getBlock('latest')
-      ).timestamp;
-
-      if (type === 'Places') {
-        await createArenaTest(
-          {
-            arenaContract: fixture.arenaContract,
-            owner: fixture.owner,
-            type: ArenaType.PLACES,
-            duration: fixture.arenaInitialConfig.durationConfig.max,
-            entryFee: parseEther('0.1'),
-            requiredPlayers: 4,
-            startTime: 0,
-            signatured: false,
-          },
-          { from: fixture.regularAccounts[0], value: parseEther('0.1') },
-        );
-      } else {
-        await createArenaTest(
-          {
-            arenaContract: fixture.arenaContract,
-            owner: fixture.owner,
-            type: ArenaType.TIME,
-            duration: fixture.arenaInitialConfig.durationConfig.max,
-            entryFee: parseEther('0.1'),
-            requiredPlayers: 0,
-            startTime:
-              blockTimestamp +
-              Math.floor(
-                fixture.arenaInitialConfig.intervalToStartConfig.max / 2,
-              ),
-            signatured: false,
-          },
-          { from: fixture.regularAccounts[0], value: parseEther('0.1') },
-        );
-      }
-
-      return { ...fixture, blockTimestamp };
-    };
-
-    it('Should be reverted if arena does not exist', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
-
-      await rebuyTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 999, // Non-existent arena
-        },
-        { revertMessage: 'PVPArena__InvalidArenaID' },
-      );
-    });
-
-    it('Should be reverted if arena emergency closed', async () => {
-      const { arenaContract, owner } = await rebuyFixture('Places');
-
-      await emergencyCloseTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-      });
-
       await rebuyTest(
         {
           arenaContract,
           owner,
           arenaId: 1,
         },
-        { revertMessage: 'PVPArena__EmergencyClosed' },
-      );
-    });
-
-    it('Should be reverted if PLACES arena not started', async () => {
-      const { arenaContract, owner } = await rebuyFixture('Places');
-
-      await rebuyTest(
         {
-          arenaContract,
-          owner,
-          arenaId: 1,
+          value: parseEther('0.1'),
+          revertMessage: 'PVPArena__ArenaRebuyLocked',
         },
-        { revertMessage: 'PVPArena__ArenaNotStarted' },
       );
     });
 
-    it('Should be reverted if TIME arena not started', async () => {
-      const { arenaContract, owner } = await rebuyFixture('Time');
-
-      await rebuyTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-        },
-        { revertMessage: 'PVPArena__ArenaNotStarted' },
-      );
-    });
-
-    it('Should be reverted if sent insufficient ether to entry', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
-        await rebuyFixture('Time');
+    it('Should successfully rebuy when lockArenaOnStart true', async () => {
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
+        await rebuyFixture('Time', false, true);
 
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
       });
       await joinArenaTest(
         {
-          arenaContract,
-          owner,
-          arenaId: 1,
-          value: parseEther('0.1'),
-        },
-        { from: regularAccounts[1] },
-      );
-
-      await increaseTime(
-        Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-      );
-
-      await rebuyTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-        },
-        {
-          revertMessage: 'PVPArena__InvalidFeeAmount',
-          value: parseEther('0.05'),
-        },
-      );
-    });
-
-    it('Should be reverted if not joined arena', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
-        await rebuyFixture('Time');
-
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-      await joinArenaTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-          value: parseEther('0.1'),
-        },
-        { from: regularAccounts[1] },
-      );
-
-      await increaseTime(
-        Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-      );
-
-      await rebuyTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-        },
-        {
-          revertMessage: 'PVPArena__NotJoined',
-          from: regularAccounts[5],
-          value: parseEther('0.1'),
-        },
-      );
-    });
-
-    it('Should be reverted if rebuy time exceeded', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
-        await rebuyFixture('Time');
-
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-      await joinArenaTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-          value: parseEther('0.1'),
-        },
-        { from: regularAccounts[1] },
-      );
-
-      await increaseTime(
-        Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2) +
-          Math.floor(arenaInitialConfig.durationConfig.max * 0.991),
-      );
-
-      await rebuyTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-        },
-        {
-          revertMessage: 'PVPArena__ArenaRebuyTimeExeeded',
-          value: parseEther('0.1'),
-        },
-      );
-    });
-
-    it('Should successfully rebuy', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
-        await rebuyFixture('Time');
-
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-      await joinArenaTest(
-        {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2337,7 +2812,7 @@ describe('ArkadaPVPArena', () => {
 
       await rebuyTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
         },
@@ -2346,24 +2821,97 @@ describe('ArkadaPVPArena', () => {
         },
       );
     });
+
+    it('Should refund all deposits', async () => {
+      const {
+        arenaContractV3: arenaContract,
+        owner,
+        regularAccounts,
+      } = await rebuyFixture('Places');
+
+      await joinArenaTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+        value: parseEther('0.1'),
+      });
+      await joinArenaTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[1] },
+      );
+      await joinArenaTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+          value: parseEther('0.1'),
+        },
+        { from: regularAccounts[2] },
+      );
+
+      await rebuyTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+        },
+        {
+          value: parseEther('0.1'),
+        },
+      );
+
+      await rebuyTest(
+        {
+          arenaContract,
+          owner,
+          arenaId: 1,
+        },
+        {
+          value: parseEther('0.1'),
+        },
+      );
+
+      await emergencyCloseTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+
+      const balanceBefore = await owner.getBalance();
+
+      await leaveArenaTest({
+        arenaContract,
+        owner,
+        arenaId: 1,
+      });
+
+      const balanceAfter = await owner.getBalance();
+
+      expect(balanceAfter.sub(balanceBefore)).eq(parseEther('0.1').mul(3));
+    });
   });
 
   describe('endArenaAndDistributeRewards', () => {
     it('Should be reverted if caller is not admin', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2372,14 +2920,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // Join arena
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -2395,7 +2948,7 @@ describe('ArkadaPVPArena', () => {
       // Non-admin tries to end arena
       await endArenaAndDistributeRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           root: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test')),
@@ -2405,11 +2958,11 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if arena does not exist', async () => {
-      const { arenaContract, owner } = await loadFixture(defaultDeploy);
+      const { arenaContractV3, owner } = await loadFixture(defaultDeploy);
 
       await endArenaAndDistributeRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 999, // Non-existent arena
           root: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test')),
@@ -2419,15 +2972,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if TIME arena has not started', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2436,7 +2989,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.max / 2),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
@@ -2444,7 +3002,7 @@ describe('ArkadaPVPArena', () => {
       // Try to end arena before it starts
       await endArenaAndDistributeRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           root: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test')),
@@ -2454,20 +3012,25 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if PLACES arena does not have enough players', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
 
       // Create a PLACES arena with requiredPlayers = 2
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: arenaInitialConfig.playersConfig.min,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
@@ -2475,7 +3038,7 @@ describe('ArkadaPVPArena', () => {
       // Try to end arena before enough players join
       await endArenaAndDistributeRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           root: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test')),
@@ -2485,15 +3048,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if arena has not ended', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2502,14 +3065,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // Join arena
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -2518,7 +3086,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2532,7 +3100,7 @@ describe('ArkadaPVPArena', () => {
       // Try to end arena before it ends
       await endArenaAndDistributeRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           root: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test')),
@@ -2542,15 +3110,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if arena already ended', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2559,14 +3127,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // Join arena
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -2575,7 +3148,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2586,7 +3159,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2604,7 +3177,7 @@ describe('ArkadaPVPArena', () => {
       // End arena first time
       const root = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test'));
       await endArenaAndDistributeRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         root,
@@ -2613,7 +3186,7 @@ describe('ArkadaPVPArena', () => {
       // Try to end arena again
       await endArenaAndDistributeRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           root: ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test2')),
@@ -2623,15 +3196,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should successfully end a TIME arena', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2640,14 +3213,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // Join arena
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -2656,7 +3234,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2667,7 +3245,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2685,7 +3263,7 @@ describe('ArkadaPVPArena', () => {
       // End arena
       const root = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test'));
       await endArenaAndDistributeRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         root,
@@ -2693,34 +3271,39 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should successfully end a PLACES arena', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
 
       // Create a PLACES arena with requiredPlayers = 3
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: 3,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { from: regularAccounts[0], value: parseEther('0.1') },
       );
 
       // All required players join
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[1],
         arenaId: 1,
         value: parseEther('0.1'),
       });
 
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[2],
         arenaId: 1,
         value: parseEther('0.1'),
@@ -2732,7 +3315,7 @@ describe('ArkadaPVPArena', () => {
       // End arena
       const root = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('test'));
       await endArenaAndDistributeRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         root,
@@ -2742,16 +3325,16 @@ describe('ArkadaPVPArena', () => {
 
   describe('claimRewards', () => {
     it('Should be reverted if rewards not distributed', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2760,7 +3343,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
@@ -2768,7 +3356,7 @@ describe('ArkadaPVPArena', () => {
       // Try to claim rewards before distribution
       await claimRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           amount: parseEther('0.09'),
@@ -2779,15 +3367,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if player has already claimed', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2796,14 +3384,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // Join arena
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -2812,7 +3405,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2823,7 +3416,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2846,7 +3439,7 @@ describe('ArkadaPVPArena', () => {
 
       // End arena and distribute rewards
       await endArenaAndDistributeRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         root,
@@ -2854,7 +3447,7 @@ describe('ArkadaPVPArena', () => {
 
       // Claim rewards
       await claimRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         amount: parseEther('0.09'),
@@ -2864,7 +3457,7 @@ describe('ArkadaPVPArena', () => {
       // Try to claim again
       await claimRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           amount: parseEther('0.09'),
@@ -2876,19 +3469,19 @@ describe('ArkadaPVPArena', () => {
 
     it('Should be reverted if proof is invalid', async () => {
       const {
-        arenaContract,
+        arenaContractV3,
         owner,
         user,
         arenaInitialConfig,
         regularAccounts,
       } = await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2897,14 +3490,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // Join arena
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -2913,7 +3511,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2924,7 +3522,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -2947,7 +3545,7 @@ describe('ArkadaPVPArena', () => {
 
       // End arena and distribute rewards
       await endArenaAndDistributeRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         root,
@@ -2956,7 +3554,7 @@ describe('ArkadaPVPArena', () => {
       // User tries to claim with invalid proof (empty proof)
       await claimRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           amount: parseEther('0.09'),
@@ -2968,7 +3566,7 @@ describe('ArkadaPVPArena', () => {
       // User tries to claim with invalid proof (empty proof)
       await claimRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner: user,
           arenaId: 1,
           amount: parseEther('0.10'),
@@ -2979,15 +3577,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should successfully claim rewards with valid proof', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -2996,14 +3594,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // Join arena
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
@@ -3012,7 +3615,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -3023,7 +3626,7 @@ describe('ArkadaPVPArena', () => {
       // Join arena
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -3046,7 +3649,7 @@ describe('ArkadaPVPArena', () => {
 
       // End arena and distribute rewards
       await endArenaAndDistributeRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         root,
@@ -3054,7 +3657,7 @@ describe('ArkadaPVPArena', () => {
 
       // Owner claims rewards
       await claimRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         amount: parseEther('0.09'),
@@ -3063,41 +3666,46 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should successfully claim rewards for multiple players', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
 
       // Create a PLACES arena with requiredPlayers = 3
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: 3,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // All required players join
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
       });
 
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[0],
         arenaId: 1,
         value: parseEther('0.1'),
       });
 
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[1],
         arenaId: 1,
         value: parseEther('0.1'),
@@ -3123,7 +3731,7 @@ describe('ArkadaPVPArena', () => {
 
       // End arena and distribute rewards
       await endArenaAndDistributeRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         root,
@@ -3131,7 +3739,7 @@ describe('ArkadaPVPArena', () => {
 
       // First player claims rewards
       await claimRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         amount: parseEther('0.09'),
@@ -3140,7 +3748,7 @@ describe('ArkadaPVPArena', () => {
 
       // Second player claims rewards
       await claimRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[0],
         arenaId: 1,
         amount: parseEther('0.08'),
@@ -3149,7 +3757,7 @@ describe('ArkadaPVPArena', () => {
 
       // Third player claims rewards
       await claimRewardsTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[1],
         arenaId: 1,
         amount: parseEther('0.07'),
@@ -3160,15 +3768,15 @@ describe('ArkadaPVPArena', () => {
 
   describe('emnergency close', () => {
     it('Should be reverted not admin try to emergency close arena', async () => {
-      const { arenaContract, owner, arenaInitialConfig, regularAccounts } =
+      const { arenaContractV3, owner, arenaInitialConfig, regularAccounts } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -3177,7 +3785,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
@@ -3185,7 +3798,7 @@ describe('ArkadaPVPArena', () => {
       // Try to claim rewards before distribution
       await emergencyCloseTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
         },
@@ -3197,16 +3810,16 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be emergency closed by admin', async () => {
-      const { arenaContract, owner, arenaInitialConfig } = await loadFixture(
+      const { arenaContractV3, owner, arenaInitialConfig } = await loadFixture(
         defaultDeploy,
       );
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -3215,29 +3828,34 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // Try to claim rewards before distribution
       await emergencyCloseTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
       });
     });
 
     it('Should be reverted if admin try to distribute rewards for emergency closed arena', async () => {
-      const { arenaContract, owner, user, arenaInitialConfig } =
+      const { arenaContractV3, owner, user, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -3246,14 +3864,19 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // Try to claim rewards before distribution
       await emergencyCloseTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
       });
@@ -3274,7 +3897,7 @@ describe('ArkadaPVPArena', () => {
       // End arena and distribute rewards
       await endArenaAndDistributeRewardsTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           root,
@@ -3284,15 +3907,15 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Should be reverted if user try to join emergency closed arena', async () => {
-      const { arenaContract, owner, user, arenaInitialConfig } =
+      const { arenaContractV3, owner, user, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -3301,21 +3924,26 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // Try to claim rewards before distribution
       await emergencyCloseTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
       });
 
       await joinArenaTest(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           arenaId: 1,
           value: parseEther('0.1'),
@@ -3325,17 +3953,17 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Initial pize pool should transfer to treasury when emergency closed', async () => {
-      const { arenaContract, owner, arenaInitialConfig, treasury } =
+      const { arenaContractV3, owner, arenaInitialConfig, treasury } =
         await loadFixture(defaultDeploy);
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
+      const blockTimestamp = (await arenaContractV3.provider.getBlock('latest'))
         .timestamp;
 
       const initialPrizePool = parseEther('1');
 
       // Create a TIME arena
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.TIME,
           duration: arenaInitialConfig.durationConfig.max,
@@ -3344,7 +3972,12 @@ describe('ArkadaPVPArena', () => {
           startTime:
             blockTimestamp +
             Math.floor(arenaInitialConfig.intervalToStartConfig.min + 10),
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: initialPrizePool },
       );
@@ -3352,7 +3985,7 @@ describe('ArkadaPVPArena', () => {
       const treasuryBalanceBefore = await treasury.getBalance();
 
       await emergencyCloseTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
       });
@@ -3365,48 +3998,53 @@ describe('ArkadaPVPArena', () => {
     });
 
     it('Users should able to leave and get refund from closed arena', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
+      const { arenaContractV3, owner, regularAccounts, arenaInitialConfig } =
         await loadFixture(defaultDeploy);
 
       // Create a PLACES arena with requiredPlayers = 3
-      await createArenaTest(
+      await createArenaV3Test(
         {
-          arenaContract,
+          arenaContract: arenaContractV3,
           owner,
           type: ArenaType.PLACES,
           duration: arenaInitialConfig.durationConfig.max,
           entryFee: parseEther('0.1'),
           requiredPlayers: 3,
           startTime: 0,
-          signatured: false,
+          boolParams: {
+            signatured: false,
+            lockArenaOnStart: false,
+            lockRebuy: false,
+          },
+          name: 'arena',
         },
         { value: parseEther('0.1') },
       );
 
       // All required players join
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
         value: parseEther('0.1'),
       });
 
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[0],
         arenaId: 1,
         value: parseEther('0.1'),
       });
 
       await joinArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[1],
         arenaId: 1,
         value: parseEther('0.1'),
       });
 
       await emergencyCloseTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
       });
@@ -3415,1041 +4053,22 @@ describe('ArkadaPVPArena', () => {
       await increaseTime(arenaInitialConfig.durationConfig.max + 20);
 
       await leaveArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner,
         arenaId: 1,
       });
 
       await leaveArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[0],
         arenaId: 1,
       });
 
       await leaveArenaTest({
-        arenaContract,
+        arenaContract: arenaContractV3,
         owner: regularAccounts[1],
         arenaId: 1,
       });
-    });
-  });
-
-  describe('initialPrizePool scenarios', () => {
-    it('Admin creates non-signatured arena with initial prize pool, user joins and leaves for delete arena', async () => {
-      const { arenaContract, owner, treasury, user, arenaInitialConfig } =
-        await loadFixture(defaultDeploy);
-      const initialPrizePool = parseEther('1.0');
-      const entryFee = parseEther('0.1');
-
-      // Create non-signatured arena with initial prize pool
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee,
-          requiredPlayers: arenaInitialConfig.playersConfig.min,
-          startTime: 0,
-          signatured: false,
-        },
-        { value: initialPrizePool },
-      );
-
-      // User joins
-      await joinArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-        value: entryFee,
-      });
-
-      const treasuryBalanceBefore = await ethers.provider.getBalance(
-        treasury.address,
-      );
-
-      // User leaves
-      await leaveArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-      });
-
-      // Verify treasury received initial prize pool
-      const treasuryBalanceAfter = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      expect(treasuryBalanceAfter).to.equal(
-        treasuryBalanceBefore.add(initialPrizePool),
-      );
-    });
-
-    it('Admin creates signatured arena with initial prize pool, user joins and leaves', async () => {
-      const {
-        arenaContract,
-        owner,
-        treasury,
-        user,
-        arenaSigner,
-        arenaInitialConfig,
-      } = await loadFixture(defaultDeploy);
-      const initialPrizePool = parseEther('1.0');
-
-      // Create signatured arena with initial prize pool
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: arenaInitialConfig.playersConfig.min,
-          startTime: 0,
-          signatured: true,
-        },
-        { value: initialPrizePool },
-      );
-
-      // User joins with signature
-      await joinArenaWithSignatureTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        player: user,
-        freeFromFee: true,
-        discountBps: 0,
-        nonce: 1,
-        signer: arenaSigner,
-      });
-
-      // Verify treasury received initial prize pool
-      const treasuryBalanceBefore = await ethers.provider.getBalance(
-        treasury.address,
-      );
-
-      // User leaves
-      await leaveArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-      });
-
-      // Verify treasury received initial prize pool
-      const treasuryBalanceAfter = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      expect(treasuryBalanceAfter).to.equal(
-        treasuryBalanceBefore.add(initialPrizePool),
-      );
-    });
-
-    it('Admin creates non-signatured arena with initial prize pool, users join and rewards distributed', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
-        await loadFixture(defaultDeploy);
-      const initialPrizePool = parseEther('1.0');
-      const entryFee = parseEther('0.1');
-
-      // Create non-signatured arena with initial prize pool
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee,
-          requiredPlayers: arenaInitialConfig.playersConfig.min,
-          startTime: 0,
-          signatured: false,
-        },
-        { value: initialPrizePool },
-      );
-
-      // Users join
-      await joinArenaTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        value: entryFee,
-      });
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[0],
-        arenaId: 1,
-        value: entryFee,
-      });
-
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[1],
-        arenaId: 1,
-        value: entryFee,
-      });
-
-      await increaseTime(arenaInitialConfig.durationConfig.max);
-
-      // End arena and distribute rewards
-      const rewards = [
-        { address: owner.address, amount: parseEther('0.09').toString() },
-        {
-          address: regularAccounts[0].address,
-          amount: parseEther('0.08').toString(),
-        },
-        {
-          address: regularAccounts[1].address,
-          amount: parseEther('0.07').toString(),
-        },
-      ];
-
-      const { root } = createRewardsMerkleTree(rewards);
-
-      await endArenaAndDistributeRewardsTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        root,
-      });
-    });
-
-    it('Admin creates signatured arena with initial prize pool, users join and rewards distributed', async () => {
-      const {
-        arenaContract,
-        owner,
-        treasury,
-        regularAccounts,
-        arenaSigner,
-        arenaInitialConfig,
-      } = await loadFixture(defaultDeploy);
-      const initialPrizePool = parseEther('1.0');
-
-      // Create signatured arena with initial prize pool
-      await createArenaTest(
-        {
-          arenaContract,
-          owner,
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee: parseEther('0.1'),
-          requiredPlayers: arenaInitialConfig.playersConfig.min,
-          startTime: 0,
-          signatured: true,
-        },
-        { value: initialPrizePool },
-      );
-
-      // Users join with signature
-      await joinArenaWithSignatureTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        player: owner,
-        freeFromFee: true,
-        discountBps: 0,
-        nonce: 1,
-        signer: arenaSigner,
-      });
-
-      await joinArenaWithSignatureTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        player: regularAccounts[0],
-        freeFromFee: true,
-        discountBps: 0,
-        nonce: 2,
-        signer: arenaSigner,
-      });
-
-      await joinArenaWithSignatureTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        player: regularAccounts[1],
-        freeFromFee: true,
-        discountBps: 0,
-        nonce: 3,
-        signer: arenaSigner,
-      });
-
-      await increaseTime(arenaInitialConfig.durationConfig.max);
-
-      // End arena and distribute rewards
-      const rewards = [
-        { address: owner.address, amount: parseEther('0.09').toString() },
-        {
-          address: regularAccounts[0].address,
-          amount: parseEther('0.08').toString(),
-        },
-        {
-          address: regularAccounts[1].address,
-          amount: parseEther('0.07').toString(),
-        },
-      ];
-
-      const { root } = createRewardsMerkleTree(rewards);
-
-      await endArenaAndDistributeRewardsTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        root,
-      });
-    });
-
-    it('User creates arena with initial prize pool, users join and rewards distributed', async () => {
-      const { arenaContract, owner, regularAccounts, arenaInitialConfig } =
-        await loadFixture(defaultDeploy);
-      const initialPrizePool = parseEther('1.0');
-      const entryFee = parseEther('0.1');
-
-      // Create arena with initial prize pool as regular user
-      await createArenaTest(
-        {
-          arenaContract,
-          owner: regularAccounts[0],
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee,
-          requiredPlayers: arenaInitialConfig.playersConfig.min,
-          startTime: 0,
-          signatured: false,
-        },
-        { value: initialPrizePool.add(entryFee) },
-      ); // Add entryFee since creator joins automatically
-
-      // Users join
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[1],
-        arenaId: 1,
-        value: entryFee,
-      });
-
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[2],
-        arenaId: 1,
-        value: entryFee,
-      });
-
-      await increaseTime(arenaInitialConfig.durationConfig.max);
-
-      // End arena and distribute rewards
-      const rewards = [
-        {
-          address: regularAccounts[0].address,
-          amount: parseEther('0.09').toString(),
-        },
-        {
-          address: regularAccounts[1].address,
-          amount: parseEther('0.08').toString(),
-        },
-        {
-          address: regularAccounts[2].address,
-          amount: parseEther('0.07').toString(),
-        },
-      ];
-
-      const { root } = createRewardsMerkleTree(rewards);
-
-      await endArenaAndDistributeRewardsTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        root,
-      });
-    });
-
-    it('User creates arena with initial prize pool, users join and all leave', async () => {
-      const { arenaContract, treasury, regularAccounts, arenaInitialConfig } =
-        await loadFixture(defaultDeploy);
-      const initialPrizePool = parseEther('1.0');
-      const entryFee = parseEther('0.1');
-
-      // Create arena with initial prize pool as regular user
-      await createArenaTest(
-        {
-          arenaContract,
-          owner: regularAccounts[0],
-          type: ArenaType.PLACES,
-          duration: arenaInitialConfig.durationConfig.max,
-          entryFee,
-          requiredPlayers: arenaInitialConfig.playersConfig.max,
-          startTime: 0,
-          signatured: false,
-        },
-        { value: initialPrizePool.add(entryFee) },
-      ); // Add entryFee since creator joins automatically
-
-      // Users join
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[1],
-        arenaId: 1,
-        value: entryFee,
-      });
-
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[2],
-        arenaId: 1,
-        value: entryFee,
-      });
-
-      // Users leave
-      await leaveArenaTest({
-        arenaContract,
-        owner: regularAccounts[1],
-        arenaId: 1,
-      });
-
-      await leaveArenaTest({
-        arenaContract,
-        owner: regularAccounts[2],
-        arenaId: 1,
-      });
-
-      const treasuryBalanceBefore = await ethers.provider.getBalance(
-        treasury.address,
-      );
-
-      // Creator leaves last
-      await leaveArenaTest({
-        arenaContract,
-        owner: regularAccounts[0],
-        arenaId: 1,
-      });
-
-      // Verify treasury received initial prize pool
-      const treasuryBalanceAfter = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      expect(treasuryBalanceAfter).to.equal(
-        treasuryBalanceBefore.add(initialPrizePool),
-      );
-    });
-  });
-
-  describe('Complex TIME Arena Scenario', () => {
-    it('Should handle complete lifecycle with multiple players, timeouts, and complex reward distribution', async () => {
-      console.log('\n----- STARTING COMPLEX TIME ARENA TEST -----');
-      const { arenaContract, owner, user, regularAccounts, treasury } =
-        await loadFixture(defaultDeploy);
-
-      // Configure for flexible testing
-      console.log('Configuring contract parameters...');
-      await setPlayersConfigTest({
-        arenaContract,
-        owner,
-        newConfig: { max: 15, min: 1 },
-      });
-
-      await setDurationConfigTest({
-        arenaContract,
-        owner,
-        newConfig: { max: 100000, min: 1000 },
-      });
-
-      await setIntervalToStartConfigTest({
-        arenaContract,
-        owner,
-        newConfig: { max: 1000, min: 200 },
-      });
-
-      await setFeeBPSTest({
-        arenaContract,
-        owner,
-        newFeeBPS: 500, // 5% fee
-      });
-
-      const blockTimestamp = (await arenaContract.provider.getBlock('latest'))
-        .timestamp;
-
-      // Create a TIME arena with future start time
-      console.log('Creating TIME arena with future start time...');
-      await createArenaTest({
-        arenaContract,
-        owner,
-        type: ArenaType.TIME,
-        duration: 1000, // 1000 seconds duration
-        entryFee: parseEther('0.15'),
-        requiredPlayers: 0,
-        startTime: blockTimestamp + 300, // Starts in 5 minutes
-        signatured: false,
-      });
-
-      // First wave of players join (5 players)
-      console.log('First wave: 5 players joining arena...');
-      for (let i = 0; i < 5; i++) {
-        console.log(`Player ${i + 1} joining with 0.15 ETH...`);
-        await joinArenaTest({
-          arenaContract,
-          owner: i === 0 ? owner : i === 1 ? user : regularAccounts[i - 2],
-          arenaId: 1,
-          value: parseEther('0.15'),
-        });
-
-        // Check player count after each join
-        const arena = await arenaContract.arenas(1);
-        console.log(`Arena now has ${arena.players.toString()} players`);
-      }
-
-      // Some players leave before arena starts
-      console.log('Two players leaving arena before it starts...');
-      await leaveArenaTest({
-        arenaContract,
-        owner: regularAccounts[1],
-        arenaId: 1,
-      });
-
-      await leaveArenaTest({
-        arenaContract,
-        owner: regularAccounts[2],
-        arenaId: 1,
-      });
-
-      // Verify arena state
-      let arena = await arenaContract.arenas(1);
-      console.log(
-        `Arena now has ${arena.players.toString()} players after 2 left`,
-      );
-      expect(arena.players).to.equal(3);
-
-      // Second wave joins
-      console.log('Second wave: 4 more players joining...');
-      for (let i = 3; i < 7; i++) {
-        await joinArenaTest({
-          arenaContract,
-          owner: regularAccounts[i],
-          arenaId: 1,
-          value: parseEther('0.15'),
-        });
-      }
-
-      // Verify arena state
-      arena = await arenaContract.arenas(1);
-      console.log(`Arena now has ${arena.players.toString()} players total`);
-      expect(arena.players).to.equal(7);
-
-      // Collect fees info before arena starts
-      const totalFees = parseEther('0.15').mul(8); // 7 players * 0.15 ETH
-      const feeBPS = await arenaContract.feeBPS();
-      const feeAmount = totalFees.mul(feeBPS).div(10000); // 5% of total
-      const prizePot = totalFees.sub(feeAmount);
-
-      console.log(
-        `Total entry fees collected: ${ethers.utils.formatEther(
-          totalFees,
-        )} ETH`,
-      );
-      console.log(
-        `Fee amount (5%): ${ethers.utils.formatEther(feeAmount)} ETH`,
-      );
-      console.log(`Prize pot: ${ethers.utils.formatEther(prizePot)} ETH`);
-
-      // Wait for arena to start automatically
-      console.log('Advancing time to start arena...');
-      await increaseTime(350); // Past the start time
-
-      // Try to join after start (should success)
-      console.log(
-        'Player trying to join after arena started (should success)...',
-      );
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[7],
-        arenaId: 1,
-        value: parseEther('0.15'),
-      });
-
-      // Wait for arena to finish
-      console.log('Advancing time to finish arena...');
-      await increaseTime(1100); // Past duration + buffer
-
-      // Prepare reward distribution with different percentages for each player
-      console.log('Preparing reward distribution...');
-      const rewards = [
-        {
-          address: owner.address,
-          amount: prizePot.mul(25).div(100).toString(),
-        }, // 25% - 1st place
-        { address: user.address, amount: prizePot.mul(20).div(100).toString() }, // 20% - 2nd place
-        {
-          address: regularAccounts[0].address,
-          amount: prizePot.mul(15).div(100).toString(),
-        }, // 15% - 3rd place
-        {
-          address: regularAccounts[3].address,
-          amount: prizePot.mul(12).div(100).toString(),
-        }, // 12% - 4th place
-        {
-          address: regularAccounts[4].address,
-          amount: prizePot.mul(10).div(100).toString(),
-        }, // 10% - 5th place
-        {
-          address: regularAccounts[5].address,
-          amount: prizePot.mul(10).div(100).toString(),
-        }, // 10% - 6th place
-        {
-          address: regularAccounts[6].address,
-          amount: prizePot.mul(8).div(100).toString(),
-        }, // 8% - 7th place
-      ];
-
-      console.log('Reward distribution by percentage:');
-      rewards.forEach((r, i) => {
-        console.log(
-          `Player ${i + 1}: ${ethers.utils.formatEther(r.amount)} ETH (${
-            i === 0
-              ? 25
-              : i === 1
-              ? 20
-              : i === 2
-              ? 15
-              : i === 3
-              ? 12
-              : i === 4
-              ? 10
-              : i === 5
-              ? 10
-              : 8
-          }%)`,
-        );
-      });
-
-      const { root, getProof } = createRewardsMerkleTree(rewards);
-
-      // Check treasury balance before ending
-      const treasuryBalanceBefore = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      console.log(
-        `Treasury balance before: ${ethers.utils.formatEther(
-          treasuryBalanceBefore,
-        )} ETH`,
-      );
-
-      // End arena and distribute rewards
-      console.log('Ending arena and distributing rewards...');
-      await endArenaAndDistributeRewardsTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        root,
-      });
-
-      // Verify treasury received fees
-      const treasuryBalanceAfter = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      console.log(
-        `Treasury received: ${ethers.utils.formatEther(
-          treasuryBalanceAfter.sub(treasuryBalanceBefore),
-        )} ETH`,
-      );
-      expect(treasuryBalanceAfter.sub(treasuryBalanceBefore)).to.be.closeTo(
-        feeAmount,
-        1000,
-      );
-
-      // Players claim rewards in random order
-      console.log('Players claiming rewards in random order...');
-
-      // Middle ranked player claims first
-      console.log('4th place player claiming first...');
-      await claimRewardsTest({
-        arenaContract,
-        owner: regularAccounts[3],
-        arenaId: 1,
-        amount: rewards[3].amount,
-        proofs: getProof(3),
-      });
-
-      // Winner claims
-      console.log('1st place (winner) claiming...');
-      await claimRewardsTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        amount: rewards[0].amount,
-        proofs: getProof(0),
-      });
-
-      // Attempt incorrect claim (should fail)
-      console.log('Attempting claim with wrong amount (should fail)...');
-      await claimRewardsTest(
-        {
-          arenaContract,
-          owner: regularAccounts[4],
-          arenaId: 1,
-          amount: prizePot.mul(15).div(100), // Wrong amount - trying to claim more
-          proofs: getProof(4),
-        },
-        { revertMessage: 'PVPArena__InvalidProofs' },
-      );
-
-      // Correct claim for remaining players
-      console.log('Remaining players claiming correctly...');
-
-      await claimRewardsTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-        amount: rewards[1].amount,
-        proofs: getProof(1),
-      });
-
-      await claimRewardsTest({
-        arenaContract,
-        owner: regularAccounts[0],
-        arenaId: 1,
-        amount: rewards[2].amount,
-        proofs: getProof(2),
-      });
-
-      await claimRewardsTest({
-        arenaContract,
-        owner: regularAccounts[4],
-        arenaId: 1,
-        amount: rewards[4].amount,
-        proofs: getProof(4),
-      });
-
-      await claimRewardsTest({
-        arenaContract,
-        owner: regularAccounts[5],
-        arenaId: 1,
-        amount: rewards[5].amount,
-        proofs: getProof(5),
-      });
-
-      await claimRewardsTest({
-        arenaContract,
-        owner: regularAccounts[6],
-        arenaId: 1,
-        amount: rewards[6].amount,
-        proofs: getProof(6),
-      });
-
-      // Attempt double claim (should fail)
-      console.log('Attempting to claim twice (should fail)...');
-      await claimRewardsTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-          amount: rewards[0].amount,
-          proofs: getProof(0),
-        },
-        { revertMessage: 'PVPArena__AlreadyClaimed' },
-      );
-
-      console.log('All rewards claimed successfully!');
-      console.log('----- COMPLEX TIME ARENA TEST COMPLETE -----\n');
-    });
-  });
-
-  describe('Complex PLACES Arena Scenario', () => {
-    it('Should handle required players count, auto-start, and special reward patterns', async () => {
-      console.log('\n----- STARTING COMPLEX PLACES ARENA TEST -----');
-      const { arenaContract, owner, user, regularAccounts, treasury } =
-        await loadFixture(defaultDeploy);
-
-      // Configure for testing
-      console.log('Configuring contract parameters...');
-      await setPlayersConfigTest({
-        arenaContract,
-        owner,
-        newConfig: { max: 15, min: 1 },
-      });
-
-      await setDurationConfigTest({
-        arenaContract,
-        owner,
-        newConfig: { max: 100000, min: 1000 },
-      });
-
-      await setIntervalToStartConfigTest({
-        arenaContract,
-        owner,
-        newConfig: { max: 1000, min: 200 },
-      });
-
-      await setFeeBPSTest({
-        arenaContract,
-        owner,
-        newFeeBPS: 800, // 8% fee
-      });
-
-      // Create a PLACES arena that requires 8 players to start
-      console.log('Creating PLACES arena with 8 required players...');
-      await createArenaTest({
-        arenaContract,
-        owner,
-        type: ArenaType.PLACES,
-        duration: 1500, // 25 minutes
-        entryFee: parseEther('0.1'),
-        requiredPlayers: 8, // Requires 8 players to start
-        startTime: 0,
-        signatured: false,
-      });
-
-      // First batch of players join (4 players)
-      console.log('First batch: 4 players joining...');
-      for (let i = 0; i < 4; i++) {
-        const player =
-          i === 0 ? owner : i === 1 ? user : regularAccounts[i - 2];
-        console.log(`Player ${i + 1} joining with 0.1 ETH...`);
-        await joinArenaTest({
-          arenaContract,
-          owner: player,
-          arenaId: 1,
-          value: parseEther('0.1'),
-        });
-
-        // Verify arena state after each join
-        const arena = await arenaContract.arenas(1);
-        console.log(
-          `Arena has ${arena.players.toString()} players, still not started`,
-        );
-        expect(arena.startTime).to.equal(0); // Not started yet
-      }
-
-      // Some players leave and rejoin to test that functionality
-      console.log('Testing leave/rejoin functionality...');
-      await leaveArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-      });
-
-      console.log('User left, now rejoining...');
-      await joinArenaTest({
-        arenaContract,
-        owner: user,
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      // Try to end arena before required players (should fail)
-      console.log(
-        'Trying to end arena before required players (should fail)...',
-      );
-      await endArenaAndDistributeRewardsTest(
-        {
-          arenaContract,
-          owner,
-          arenaId: 1,
-          root: ethers.utils.formatBytes32String('dummy'),
-        },
-        { revertMessage: 'PVPArena__ArenaNotStarted' },
-      );
-
-      // Add more players to reach the threshold (4 more)
-      console.log('Adding 4 more players to reach required threshold...');
-      for (let i = 4; i < 8; i++) {
-        console.log(
-          `Player ${i + 1} joining (player ${i + 1} of 8 required)...`,
-        );
-        await joinArenaTest({
-          arenaContract,
-          owner: regularAccounts[i - 2],
-          arenaId: 1,
-          value: parseEther('0.1'),
-        });
-
-        // Check if we've hit the required players threshold
-        if (i < 7) {
-          // Not enough players yet
-          const arena = await arenaContract.arenas(1);
-          console.log(
-            `Arena has ${arena.players.toString()} players, still not started`,
-          );
-          expect(arena.startTime).to.equal(0);
-        } else {
-          // Should have started with the 8th player
-          const arena = await arenaContract.arenas(1);
-          console.log(
-            `Arena has ${arena.players.toString()} players, STARTED at ${
-              arena.startTime
-            }`,
-          );
-          expect(arena.startTime).to.be.gt(0);
-          expect(arena.endTime).to.equal(arena.startTime.add(arena.duration));
-        }
-      }
-
-      // Arena has started, wait for completion
-      console.log('Arena has started, waiting for completion...');
-      await increaseTime(1300);
-
-      // Try to add more players after the arena has started (should success for PLACES arena)
-      console.log(
-        'Adding 2 more players after arena start but before end... (should success)',
-      );
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[6],
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      await joinArenaTest({
-        arenaContract,
-        owner: regularAccounts[7],
-        arenaId: 1,
-        value: parseEther('0.1'),
-      });
-
-      await increaseTime(1300);
-
-      // Calculate fees and prepare rewards
-      console.log('Calculating fees and preparing rewards...');
-      const totalFees = parseEther('0.1').mul(10); // 10 players * 0.1 ETH
-      const feeBPS = await arenaContract.feeBPS();
-      const feeAmount = totalFees.mul(feeBPS).div(10000);
-      const prizePot = totalFees.sub(feeAmount);
-
-      console.log(`Total fees: ${ethers.utils.formatEther(totalFees)} ETH`);
-      console.log(
-        `Fee amount (8%): ${ethers.utils.formatEther(feeAmount)} ETH`,
-      );
-      console.log(`Prize pot: ${ethers.utils.formatEther(prizePot)} ETH`);
-
-      // Create a non-uniform distribution for the 8 players
-      console.log('Creating non-uniform reward distribution...');
-      const rewards = [
-        {
-          address: owner.address,
-          amount: prizePot.mul(35).div(100).toString(),
-        }, // 35% - Winner
-        { address: user.address, amount: prizePot.mul(20).div(100).toString() }, // 20% - Runner-up
-        {
-          address: regularAccounts[0].address,
-          amount: prizePot.mul(15).div(100).toString(),
-        }, // 15% - Third place
-        {
-          address: regularAccounts[1].address,
-          amount: prizePot.mul(7).div(100).toString(),
-        }, // 7% - participation
-        {
-          address: regularAccounts[2].address,
-          amount: prizePot.mul(7).div(100).toString(),
-        }, // 7% - participation
-        {
-          address: regularAccounts[3].address,
-          amount: prizePot.mul(6).div(100).toString(),
-        }, // 6% - participation
-        {
-          address: regularAccounts[4].address,
-          amount: prizePot.mul(5).div(100).toString(),
-        }, // 5% - participation
-        {
-          address: regularAccounts[5].address,
-          amount: prizePot.mul(5).div(100).toString(),
-        }, // 5% - participation
-      ];
-
-      console.log('Reward distribution:');
-      rewards.forEach((r, i) => {
-        const percent =
-          i === 0
-            ? 35
-            : i === 1
-            ? 20
-            : i === 2
-            ? 15
-            : i === 3
-            ? 7
-            : i === 4
-            ? 7
-            : i === 5
-            ? 6
-            : 5;
-        console.log(
-          `Player ${i + 1}: ${ethers.utils.formatEther(
-            r.amount,
-          )} ETH (${percent}%)`,
-        );
-      });
-
-      const { root, getProof } = createRewardsMerkleTree(rewards);
-
-      // End arena and distribute rewards
-      console.log('Ending arena and distributing rewards...');
-      const treasuryBalanceBefore = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      await endArenaAndDistributeRewardsTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        root,
-      });
-
-      // Verify treasury received correct fee
-      const treasuryBalanceAfter = await ethers.provider.getBalance(
-        treasury.address,
-      );
-      console.log(
-        `Treasury received: ${ethers.utils.formatEther(
-          treasuryBalanceAfter.sub(treasuryBalanceBefore),
-        )} ETH`,
-      );
-      expect(treasuryBalanceAfter.sub(treasuryBalanceBefore)).to.be.closeTo(
-        feeAmount,
-        1000,
-      );
-
-      // Winner claims first
-      console.log('Winner claiming reward first...');
-      await claimRewardsTest({
-        arenaContract,
-        owner,
-        arenaId: 1,
-        amount: rewards[0].amount,
-        proofs: getProof(0),
-      });
-
-      // Random order of claims for other players
-      console.log('Other players claiming in random order...');
-      const claimOrder = [2, 5, 1, 3, 4, 6, 7]; // Random claim order for 7 remaining players
-
-      for (const idx of claimOrder) {
-        const playerIndex = idx; // Convert to zero-based index
-        const playerAccount =
-          playerIndex === 0
-            ? owner
-            : playerIndex === 1
-            ? user
-            : regularAccounts[playerIndex - 2];
-
-        console.log(`Player ${idx} claiming reward...`);
-        await claimRewardsTest({
-          arenaContract,
-          owner: playerAccount,
-          arenaId: 1,
-          amount: rewards[playerIndex].amount,
-          proofs: getProof(playerIndex),
-        });
-      }
-
-      // Test claim by player who wasn't on the list (should fail)
-      console.log(
-        'Player not in distribution trying to claim (should fail)...',
-      );
-      await claimRewardsTest(
-        {
-          arenaContract,
-          owner: regularAccounts[8], // This player wasn't in the arena
-          arenaId: 1,
-          amount: parseEther('0.01'),
-          proofs: [],
-        },
-        { revertMessage: 'PVPArena__InvalidProofs' },
-      );
-
-      console.log('All rewards claimed successfully!');
-      console.log('----- COMPLEX PLACES ARENA TEST COMPLETE -----\n');
     });
   });
 });
