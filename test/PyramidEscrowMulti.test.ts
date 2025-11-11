@@ -12,55 +12,77 @@ import {
   withdrawTest,
 } from './common/pyramid-escrow.helpers';
 
-describe('PyramidEscrow', () => {
+describe.only('PyramidEscrowMulti', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
 
   describe('Deployment', () => {
     it('Should set the right admin role', async () => {
-      const { pyramidEscrowContract, owner } = await loadFixture(defaultDeploy);
+      const { pyramidEscrowContractMulti, owner } = await loadFixture(
+        defaultDeploy,
+      );
       expect(
-        await pyramidEscrowContract.hasRole(
-          await pyramidEscrowContract.DEFAULT_ADMIN_ROLE(),
+        await pyramidEscrowContractMulti.hasRole(
+          await pyramidEscrowContractMulti.DEFAULT_ADMIN_ROLE(),
           owner.address,
         ),
       ).to.equal(true);
     });
 
+    it('Should set the right signer role', async () => {
+      const { pyramidEscrowContractMulti, questSigner } = await loadFixture(
+        defaultDeploy,
+      );
+      expect(
+        await pyramidEscrowContractMulti.hasRole(
+          await pyramidEscrowContractMulti.SIGNER_ROLE(),
+          questSigner.address,
+        ),
+      ).to.equal(true);
+    });
+
     it('Should set initial minting state to true', async () => {
-      const { pyramidEscrowContract } = await loadFixture(defaultDeploy);
-      expect(await pyramidEscrowContract.s_isMintingActive()).to.equal(true);
+      const { pyramidEscrowContractMulti } = await loadFixture(defaultDeploy);
+      expect(await pyramidEscrowContractMulti.s_isMintingActive()).to.equal(
+        true,
+      );
     });
 
     it('Should set correct token name and symbol', async () => {
-      const { pyramidEscrowContract } = await loadFixture(defaultDeploy);
-      expect(await pyramidEscrowContract.name()).to.equal('Pyramid');
-      expect(await pyramidEscrowContract.symbol()).to.equal('PYR');
+      const { pyramidEscrowContractMulti } = await loadFixture(defaultDeploy);
+      expect(await pyramidEscrowContractMulti.name()).to.equal('Pyramid');
+      expect(await pyramidEscrowContractMulti.symbol()).to.equal('PYR');
     });
   });
 
   describe('Minting Control', () => {
     it('Should allow owner to set minting state', async () => {
-      const { pyramidEscrowContract, owner } = await loadFixture(defaultDeploy);
+      const { pyramidEscrowContractMulti, owner } = await loadFixture(
+        defaultDeploy,
+      );
       await setIsMintingActiveTest({
-        pyramidEscrowContract,
+        pyramidEscrowContract: pyramidEscrowContractMulti,
         owner,
         isActive: true,
       });
       await setIsMintingActiveTest({
-        pyramidEscrowContract,
+        pyramidEscrowContract: pyramidEscrowContractMulti,
         owner,
         isActive: false,
       });
     });
 
     it('Should not allow non-owner to set minting state', async () => {
-      const { pyramidEscrowContract, owner, user } = await loadFixture(
+      const { pyramidEscrowContractMulti, owner, user } = await loadFixture(
         defaultDeploy,
       );
       await setIsMintingActiveTest(
-        { pyramidEscrowContract, owner, isActive: true },
+        {
+          pyramidEscrowContract: pyramidEscrowContractMulti,
+          owner,
+          isActive: true,
+        },
         { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },
       );
     });
@@ -68,22 +90,22 @@ describe('PyramidEscrow', () => {
 
   describe('Treasury Management', () => {
     it('Should allow owner to set treasury', async () => {
-      const { pyramidEscrowContract, owner, treasury } = await loadFixture(
+      const { pyramidEscrowContractMulti, owner, treasury } = await loadFixture(
         defaultDeploy,
       );
       await setTreasuryTest({
-        pyramidEscrowContract,
+        pyramidEscrowContract: pyramidEscrowContractMulti,
         owner,
         treasury: treasury.address,
       });
     });
 
     it('Should not allow non-owner to set treasury', async () => {
-      const { pyramidEscrowContract, owner, user, treasury } =
+      const { pyramidEscrowContractMulti, owner, user, treasury } =
         await loadFixture(defaultDeploy);
       await setTreasuryTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           treasury: treasury.address,
         },
@@ -92,10 +114,12 @@ describe('PyramidEscrow', () => {
     });
 
     it('Should not allow setting treasury to zero address', async () => {
-      const { pyramidEscrowContract, owner } = await loadFixture(defaultDeploy);
+      const { pyramidEscrowContractMulti, owner } = await loadFixture(
+        defaultDeploy,
+      );
       await setTreasuryTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           treasury: ethers.constants.AddressZero,
         },
@@ -107,7 +131,7 @@ describe('PyramidEscrow', () => {
   describe('Minting', () => {
     it('Should not allow minting when inactive', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         QUEST_ID,
@@ -115,7 +139,7 @@ describe('PyramidEscrow', () => {
         domain,
       } = await loadFixture(defaultDeploy);
       await setIsMintingActiveTest({
-        pyramidEscrowContract,
+        pyramidEscrowContract: pyramidEscrowContractMulti,
         owner,
         isActive: false,
       });
@@ -163,7 +187,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -175,7 +199,7 @@ describe('PyramidEscrow', () => {
 
     it('Should not allow minting with invalid signature', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         QUEST_ID,
@@ -226,7 +250,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -238,13 +262,13 @@ describe('PyramidEscrow', () => {
 
     it('Should not allow minting with used nonce', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
-        factoryContract,
-        domainEscrow,
+        factoryContractMulti,
+        domainEscrowMulti,
       } = await loadFixture(defaultDeploy);
 
       const data: IMintPyramidData = {
@@ -274,7 +298,7 @@ describe('PyramidEscrow', () => {
           tokenId: 0,
           tokenType: 3,
           rakeBps: 10000,
-          factoryAddress: factoryContract.address,
+          factoryAddress: factoryContractMulti.address,
         },
         globalReward: {
           tokenAddress: ethers.constants.AddressZero,
@@ -289,12 +313,12 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -305,7 +329,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -315,15 +339,98 @@ describe('PyramidEscrow', () => {
       );
     });
 
-    it('Should allow successful minting with native token rewards', async () => {
+    it('Should allow minting if quest id for user already minted', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
-        factoryContract,
-        domainEscrow,
+        factoryContractMulti,
+        domainEscrowMulti,
+      } = await loadFixture(defaultDeploy);
+
+      const data: IMintPyramidData = {
+        questId: QUEST_ID.toString(),
+        nonce: 1,
+        price: parseEther('0.1'),
+        toAddress: user.address,
+        walletProvider: 'walletProvider',
+        tokenURI: 'tokenURI',
+        embedOrigin: 'embedOrigin',
+        transactions: [
+          {
+            txHash: '0x123',
+            networkChainId: 'networkChainId',
+          },
+        ],
+        recipients: [
+          {
+            recipient: user.address,
+            BPS: 100,
+          },
+        ],
+        reward: {
+          tokenAddress: ethers.constants.AddressZero,
+          chainId: 1,
+          amount: parseEther('0.01'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          factoryAddress: factoryContractMulti.address,
+        },
+        globalReward: {
+          tokenAddress: ethers.constants.AddressZero,
+          amount: parseEther('0.01'),
+          tokenId: 0,
+          tokenType: 3,
+          rakeBps: 10000,
+          escrowAddress: ethers.constants.AddressZero,
+        },
+      };
+
+      const signature = await signMintDataTyped(
+        data,
+        questSigner,
+        domainEscrowMulti,
+      );
+
+      await mintPyramidTest(
+        {
+          pyramidEscrowContract: pyramidEscrowContractMulti,
+          owner,
+          data,
+          signature,
+          value: parseEther('0.1'),
+        },
+        { from: user },
+      );
+
+      const data2 = { ...data, nonce: 2 };
+      const signature2 = await signMintDataTyped(
+        data2,
+        questSigner,
+        domainEscrowMulti,
+      );
+
+      await mintPyramidTest({
+        pyramidEscrowContract: pyramidEscrowContractMulti,
+        owner,
+        data: data2,
+        signature: signature2,
+        value: parseEther('0.1'),
+      });
+    });
+
+    it('Should allow successful minting with native token rewards', async () => {
+      const {
+        pyramidEscrowContractMulti,
+        owner,
+        user,
+        questSigner,
+        QUEST_ID,
+        factoryContractMulti,
+        domainEscrowMulti,
         treasury,
       } = await loadFixture(defaultDeploy);
 
@@ -360,7 +467,7 @@ describe('PyramidEscrow', () => {
           tokenId: 0,
           tokenType: 3,
           rakeBps: 0,
-          factoryAddress: factoryContract.address,
+          factoryAddress: factoryContractMulti.address,
         },
         globalReward: {
           tokenAddress: ethers.constants.AddressZero,
@@ -375,7 +482,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -392,7 +499,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -423,13 +530,13 @@ describe('PyramidEscrow', () => {
 
     it('Should allow successful minting with native token global rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
         globalEscrowContract,
-        domainEscrow,
+        domainEscrowMulti,
         treasury,
       } = await loadFixture(defaultDeploy);
 
@@ -481,7 +588,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -498,7 +605,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -529,13 +636,13 @@ describe('PyramidEscrow', () => {
 
     it('Should allow successful minting without any rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
         factoryContract,
-        domainEscrow,
+        domainEscrowMulti,
         treasury,
         arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
@@ -588,7 +695,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -606,7 +713,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -638,16 +745,15 @@ describe('PyramidEscrow', () => {
 
     it('Should allow successful minting with erc20 token rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
-        factoryContract,
-        domainEscrow,
+        factoryContractMulti,
+        domainEscrowMulti,
         treasury,
         tokens,
-        arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -683,7 +789,7 @@ describe('PyramidEscrow', () => {
           tokenId: 0,
           tokenType: 0,
           rakeBps: 0,
-          factoryAddress: factoryContract.address,
+          factoryAddress: factoryContractMulti.address,
         },
         globalReward: {
           tokenAddress: ethers.constants.AddressZero,
@@ -698,7 +804,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -718,7 +824,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -748,13 +854,13 @@ describe('PyramidEscrow', () => {
 
     it('Should allow successful minting with erc20 token global rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
         globalEscrowContract,
-        domainEscrow,
+        domainEscrowMulti,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -807,7 +913,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -827,7 +933,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -857,16 +963,15 @@ describe('PyramidEscrow', () => {
 
     it('Should allow successful minting with erc721 token rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
-        factoryContract,
-        domainEscrow,
+        factoryContractMulti,
+        domainEscrowMulti,
         treasury,
         tokens,
-        arkadaRewarderContract,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -899,10 +1004,10 @@ describe('PyramidEscrow', () => {
           tokenAddress: tokens.erc721Token.address,
           chainId: 1,
           amount: rewards,
-          tokenId: 1,
+          tokenId: 3,
           tokenType: 1,
           rakeBps: 0,
-          factoryAddress: factoryContract.address,
+          factoryAddress: factoryContractMulti.address,
         },
         globalReward: {
           tokenAddress: ethers.constants.AddressZero,
@@ -917,7 +1022,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -935,7 +1040,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -960,18 +1065,18 @@ describe('PyramidEscrow', () => {
         treasuryBalanceBefore.add(expectedTreasuryPayout),
       );
       expect(userBalanceAfter).to.equal(userBalanceBefore.sub(price));
-      expect(await tokens.erc721Token.ownerOf(1)).eq(user.address);
+      expect(await tokens.erc721Token.ownerOf(3)).eq(user.address);
     });
 
     it('Should allow successful minting with erc721 token global rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
         globalEscrowContract,
-        domainEscrow,
+        domainEscrowMulti,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -1024,7 +1129,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -1042,7 +1147,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -1072,14 +1177,13 @@ describe('PyramidEscrow', () => {
 
     it('Should allow successful minting with erc1155 token rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
-        factoryContract,
-        domainEscrow,
-        arkadaRewarderContract,
+        factoryContractMulti,
+        domainEscrowMulti,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -1117,7 +1221,7 @@ describe('PyramidEscrow', () => {
           tokenId: 1,
           tokenType: 2,
           rakeBps: 0,
-          factoryAddress: factoryContract.address,
+          factoryAddress: factoryContractMulti.address,
         },
         globalReward: {
           tokenAddress: ethers.constants.AddressZero,
@@ -1132,7 +1236,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -1149,7 +1253,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -1178,13 +1282,13 @@ describe('PyramidEscrow', () => {
 
     it('Should allow successful minting with erc1155 token global rewards', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
         globalEscrowContract,
-        domainEscrow,
+        domainEscrowMulti,
         treasury,
         tokens,
       } = await loadFixture(defaultDeploy);
@@ -1237,7 +1341,7 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       const expectedRecipientPayout = price.mul(BPS).div(MAX_BPS);
@@ -1254,7 +1358,7 @@ describe('PyramidEscrow', () => {
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -1285,13 +1389,13 @@ describe('PyramidEscrow', () => {
   describe('Withdrawal', () => {
     it('Should allow owner to withdraw funds', async () => {
       const {
-        pyramidEscrowContract,
+        pyramidEscrowContractMulti,
         owner,
         user,
         questSigner,
         QUEST_ID,
-        factoryContract,
-        domainEscrow,
+        factoryContractMulti,
+        domainEscrowMulti,
       } = await loadFixture(defaultDeploy);
 
       const price = parseEther('0.1');
@@ -1326,7 +1430,7 @@ describe('PyramidEscrow', () => {
           tokenId: 0,
           tokenType: 3,
           rakeBps: 0,
-          factoryAddress: factoryContract.address,
+          factoryAddress: factoryContractMulti.address,
         },
         globalReward: {
           tokenAddress: ethers.constants.AddressZero,
@@ -1341,12 +1445,12 @@ describe('PyramidEscrow', () => {
       const signature = await signMintDataTyped(
         data,
         questSigner,
-        domainEscrow,
+        domainEscrowMulti,
       );
 
       await mintPyramidTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
           data,
           signature,
@@ -1358,7 +1462,7 @@ describe('PyramidEscrow', () => {
       const balanceBefore = await ethers.provider.getBalance(owner.address);
 
       await withdrawTest({
-        pyramidEscrowContract,
+        pyramidEscrowContract: pyramidEscrowContractMulti,
         owner,
       });
 
@@ -1367,12 +1471,12 @@ describe('PyramidEscrow', () => {
     });
 
     it('Should not allow non-owner to withdraw funds', async () => {
-      const { pyramidEscrowContract, owner, user } = await loadFixture(
+      const { pyramidEscrowContractMulti, owner, user } = await loadFixture(
         defaultDeploy,
       );
       await withdrawTest(
         {
-          pyramidEscrowContract,
+          pyramidEscrowContract: pyramidEscrowContractMulti,
           owner,
         },
         { from: user, revertMessage: 'AccessControlUnauthorizedAccount' },

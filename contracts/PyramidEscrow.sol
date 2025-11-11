@@ -1,17 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.22;
 
-import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import {
+    EIP712Upgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {
+    MessageHashUtils
+} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {
+    Initializable
+} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {
+    ERC721Upgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {
+    AccessControlUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {
+    ReentrancyGuardUpgradeable
+} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
 import {IGlobalEscrow} from "./escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IPyramidEscrow} from "./interfaces/IPyramidEscrow.sol";
+import {IPyramidEscrowBase} from "./interfaces/IPyramidEscrowBase.sol";
 
 /// @title PyramidEscrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
@@ -103,7 +116,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function mintPyramid(
         PyramidData calldata pyramidData,
@@ -504,7 +517,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function setIsMintingActive(
         bool _isMintingActive
@@ -514,7 +527,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function setTreasury(
         address _treasury
@@ -525,7 +538,7 @@ contract PyramidEscrow is
     }
 
     /**
-     * @inheritdoc IPyramidEscrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 withdrawAmount = address(this).balance;

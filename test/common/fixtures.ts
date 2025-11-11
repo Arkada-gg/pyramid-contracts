@@ -19,6 +19,7 @@ import {
   Pyramid__factory,
   // eslint-disable-next-line
   PyramidEscrow__factory,
+  PyramidEscrowMulti__factory,
 } from '../../typechain-types';
 
 export async function defaultDeploy() {
@@ -37,6 +38,8 @@ export async function defaultDeploy() {
     version: '1',
   };
 
+  // -----------------------------------------------> REVARDER
+
   const arkadaRewarderContract = await new ArkadaRewarder__factory(
     owner,
   ).deploy();
@@ -47,6 +50,8 @@ export async function defaultDeploy() {
     'ArkadaRewarder__InvalidAddress',
   );
   await arkadaRewarderContract.initialize(owner.address);
+
+  // -----------------------------------------------> PURAMID V1
 
   const pyramidContract = await new Pyramid__factory(owner).deploy();
   await expect(
@@ -96,6 +101,7 @@ export async function defaultDeploy() {
     pyramidContract.address,
   );
 
+  // -----------------------------------------------> GLOBAL ESCROW
   // Deploy mock tokens
   const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
   const erc20Token = (await ERC20Mock.deploy(
@@ -139,6 +145,8 @@ export async function defaultDeploy() {
     owner.address,
   );
 
+  // -----------------------------------------------> PYRAMID ESCROW V1
+
   const pyramidEscrowContract = await new PyramidEscrow__factory(
     owner,
   ).deploy();
@@ -179,6 +187,8 @@ export async function defaultDeploy() {
     pyramidEscrowContract.address,
   );
 
+  // -----------------------------------------------> FACTORY FOR PYRAMID ESCROW V1
+
   const { chainId } = await ethers.provider.getNetwork();
 
   const factoryContract = await new Factory__factory(owner).deploy();
@@ -192,6 +202,64 @@ export async function defaultDeploy() {
     owner.address,
     pyramidEscrowContract.address,
   );
+
+  // -----------------------------------------------> PYRAMID ESCROW Multi
+
+  const pyramidEscrowContractMulti = await new PyramidEscrowMulti__factory(
+    owner,
+  ).deploy();
+  await expect(
+    pyramidEscrowContractMulti.initialize(
+      'Pyramid',
+      'PYR',
+      domain.name,
+      domain.version,
+      ethers.constants.AddressZero,
+    ),
+  ).to.be.revertedWithCustomError(
+    pyramidEscrowContractMulti,
+    'Pyramid__InvalidAdminAddress',
+  );
+  await pyramidEscrowContractMulti.initialize(
+    'Pyramid',
+    'PYR',
+    domain.name,
+    domain.version,
+    owner.address,
+  );
+
+  await globalEscrowContract.grantRole(
+    await globalEscrowContract.DISTRIBUTOR_ROLE(),
+    pyramidEscrowContractMulti.address,
+  );
+
+  await pyramidEscrowContractMulti.grantRole(
+    await pyramidEscrowContractMulti.SIGNER_ROLE(),
+    questSigner.address,
+  );
+
+  await pyramidEscrowContractMulti.setTreasury(treasury.address);
+
+  await arkadaRewarderContract.grantRole(
+    await arkadaRewarderContract.OPERATOR_ROLE(),
+    pyramidEscrowContractMulti.address,
+  );
+
+  // -----------------------------------------------> FACTORY FOR PYRAMID ESCROW Multi
+
+  const factoryContractMulti = await new Factory__factory(owner).deploy();
+  await expect(
+    factoryContractMulti.initialize(
+      ethers.constants.AddressZero,
+      pyramidEscrowContractMulti.address,
+    ),
+  ).to.be.revertedWithCustomError(factoryContractMulti, 'Factory__ZeroAddress');
+  await factoryContractMulti.initialize(
+    owner.address,
+    pyramidEscrowContractMulti.address,
+  );
+
+  // -----------------------------------------------> CREATE ESCROW TEST
 
   const QUEST_ID = 'test';
   const QUEST_ID_HASH = ethers.utils.keccak256(
@@ -215,12 +283,31 @@ export async function defaultDeploy() {
     ],
     treasury: treasury.address,
   });
+  await createEscrowTest({
+    factoryContract: factoryContractMulti,
+    owner,
+    questId: QUEST_ID_HASH,
+    admin: admin.address,
+    whitelistedTokens: [
+      erc20Token.address,
+      erc721Token.address,
+      erc1155Token.address,
+    ],
+    treasury: treasury.address,
+  });
 
   const escrowAddress = await factoryContract.s_escrows(QUEST_ID_HASH);
   // Setup initial balances
   await erc20Token.mint(escrowAddress, ethers.utils.parseEther('1000'));
   await erc721Token.mint(escrowAddress, 1);
   await erc1155Token.mint(escrowAddress, 1, 100, '0x');
+
+  const escrowAddressMulti = await factoryContractMulti.s_escrows(
+    QUEST_ID_HASH,
+  );
+  await erc20Token.mint(escrowAddressMulti, ethers.utils.parseEther('1000'));
+  await erc721Token.mint(escrowAddressMulti, 3);
+  await erc1155Token.mint(escrowAddressMulti, 1, 100, '0x');
 
   await erc20Token.mint(
     globalEscrowContract.address,
@@ -234,11 +321,18 @@ export async function defaultDeploy() {
     to: escrowAddress,
     value: ethers.utils.parseEther('1'),
   });
+  // Send native tokens
+  await user.sendTransaction({
+    to: escrowAddressMulti,
+    value: ethers.utils.parseEther('1'),
+  });
 
   await user.sendTransaction({
     to: globalEscrowContract.address,
     value: ethers.utils.parseEther('1000'),
   });
+
+  // -----------------------------------------------> ARENA PVP V1
 
   const arenaDomain = {
     name: 'ArenaPVP',
@@ -341,6 +435,8 @@ export async function defaultDeploy() {
 
   const operatorRole = await arenaContract.OPERATOR_ROLE();
   await arenaContract.grantRole(operatorRole, owner.address);
+
+  // -----------------------------------------------> ARENA PVP V3
 
   const arenaContractV3 = await new ArkadaPVPArenaV3__factory(owner).deploy();
   await expect(
@@ -447,6 +543,11 @@ export async function defaultDeploy() {
       chainId,
       verifyingContract: pyramidEscrowContract.address,
     },
+    domainEscrowMulti: {
+      ...domain,
+      chainId,
+      verifyingContract: pyramidEscrowContractMulti.address,
+    },
     domainArena: {
       ...arenaDomain,
       chainId,
@@ -470,7 +571,9 @@ export async function defaultDeploy() {
       erc1155Token,
     },
     pyramidEscrowContract,
+    pyramidEscrowContractMulti,
     arkadaRewarderContract,
+    factoryContractMulti,
     arenaContract,
     arenaContractV3,
     arenaSigner,

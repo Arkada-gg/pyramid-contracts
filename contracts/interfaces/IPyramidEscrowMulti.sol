@@ -3,12 +3,10 @@ pragma solidity 0.8.22;
 
 import {IPyramidEscrowBase} from "./IPyramidEscrowBase.sol";
 
-/// @title IPyramidEscrow
+/// @title IPyramidEscrowMulti
 /// @dev Interface of the PyramidEscrow contract.
-interface IPyramidEscrow is IPyramidEscrowBase {
-    error Pyramid__MintedForQuestId();
-
-    /// @notice Emitted when a Pyramid is claimed
+interface IPyramidEscrowMulti is IPyramidEscrowBase {
+    /// @notice Emitted when a Pyramid is claimed for a multi quest
     /// @param questId The quest ID associated with the Pyramid
     /// @param tokenId The token ID of the minted Pyramid
     /// @param claimer Address of the Pyramid claimer
@@ -17,7 +15,8 @@ interface IPyramidEscrow is IPyramidEscrowBase {
     /// @param issueNumber The issue number of the Pyramid
     /// @param walletProvider The name of the wallet provider used for claiming
     /// @param embedOrigin The origin of the embed associated with the Pyramid
-    event PyramidClaim(
+    /// @param nonce The nonce of the Pyramid
+    event PyramidClaimMulti(
         string questId,
         uint256 indexed tokenId,
         address indexed claimer,
@@ -25,6 +24,7 @@ interface IPyramidEscrow is IPyramidEscrowBase {
         uint256 rewards,
         uint256 issueNumber,
         string walletProvider,
-        string embedOrigin
+        string embedOrigin,
+        uint256 nonce
     );
 }

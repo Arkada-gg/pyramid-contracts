@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     owner,
   );
 
-  const ARENA_ID = 102;
+  const ARENA_ID = 28;
 
   await arenaContract.emergencyClose(ARENA_ID);
 

@@ -7,6 +7,9 @@ export const PYRAMID_CONTRACT_NAME = 'Pyramid';
 export const PYRAMID_ESCROW_DEPLOY_TAG = 'PyramidEscrow';
 export const PYRAMID_ESCROW_CONTRACT_NAME = 'PyramidEscrow';
 
+export const PYRAMID_ESCROW_MULTI_DEPLOY_TAG = 'PyramidEscrowMulti';
+export const PYRAMID_ESCROW_MULTI_CONTRACT_NAME = 'PyramidEscrowMulti';
+
 export const GLOBAL_ESCROW_DEPLOY_TAG = 'GlobalEscrow';
 export const GLOBAL_ESCROW_CONTRACT_NAME = 'GlobalEscrow';
 

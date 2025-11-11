@@ -107,7 +107,7 @@ const upgradeFixture = async () => {
   };
 };
 
-describe.only('UPGRADE: ArkadaPVPArenaV3 -> ArkadaPVPArenaV4', () => {
+describe('UPGRADE: ArkadaPVPArenaV3 -> ArkadaPVPArenaV4', () => {
   it('deployment', async () => {
     await loadFixture(upgradeFixture);
   });
