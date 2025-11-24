@@ -6,6 +6,7 @@ export type Network =
   | 'sonic'
   | 'base'
   | 'monadtestnet'
+  | 'monad-mainnet'
   | 'arbitrum'
   | 'hyperevm'
   | 'megaeth-testnet'

@@ -89,6 +89,13 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
     globalEscrow: '0xa4e6101e26BD7d2C418aDb3bbF3189375678eb99',
   },
+  'monad-mainnet': {
+    arkadaRewarder: '',
+    pyramid: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
+    arena: '',
+    escrowFactory: '',
+    globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
+  },
 
   sepolia: undefined,
   hardhat: undefined,

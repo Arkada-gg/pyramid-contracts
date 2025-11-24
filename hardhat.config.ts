@@ -60,6 +60,7 @@ const config: HardhatUserConfig = {
       sonic: DEPLOYER,
       base: DEPLOYER,
       monadtestnet: DEPLOYER,
+      'monad-mainnet': DEPLOYER,
       arbitrum: DEPLOYER,
       hyperevm: DEPLOYER,
       plume: DEPLOYER,
@@ -79,6 +80,7 @@ const config: HardhatUserConfig = {
     sonic: getNetworkConfig('sonic'),
     base: getNetworkConfig('base'),
     monadtestnet: getNetworkConfig('monadtestnet'),
+    'monad-mainnet': getNetworkConfig('monad-mainnet'),
     arbitrum: getNetworkConfig('arbitrum'),
     hyperevm: getNetworkConfig('hyperevm'),
     plume: getNetworkConfig('plume'),
@@ -116,6 +118,7 @@ const config: HardhatUserConfig = {
       'pharos-testnet': ETHERSCAN_API_KEY_ARBITRUM ?? '',
       abstract: ETHERSCAN_API_KEY_ABSTRACT ?? '',
       monadtestnet: ETHERSCAN_API_KEY ?? '',
+      'monad-mainnet': ETHERSCAN_API_KEY ?? '',
     },
     customChains: [
       {
@@ -173,6 +176,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.etherscan.io/v2/api?chainid=10143',
           browserURL: 'https://testnet.monadscan.com/',
+        },
+      },
+      {
+        network: 'monad-mainnet',
+        chainId: 143,
+        urls: {
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=143',
+          browserURL: 'https://monadscan.com/',
         },
       },
     ],
