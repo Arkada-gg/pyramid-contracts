@@ -208,6 +208,14 @@ export async function defaultDeploy() {
   const pyramidEscrowContractMulti = await new PyramidEscrowMulti__factory(
     owner,
   ).deploy();
+  console.log(
+    'pyramidEscrowContractMulti address:',
+    pyramidEscrowContractMulti.filters['PyramidClaimMulti'],
+  );
+  console.log(
+    'pyramidEscrowContractMulti address:',
+    pyramidEscrowContractMulti.interface.getEventTopic('PyramidClaimMulti'),
+  );
   await expect(
     pyramidEscrowContractMulti.initialize(
       'Pyramid',

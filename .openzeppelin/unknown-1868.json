@@ -79,6 +79,16 @@
       "address": "0x971E77D2823A8311923a69d62021E3311502C7Be",
       "txHash": "0x23f72a2dbcc5fb102b55df6b82aa8011cf350effefd2d501f48efe5df5f7d592",
       "kind": "transparent"
+    },
+    {
+      "address": "0xFc4bd5C70D3190ce042857d5138670604a6a0B04",
+      "txHash": "0x226eb2482d3776557d885ae208a2f309a0a5f11c37b8bf6c98b79125c71ef3f6",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xe8F84D11a97D0e9Fb51DAE5a0f42857745e30634",
+      "txHash": "0xf8996d916662ecf93bc76c3aade5e52e9cecb9c62bd09757d36be657aeff4efb",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -2145,6 +2155,109 @@
           },
           "t_mapping(t_bytes32,t_bool)": {
             "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "a100ec8e68b24e72691b1cbfbff067e4a4fb064ee9a00a10d258533fa266f43d": {
+      "address": "0x33a13D24f985B545CF5Be3A65C5f81dA4Be80319",
+      "txHash": "0x5ca95ff941865a3e41b35bb5f6744398f82242194df47a7ac0d5efe036f60f4d",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "PyramidEscrowMulti",
+            "src": "contracts/PyramidEscrowMulti.sol:42"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "PyramidEscrowMulti",
+            "src": "contracts/PyramidEscrowMulti.sol:43"
+          },
+          {
+            "label": "s_questIssueNumbers",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "PyramidEscrowMulti",
+            "src": "contracts/PyramidEscrowMulti.sol:64"
+          },
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "PyramidEscrowMulti",
+            "src": "contracts/PyramidEscrowMulti.sol:65"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "PyramidEscrowMulti",
+            "src": "contracts/PyramidEscrowMulti.sol:66"
+          },
+          {
+            "label": "s_treasury",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "PyramidEscrowMulti",
+            "src": "contracts/PyramidEscrowMulti.sol:68"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "PyramidEscrowMulti",
+            "src": "contracts/PyramidEscrowMulti.sol:75"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
             "numberOfBytes": "32"
           },
           "t_mapping(t_bytes32,t_uint256)": {
