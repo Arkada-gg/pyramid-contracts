@@ -23,8 +23,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const TREASURY = '0x2b412bfeaefaefc03134ff62d86ca5bb3359f68a';
   // =====================
 
-  console.log('BEFORE');
-
   const deployment = await hre.upgrades.deployProxy(
     await hre.ethers.getContractFactory(GLOBAL_ESCROW_CONTRACT_NAME, owner),
     [ADMIN, WHITELISTED_TOKENS, TREASURY],
@@ -32,7 +30,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       unsafeAllow: ['constructor'],
     },
   );
-  console.log('AFTER');
 
   if (deployment.deployTransaction) {
     console.log('Waiting 5 blocks...');

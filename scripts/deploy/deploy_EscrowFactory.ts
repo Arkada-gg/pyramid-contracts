@@ -20,7 +20,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   // initialise params <=========
   const ADMIN = deployer; // Set admin address here
-  const PYRAMID = addresses?.pyramid; // Set arkada rewarder address here
+  const PYRAMID = addresses?.pyramid;
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(

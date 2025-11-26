@@ -68,6 +68,7 @@ const config: HardhatUserConfig = {
       abstract: DEPLOYER,
       'megaeth-testnet': DEPLOYER,
       'pharos-testnet': DEPLOYER,
+      unichain: DEPLOYER,
     },
   },
   // verify: {
@@ -88,6 +89,7 @@ const config: HardhatUserConfig = {
     abstract: getNetworkConfig('abstract'),
     'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
     'pharos-testnet': getNetworkConfig('pharos-testnet'),
+    unichain: getNetworkConfig('unichain'),
 
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,6 +121,7 @@ const config: HardhatUserConfig = {
       abstract: ETHERSCAN_API_KEY_ABSTRACT ?? '',
       monadtestnet: ETHERSCAN_API_KEY ?? '',
       'monad-mainnet': ETHERSCAN_API_KEY ?? '',
+      unichain: ETHERSCAN_API_KEY ?? '',
     },
     customChains: [
       {
@@ -184,6 +187,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.etherscan.io/v2/api?chainid=143',
           browserURL: 'https://monadscan.com/',
+        },
+      },
+      {
+        network: 'unichain',
+        chainId: 130,
+        urls: {
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=130',
+          browserURL: 'https://uniscan.xyz/',
         },
       },
     ],

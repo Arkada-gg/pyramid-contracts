@@ -93,7 +93,14 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     arkadaRewarder: '',
     pyramid: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
     arena: '',
-    escrowFactory: '',
+    escrowFactory: '0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989',
+    globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
+  },
+  unichain: {
+    arkadaRewarder: '',
+    pyramid: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
+    arena: '',
+    escrowFactory: '0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989',
     globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
   },
 

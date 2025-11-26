@@ -35,6 +35,9 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   'monad-mainnet': ALCHEMY_KEY
     ? `https://monad-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://rpc1.monad.xyz`,
+  unichain: ALCHEMY_KEY
+    ? `https://unichain-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+    : 'https://0xrpc.io/uni',
 
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
@@ -56,6 +59,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   'megaeth-testnet': 'auto',
   'pharos-testnet': 'auto',
   'monad-mainnet': 'auto',
+  unichain: 'auto',
 
   sepolia: 'auto',
   hardhat: 0,
@@ -75,6 +79,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   'megaeth-testnet': 6342,
   'pharos-testnet': 688688,
   'monad-mainnet': 143,
+  unichain: 130,
 
   sepolia: 11155111,
   hardhat: 31337,
@@ -94,6 +99,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   'megaeth-testnet': MNEMONIC_PROD,
   'pharos-testnet': MNEMONIC_PROD,
   'monad-mainnet': MNEMONIC_PROD,
+  unichain: MNEMONIC_PROD,
 
   sepolia: MNEMONIC_DEV,
   hardhat: MNEMONIC_DEV,
@@ -113,6 +119,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   'megaeth-testnet': undefined,
   'pharos-testnet': undefined,
   'monad-mainnet': undefined,
+  unichain: undefined,
 
   sepolia: undefined,
   hardhat: undefined,
@@ -132,6 +139,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   'megaeth-testnet': 999999,
   'pharos-testnet': 999999,
   'monad-mainnet': 999999,
+  unichain: undefined,
 
   sepolia: 999999,
   hardhat: undefined,
@@ -151,6 +159,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   'megaeth-testnet': undefined,
   'pharos-testnet': undefined,
   'monad-mainnet': undefined,
+  unichain: undefined,
 
   sepolia: undefined,
   hardhat: 300 * 10 ** 6,
@@ -170,6 +179,7 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   'megaeth-testnet': undefined,
   'pharos-testnet': undefined,
   'monad-mainnet': undefined,
+  unichain: undefined,
 
   sepolia: undefined,
   hardhat: 0,

@@ -13,6 +13,7 @@ export type Network =
   | 'pharos-testnet'
   | 'plume'
   | 'somnia'
+  | 'unichain'
   | 'abstract'
   | 'hardhat'
   | 'localhost';
