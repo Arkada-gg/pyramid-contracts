@@ -3,9 +3,9 @@ pragma solidity 0.8.22;
 
 import {ITokenType} from "../escrow/interfaces/ITokenType.sol";
 
-/// @title IPyramidEscrow
+/// @title IPyramidEscrowMultiV1
 /// @dev Interface of the PyramidEscrow contract.
-interface IPyramidEscrowBase is ITokenType {
+interface IPyramidEscrowMultiV1 is ITokenType {
     error Pyramid__IsNotSigner();
     error Pyramid__MintingIsNotActive();
     error Pyramid__FeeNotEnough();
@@ -24,6 +24,7 @@ interface IPyramidEscrowBase is ITokenType {
     error Pyramid__TreasuryNotSet();
     error Pyramid__InvalidAdminAddress();
     error Pyramid__ZeroAddress();
+    error Pyramid__MintedForQuestId();
 
     enum QuestType {
         QUEST,
@@ -114,6 +115,28 @@ interface IPyramidEscrowBase is ITokenType {
     /// @param amount ether amount
     event TreasuryPayout(address indexed caller, uint256 amount);
 
+    /// @notice Emitted when a Pyramid is claimed for a multi quest
+    /// @param questId The quest ID associated with the Pyramid
+    /// @param tokenId The token ID of the minted Pyramid
+    /// @param claimer Address of the Pyramid claimer
+    /// @param price The price paid for the Pyramid
+    /// @param rewards The rewards paid for the Pyramid
+    /// @param issueNumber The issue number of the Pyramid
+    /// @param walletProvider The name of the wallet provider used for claiming
+    /// @param embedOrigin The origin of the embed associated with the Pyramid
+    /// @param nonce The nonce of the Pyramid
+    event PyramidClaimMulti(
+        string questId,
+        uint256 indexed tokenId,
+        address indexed claimer,
+        uint256 price,
+        uint256 rewards,
+        uint256 issueNumber,
+        string walletProvider,
+        string embedOrigin,
+        uint256 nonce
+    );
+
     /// @dev Represents the data needed for minting a Pyramid.
     /// @param questId The ID of the quest associated with the Pyramid
     /// @param nonce A unique number to prevent replay attacks
@@ -149,7 +172,6 @@ interface IPyramidEscrowBase is ITokenType {
     }
 
     /// @dev Contains data about the token rewards associated with a Pyramid.
-    /// @param questIdHash The hash of the quest ID from where the reward is coming from (for linked quests)
     /// @param tokenAddress The token address of the reward
     /// @param chainId The blockchain chain ID where the transaction occurred
     /// @param amount The amount of the reward (in ETH for this implementation)
@@ -158,7 +180,6 @@ interface IPyramidEscrowBase is ITokenType {
     /// @param rakeBps The rake basis points which will go to the treasury
     /// @param factoryAddress The escrow factory address
     struct RewardData {
-        bytes32 questIdHash;
         address tokenAddress;
         uint256 chainId;
         uint256 amount;

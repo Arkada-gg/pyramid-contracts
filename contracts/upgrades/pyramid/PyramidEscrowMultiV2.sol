@@ -20,16 +20,16 @@ import {
 import {
     ReentrancyGuardUpgradeable
 } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IFactory} from "./escrow/interfaces/IFactory.sol";
-import {IGlobalEscrow} from "./escrow/interfaces/IGlobalEscrow.sol";
+import {IFactory} from "../../escrow/interfaces/IFactory.sol";
+import {IGlobalEscrow} from "../../escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidEscrowMulti} from "./interfaces/IPyramidEscrowMulti.sol";
-import {IPyramidEscrowBase} from "./interfaces/IPyramidEscrowBase.sol";
+import {IPyramidEscrowMulti} from "../../interfaces/IPyramidEscrowMulti.sol";
+import {IPyramidEscrowBase} from "../../interfaces/IPyramidEscrowBase.sol";
 
-/// @title PyramidEscrowMulti
+/// @title PyramidEscrowMultiV2
 /// @dev Implementation of a multi quest NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
-contract PyramidEscrowMulti is
+contract PyramidEscrowMultiV2 is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
@@ -76,7 +76,7 @@ contract PyramidEscrowMulti is
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
-        return "1";
+        return "2";
     }
 
     /// @notice Initializes the Pyramid contract with necessary parameters

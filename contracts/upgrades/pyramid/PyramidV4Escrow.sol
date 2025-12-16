@@ -23,7 +23,8 @@ import {
 import {IFactory} from "../../escrow/interfaces/IFactory.sol";
 import {IGlobalEscrow} from "../../escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidV4Escrow} from "../interfaces/IPyramidV4Escrow.sol";
+import {IPyramidEscrow} from "../../interfaces/IPyramidEscrow.sol";
+import {IPyramidEscrowBase} from "../../interfaces/IPyramidEscrowBase.sol";
 
 /// @title PyramidV4Escrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
@@ -34,7 +35,7 @@ contract PyramidV4Escrow is
     AccessControlUpgradeable,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
-    IPyramidV4Escrow
+    IPyramidEscrow
 {
     using ECDSA for bytes32;
 
@@ -98,7 +99,7 @@ contract PyramidV4Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV4Escrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function mintPyramid(
         PyramidData calldata pyramidData,
@@ -498,7 +499,7 @@ contract PyramidV4Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV4Escrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function setIsMintingActive(
         bool _isMintingActive
@@ -508,7 +509,7 @@ contract PyramidV4Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV4Escrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function setTreasury(
         address _treasury
@@ -519,7 +520,7 @@ contract PyramidV4Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV4Escrow
+     * @inheritdoc IPyramidEscrowBase
      */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 withdrawAmount = address(this).balance;
