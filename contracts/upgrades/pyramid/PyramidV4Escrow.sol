@@ -23,18 +23,18 @@ import {
 import {IFactory} from "../../escrow/interfaces/IFactory.sol";
 import {IGlobalEscrow} from "../../escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IPyramidV3Escrow} from "../interfaces/IPyramidV3Escrow.sol";
+import {IPyramidV4Escrow} from "../interfaces/IPyramidV4Escrow.sol";
 
-/// @title PyramidV3Escrow
+/// @title PyramidV4Escrow
 /// @dev Implementation of an NFT smart contract with EIP712 signatures.
 /// The contract is upgradeable using OpenZeppelin's TransparentUpgradeableProxy pattern.
-contract PyramidV3Escrow is
+contract PyramidV4Escrow is
     Initializable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
-    IPyramidV3Escrow
+    IPyramidV4Escrow
 {
     using ECDSA for bytes32;
 
@@ -50,7 +50,7 @@ contract PyramidV3Escrow is
         keccak256("FeeRecipient(address recipient,uint16 BPS)");
     bytes32 internal constant REWARD_DATA_HASH =
         keccak256(
-            "RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)"
+            "RewardData(bytes32 questIdHash,address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)"
         );
     bytes32 internal constant _PYRAMID_DATA_HASH =
         keccak256(
@@ -74,7 +74,7 @@ contract PyramidV3Escrow is
 
     bytes32 internal constant _PYRAMID_DATA_HASH_V2 =
         keccak256(
-            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward,GlobalRewardData globalReward)FeeRecipient(address recipient,uint16 BPS)GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)RewardData(address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)"
+            "PyramidData(string questId,uint256 nonce,uint256 price,address toAddress,string walletProvider,string tokenURI,string embedOrigin,TransactionData[] transactions,FeeRecipient[] recipients,RewardData reward,GlobalRewardData globalReward)FeeRecipient(address recipient,uint16 BPS)GlobalRewardData(address tokenAddress,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address escrowAddress)RewardData(bytes32 questIdHash,address tokenAddress,uint256 chainId,uint256 amount,uint256 tokenId,uint8 tokenType,uint256 rakeBps,address factoryAddress)TransactionData(string txHash,string networkChainId)"
         );
 
     /**
@@ -84,7 +84,7 @@ contract PyramidV3Escrow is
 
     /// @notice Returns the version of the Pyramid smart contract
     function pyramidVersion() external pure returns (string memory) {
-        return "3";
+        return "4";
     }
 
     /// @notice Retrieves the URI for a given token
@@ -98,7 +98,7 @@ contract PyramidV3Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV3Escrow
+     * @inheritdoc IPyramidV4Escrow
      */
     function mintPyramid(
         PyramidData calldata pyramidData,
@@ -187,7 +187,7 @@ contract PyramidV3Escrow is
         if (data.reward.chainId != 0) {
             if (data.reward.factoryAddress != address(0)) {
                 IFactory(data.reward.factoryAddress).distributeRewards(
-                    questIdHash,
+                    data.reward.questIdHash,
                     data.reward.tokenAddress,
                     data.toAddress,
                     data.reward.amount,
@@ -465,6 +465,7 @@ contract PyramidV3Escrow is
             keccak256(
                 abi.encode(
                     REWARD_DATA_HASH,
+                    data.questIdHash,
                     data.tokenAddress,
                     data.chainId,
                     data.amount,
@@ -497,7 +498,7 @@ contract PyramidV3Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV3Escrow
+     * @inheritdoc IPyramidV4Escrow
      */
     function setIsMintingActive(
         bool _isMintingActive
@@ -507,7 +508,7 @@ contract PyramidV3Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV3Escrow
+     * @inheritdoc IPyramidV4Escrow
      */
     function setTreasury(
         address _treasury
@@ -518,7 +519,7 @@ contract PyramidV3Escrow is
     }
 
     /**
-     * @inheritdoc IPyramidV3Escrow
+     * @inheritdoc IPyramidV4Escrow
      */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 withdrawAmount = address(this).balance;

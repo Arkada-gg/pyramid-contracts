@@ -21,6 +21,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const pyramid = await hre.ethers.getContractAt(
     PYRAMID_CONTRACT_NAME,
     addresses?.pyramid ?? '',
+    // '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
     owner,
   );
 

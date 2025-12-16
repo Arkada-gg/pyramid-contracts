@@ -9,6 +9,7 @@ import {
   PyramidEscrowMulti,
   PyramidV2Escrow,
   PyramidV3Escrow,
+  PyramidV4Escrow,
 } from '../../typechain-types';
 
 type CommonParams = {
@@ -16,6 +17,7 @@ type CommonParams = {
     | PyramidEscrow
     | PyramidV2Escrow
     | PyramidV3Escrow
+    | PyramidV4Escrow
     | PyramidEscrowMulti;
   owner: SignerWithAddress;
 };
@@ -125,9 +127,9 @@ export const mintPyramidTest = async (
     return;
   }
 
-  // await pyramidContract.connect(sender).mintPyramid(data, signature, { value });
+  await pyramidContract.connect(sender).mintPyramid(data, signature, { value });
 
-  await expect(
-    pyramidContract.connect(sender).mintPyramid(data, signature, { value }),
-  ).to.not.reverted;
+  // await expect(
+  //   pyramidContract.connect(sender).mintPyramid(data, signature, { value }),
+  // ).to.not.reverted;
 };

@@ -3,14 +3,12 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { PYRAMID_ESCROW_MULTI_CONTRACT_NAME } from '../../config';
-import { getCurrentAddresses } from '../../config/constants/addresses';
 import {
   logDeployProxy,
   tryEtherscanVerifyImplementation,
 } from '../../helpers/utils';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-  const addresses = getCurrentAddresses(hre);
   const { deployer } = await hre.getNamedAccounts();
   console.log('deployer', { deployer });
 
