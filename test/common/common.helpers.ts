@@ -177,8 +177,21 @@ export const signMintDataTyped = async (
     verifyingContract: string;
   },
 ) => {
+  // Remove questIdHash from reward data for signing (PyramidEscrow doesn't use it in signature)
+  const dataForSigning = {
+    ...data,
+    reward: {
+      tokenAddress: data.reward.tokenAddress,
+      chainId: data.reward.chainId,
+      amount: data.reward.amount,
+      tokenId: data.reward.tokenId,
+      tokenType: data.reward.tokenType,
+      rakeBps: data.reward.rakeBps,
+      factoryAddress: data.reward.factoryAddress,
+    },
+  };
   // Sign the hash directly
-  return await signer._signTypedData(domain, TYPES_V2, data);
+  return await signer._signTypedData(domain, TYPES_V2, dataForSigning);
 };
 
 const TYPES_V4 = {

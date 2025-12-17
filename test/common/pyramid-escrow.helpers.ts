@@ -6,7 +6,8 @@ import { IMintPyramidData, OptionalCommonParams } from './common.helpers';
 
 import {
   PyramidEscrow,
-  PyramidEscrowMulti,
+  PyramidEscrowMultiV1,
+  PyramidEscrowMultiV2,
   PyramidV2Escrow,
   PyramidV3Escrow,
   PyramidV4Escrow,
@@ -18,7 +19,8 @@ type CommonParams = {
     | PyramidV2Escrow
     | PyramidV3Escrow
     | PyramidV4Escrow
-    | PyramidEscrowMulti;
+    | PyramidEscrowMultiV1
+    | PyramidEscrowMultiV2;
   owner: SignerWithAddress;
 };
 

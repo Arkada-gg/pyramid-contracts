@@ -19,7 +19,7 @@ import {
   Pyramid__factory,
   // eslint-disable-next-line
   PyramidEscrow__factory,
-  PyramidEscrowMulti__factory,
+  PyramidEscrowMultiV1__factory,
 } from '../../typechain-types';
 
 export async function defaultDeploy() {
@@ -205,7 +205,7 @@ export async function defaultDeploy() {
 
   // -----------------------------------------------> PYRAMID ESCROW Multi
 
-  const pyramidEscrowContractMulti = await new PyramidEscrowMulti__factory(
+  const pyramidEscrowContractMulti = await new PyramidEscrowMultiV1__factory(
     owner,
   ).deploy();
   console.log(

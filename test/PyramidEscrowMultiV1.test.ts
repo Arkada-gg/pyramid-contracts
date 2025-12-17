@@ -12,7 +12,7 @@ import {
   withdrawTest,
 } from './common/pyramid-escrow.helpers';
 
-describe('PyramidEscrowMulti', () => {
+describe('PyramidEscrowMultiV1', () => {
   it('deployment', async () => {
     await loadFixture(defaultDeploy);
   });
