@@ -15,7 +15,7 @@ import {
   transferFromTest,
 } from './common/arkada-map-boost.helpers';
 
-describe.only('ArkadaMapBoost', () => {
+describe('ArkadaMapBoost', () => {
   it('deployment', async () => {
     await loadFixture(arkadaMapBoostDeploy);
   });

@@ -99,6 +99,11 @@
       "address": "0x467D58B7198ab3F6976F53a9b1d96991B2EE7a29",
       "txHash": "0x7bf3e080251496a5df2d114a3b6836a320a63a50941c14f8f3f9f853a71d5727",
       "kind": "transparent"
+    },
+    {
+      "address": "0xBc4603fEe7BabBE1feBD6B82443d98082a28b16e",
+      "txHash": "0x432caf34991166280c76cacccd69b84be46d63296d6f7f2a2e14140b725a7b1e",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -2506,6 +2511,97 @@
           },
           "t_mapping(t_uint256,t_string_storage)": {
             "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "bb7bdea7fb0e04a5803ab9d253085d9c644ee8f8ba1df01cd32063e419623135": {
+      "address": "0x7Df30032aa01F6aC3a98079467083b21A9B6B01b",
+      "txHash": "0x1f1f3d4c5ed4f5856859f46e3eb3fa0336b6d5a3799acba052bb8e394c92e93a",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "ArkadaMapBoost",
+            "src": "contracts/treasure-map/ArkadaMapBoost.sol:30"
+          },
+          {
+            "label": "s_baseURI",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_string_storage",
+            "contract": "ArkadaMapBoost",
+            "src": "contracts/treasure-map/ArkadaMapBoost.sol:31"
+          },
+          {
+            "label": "mintPrice",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ArkadaMapBoost",
+            "src": "contracts/treasure-map/ArkadaMapBoost.sol:33"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ArkadaMapBoost",
+            "src": "contracts/treasure-map/ArkadaMapBoost.sol:34"
+          },
+          {
+            "label": "treasury",
+            "offset": 1,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "ArkadaMapBoost",
+            "src": "contracts/treasure-map/ArkadaMapBoost.sol:35"
+          },
+          {
+            "label": "isActivated",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "ArkadaMapBoost",
+            "src": "contracts/treasure-map/ArkadaMapBoost.sol:37"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ArkadaMapBoost",
+            "src": "contracts/treasure-map/ArkadaMapBoost.sol:42"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
             "numberOfBytes": "32"
           },
           "t_string_storage": {
