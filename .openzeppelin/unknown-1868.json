@@ -104,6 +104,16 @@
       "address": "0xBc4603fEe7BabBE1feBD6B82443d98082a28b16e",
       "txHash": "0x432caf34991166280c76cacccd69b84be46d63296d6f7f2a2e14140b725a7b1e",
       "kind": "transparent"
+    },
+    {
+      "address": "0xD8636d63C251d1DcAAEd380Da814d2d406C77989",
+      "txHash": "0x698e60b934e9f0340ce10b169ee156ad623dba7432a3476fb395f8f33374240f",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x9a1D1B8eB209e16AaF3F56A7a0ea9B36E07B5cae",
+      "txHash": "0x073e16871c85070aee3a4b58b3dfc27dfb68fdd6ea5fb2cc83e369e55e345a52",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -2602,6 +2612,69 @@
           },
           "t_mapping(t_uint256,t_bool)": {
             "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "b4f943fb0cf0690ba8fdaa7749e6e8200358bb23fe2b610cdedd95d2f42fd0fa": {
+      "address": "0xA0e3B5a7b5Df5cD306AbEc8252F94c04A3EF67E2",
+      "txHash": "0x09222397665478a2a979fbd28e6cd375d02138633c2ea7ad084867df815ff01b",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "ArkadaMap",
+            "src": "contracts/treasure-map/ArkadaMap.sol:43"
+          },
+          {
+            "label": "isWhitelisted",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "ArkadaMap",
+            "src": "contracts/treasure-map/ArkadaMap.sol:46"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ArkadaMap",
+            "src": "contracts/treasure-map/ArkadaMap.sol:51"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
             "numberOfBytes": "32"
           },
           "t_string_storage": {

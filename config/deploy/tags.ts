@@ -25,4 +25,7 @@ export const ARENA_V3_CONTRACT_NAME = 'ArkadaPVPArenaV3';
 export const ARKADA_MAP_BOOST_DEPLOY_TAG = 'ArkadaMapBoost';
 export const ARKADA_MAP_BOOST_CONTRACT_NAME = 'ArkadaMapBoost';
 
+export const ARKADA_MAP_DEPLOY_TAG = 'ArkadaMap';
+export const ARKADA_MAP_CONTRACT_NAME = 'ArkadaMap';
+
 export const POST_DEPLOY_TAG = 'POST_DEPLOY';

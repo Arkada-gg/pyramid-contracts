@@ -2,7 +2,7 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-import { ARKADA_MAP_BOOST_CONTRACT_NAME } from '../../config';
+import { ARKADA_MAP_CONTRACT_NAME } from '../../config';
 import {
   logDeployProxy,
   tryEtherscanVerifyImplementation,
@@ -14,21 +14,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   const owner = await hre.ethers.getSigner(deployer);
 
-  console.log('Deploying ArkadaMapBoost...');
+  console.log('Deploying ArkadaMap...');
 
   // initialise params <=========
-  const NAME = 'ArkadaMapBoost';
-  const SYMBOL = 'BOOSTTEST2';
-  const BASE_URI = 'https://api.arkada.com/mapboost/';
+  const BASE_URI = 'https://api.arkada.com/map/';
+  // const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
   const ADMIN = deployer; // Set admin address here
-  const TREASURY = deployer;
-  // const MINT_PRICE = parseEther('0.1'); // 0.1 ETH
-  const MINT_PRICE = 1; // 0.1 ETH
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(
-    await hre.ethers.getContractFactory(ARKADA_MAP_BOOST_CONTRACT_NAME, owner),
-    [NAME, SYMBOL, BASE_URI, ADMIN, TREASURY, MINT_PRICE],
+    await hre.ethers.getContractFactory(ARKADA_MAP_CONTRACT_NAME, owner),
+    [ADMIN, BASE_URI],
     {
       unsafeAllow: ['constructor'],
     },
@@ -42,7 +38,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log('Waited.');
   }
 
-  await logDeployProxy(hre, ARKADA_MAP_BOOST_CONTRACT_NAME, deployment.address);
+  await logDeployProxy(hre, ARKADA_MAP_CONTRACT_NAME, deployment.address);
   await tryEtherscanVerifyImplementation(hre, deployment.address);
 };
 
