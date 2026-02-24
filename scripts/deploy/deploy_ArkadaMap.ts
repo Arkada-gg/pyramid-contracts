@@ -17,7 +17,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log('Deploying ArkadaMap...');
 
   // initialise params <=========
-  const BASE_URI = 'https://api.arkada.com/map/';
+  const BASE_URI = 'https://bafybeigf6tqrhlw6ymzx2jfmcplrdxpaas7jb2wc26y6esw623cxwzou6m.ipfs.w3s.link/metadata.json';
   // const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
   const ADMIN = deployer; // Set admin address here
   // =====================

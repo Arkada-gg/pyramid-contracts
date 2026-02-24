@@ -69,6 +69,7 @@ const config: HardhatUserConfig = {
       'megaeth-testnet': DEPLOYER,
       'pharos-testnet': DEPLOYER,
       unichain: DEPLOYER,
+      'bsc-mainnet': DEPLOYER,
     },
   },
   // verify: {
@@ -90,6 +91,7 @@ const config: HardhatUserConfig = {
     'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
     'pharos-testnet': getNetworkConfig('pharos-testnet'),
     unichain: getNetworkConfig('unichain'),
+    'bsc-mainnet': getNetworkConfig('bsc-mainnet'),
 
     sepolia: getNetworkConfig('sepolia'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,6 +124,7 @@ const config: HardhatUserConfig = {
       monadtestnet: ETHERSCAN_API_KEY ?? '',
       'monad-mainnet': ETHERSCAN_API_KEY ?? '',
       unichain: ETHERSCAN_API_KEY ?? '',
+      bsc: ETHERSCAN_API_KEY ?? '',
     },
     customChains: [
       {

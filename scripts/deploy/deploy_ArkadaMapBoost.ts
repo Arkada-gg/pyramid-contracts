@@ -2,6 +2,7 @@ import * as hre from 'hardhat';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
+import { parseEther } from 'ethers/lib/utils';
 import { ARKADA_MAP_BOOST_CONTRACT_NAME } from '../../config';
 import {
   logDeployProxy,
@@ -17,13 +18,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   console.log('Deploying ArkadaMapBoost...');
 
   // initialise params <=========
-  const NAME = 'ArkadaMapBoost';
-  const SYMBOL = 'BOOSTTEST2';
-  const BASE_URI = 'https://api.arkada.com/mapboost/';
+  const NAME = 'Field Medkit';
+  const SYMBOL = 'MEDKIT';
+  const BASE_URI = 'https://bafybeihcnyjhb7bk2vgvwiwep5eur67hda3vioi2pnquti37cqr2aetzea.ipfs.w3s.link/metadata.json';
   const ADMIN = deployer; // Set admin address here
-  const TREASURY = deployer;
-  // const MINT_PRICE = parseEther('0.1'); // 0.1 ETH
-  const MINT_PRICE = 1; // 0.1 ETH
+  const TREASURY = '0x4a665E6785556624324637695C4A20465D5D7b74';
+  const MINT_PRICE = parseEther('0.01'); // 0.01 ETH
+  // const MINT_PRICE = 1; // 0.1 ETH
   // =====================
 
   const deployment = await hre.upgrades.deployProxy(

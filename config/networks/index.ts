@@ -38,6 +38,7 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   unichain: ALCHEMY_KEY
     ? `https://unichain-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : 'https://0xrpc.io/uni',
+  'bsc-mainnet': 'https://bsc-dataseed.bnbchain.org',
 
   sepolia: ALCHEMY_KEY
     ? `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`
@@ -60,7 +61,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   'pharos-testnet': 'auto',
   'monad-mainnet': 'auto',
   unichain: 'auto',
-
+  'bsc-mainnet': 'auto',
   sepolia: 'auto',
   hardhat: 0,
   localhost: 0,
@@ -80,7 +81,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   'pharos-testnet': 688688,
   'monad-mainnet': 143,
   unichain: 130,
-
+  'bsc-mainnet': 56,
   sepolia: 11155111,
   hardhat: 31337,
   localhost: 31337,
@@ -100,7 +101,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   'pharos-testnet': MNEMONIC_PROD,
   'monad-mainnet': MNEMONIC_PROD,
   unichain: MNEMONIC_PROD,
-
+  'bsc-mainnet': MNEMONIC_PROD,
   sepolia: MNEMONIC_DEV,
   hardhat: MNEMONIC_DEV,
   localhost: MNEMONIC_DEV,
@@ -120,7 +121,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   'pharos-testnet': undefined,
   'monad-mainnet': undefined,
   unichain: undefined,
-
+  'bsc-mainnet': undefined,
   sepolia: undefined,
   hardhat: undefined,
   localhost: undefined,
@@ -140,7 +141,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   'pharos-testnet': 999999,
   'monad-mainnet': 999999,
   unichain: undefined,
-
+  'bsc-mainnet': undefined,
   sepolia: 999999,
   hardhat: undefined,
   localhost: 999999,
@@ -160,7 +161,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   'pharos-testnet': undefined,
   'monad-mainnet': undefined,
   unichain: undefined,
-
+  'bsc-mainnet': undefined,
   sepolia: undefined,
   hardhat: 300 * 10 ** 6,
   localhost: undefined,
@@ -180,7 +181,7 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   'pharos-testnet': undefined,
   'monad-mainnet': undefined,
   unichain: undefined,
-
+  'bsc-mainnet': undefined,
   sepolia: undefined,
   hardhat: 0,
   localhost: undefined,

@@ -8,6 +8,7 @@ export interface ArkadaAddresses {
   arena?: string;
   escrowFactory?: string;
   globalEscrow?: string;
+  arkadaMap?: string;
 }
 
 export const arkadaAddressesPerNetwork: ConfigPerNetwork<
@@ -22,6 +23,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     globalEscrow: '0x971E77D2823A8311923a69d62021E3311502C7Be',
     pyramidEscrowMulti: '0x467D58B7198ab3F6976F53a9b1d96991B2EE7a29',
     // pyramidEscrowMulti: '0xe8F84D11a97D0e9Fb51DAE5a0f42857745e30634', // dev
+    arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
   },
   sonic: {
     arkadaRewarder: '0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617',
@@ -118,6 +120,14 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     escrowFactory: '0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989',
     globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
     pyramidEscrowMulti: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
+  },
+  'bsc-mainnet': {
+    arkadaRewarder: '',
+    pyramid: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
+    arena: '',
+    escrowFactory: '0x30410050CB1eBCF21741c9D3F817C386401f82fd',
+    globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
+    pyramidEscrowMulti: '',
   },
 
   sepolia: undefined,

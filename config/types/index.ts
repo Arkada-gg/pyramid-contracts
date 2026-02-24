@@ -15,6 +15,7 @@ export type Network =
   | 'somnia'
   | 'unichain'
   | 'abstract'
+  | 'bsc-mainnet'
   | 'hardhat'
   | 'localhost';
 export type RpcUrl =
