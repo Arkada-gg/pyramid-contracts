@@ -25,6 +25,11 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     // pyramidEscrowMulti: '0xe8F84D11a97D0e9Fb51DAE5a0f42857745e30634', // dev
     arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
   },
+  tempo: {
+    pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',
+    globalEscrow: '0x26189A7C19C99119E2B6c027de6a9EB75d0Bc051',
+    escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
+  },
   sonic: {
     arkadaRewarder: '0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617',
     pyramid: '0xE99F2AEfff9CCff34832747479Bd84658495F50A',

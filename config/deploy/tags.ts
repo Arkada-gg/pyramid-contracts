@@ -28,4 +28,7 @@ export const ARKADA_MAP_BOOST_CONTRACT_NAME = 'ArkadaMapBoost';
 export const ARKADA_MAP_DEPLOY_TAG = 'ArkadaMap';
 export const ARKADA_MAP_CONTRACT_NAME = 'ArkadaMap';
 
+export const PYRAMID_ESCROW_FEE_TOKEN_DEPLOY_TAG = 'PyramidEscrowFeeToken';
+export const PYRAMID_ESCROW_FEE_TOKEN_CONTRACT_NAME = 'PyramidEscrowFeeToken';
+
 export const POST_DEPLOY_TAG = 'POST_DEPLOY';

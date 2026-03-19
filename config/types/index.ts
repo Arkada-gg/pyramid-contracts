@@ -16,6 +16,7 @@ export type Network =
   | 'unichain'
   | 'abstract'
   | 'bsc-mainnet'
+  | 'tempo'
   | 'hardhat'
   | 'localhost';
 export type RpcUrl =
