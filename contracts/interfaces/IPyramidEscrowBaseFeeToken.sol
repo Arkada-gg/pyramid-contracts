@@ -24,6 +24,7 @@ interface IPyramidEscrowBaseFeeToken is ITokenType {
     error Pyramid__TreasuryNotSet();
     error Pyramid__InvalidAdminAddress();
     error Pyramid__ZeroAddress();
+    error Pyramid__FeeTokenNotSet();
 
     enum QuestType {
         QUEST,
@@ -104,6 +105,8 @@ interface IPyramidEscrowBaseFeeToken is ITokenType {
     /// @notice Emitted when the treasury address is updated
     /// @param newTreasury The new treasury address
     event UpdatedTreasury(address indexed newTreasury);
+
+
 
     /// @notice Emitted when the Arkada rewarder address is updated
     /// @param newArkadaRewarder The new Arkada rewarder address
@@ -210,6 +213,8 @@ interface IPyramidEscrowBaseFeeToken is ITokenType {
     /// @dev Can only be called by an account with the default admin role.
     /// @param _treasury Address of the new treasury to receive fees
     function setTreasury(address _treasury) external;
+
+
 
     /// @notice Withdraws the contract's balance to the message sender
     /// @dev Can only be called by an account with the default admin role.

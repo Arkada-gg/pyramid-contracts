@@ -23,6 +23,7 @@ import {
 import {IFactory} from "./escrow/interfaces/IFactory.sol";
 import {IGlobalEscrow} from "./escrow/interfaces/IGlobalEscrow.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IPyramidEscrowFeeToken} from "./interfaces/IPyramidEscrowFeeToken.sol";
 import {
     IPyramidEscrowBaseFeeToken
@@ -40,6 +41,7 @@ contract PyramidEscrowFeeToken is
     IPyramidEscrowFeeToken
 {
     using ECDSA for bytes32;
+    using SafeERC20 for IERC20;
 
     uint256 internal s_nextTokenId;
     bool public s_isMintingActive;
@@ -70,8 +72,7 @@ contract PyramidEscrowFeeToken is
     mapping(bytes32 => bool) internal s_quests_ids;
 
     address public s_treasury;
-    bytes4 private constant TRANSFER_ERC20 =
-        bytes4(keccak256(bytes("transferFrom(address,address,uint256)")));
+    IERC20 public s_feeToken;
 
     /**
      * @dev leaving a storage gap for futures updates
@@ -90,14 +91,17 @@ contract PyramidEscrowFeeToken is
         string memory _tokenSymbol,
         string memory _signingDomain,
         string memory _signatureVersion,
-        address _admin
+        address _admin,
+        address _feeToken
     ) external initializer {
         if (_admin == address(0)) revert Pyramid__InvalidAdminAddress();
+        if (_feeToken == address(0)) revert Pyramid__FeeTokenNotSet();
         __ERC721_init(_tokenName, _tokenSymbol);
         __EIP712_init(_signingDomain, _signatureVersion);
         __AccessControl_init();
         __ReentrancyGuard_init();
         s_isMintingActive = true;
+        s_feeToken = IERC20(_feeToken);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
     }
@@ -124,14 +128,8 @@ contract PyramidEscrowFeeToken is
         PyramidData calldata pyramidData,
         bytes calldata signature
     ) external nonReentrant {
-        // Check if the minting function is currently active. If not, revert the transaction
         if (!s_isMintingActive) {
             revert Pyramid__MintingIsNotActive();
-        }
-
-        // Check if the sent value is at least equal to the price
-        if (msg.value < pyramidData.price) {
-            revert Pyramid__FeeNotEnough();
         }
 
         if (s_treasury == address(0)) {
@@ -187,7 +185,7 @@ contract PyramidEscrowFeeToken is
         }
 
         // process payments
-        _processNativePayouts(data);
+        _processTokenPayouts(data);
 
         // Perform the actual minting of the Pyramid
         _safeMint(data.toAddress, tokenId);
@@ -301,44 +299,32 @@ contract PyramidEscrowFeeToken is
         }
     }
 
-    /// @notice Processes fee payouts to specified recipients
+    /// @notice Processes fee payouts in ERC20 tokens to specified recipients
     /// @dev Distributes a portion of the minting fee to designated addresses based on their Basis Points (BPS)
     /// @param data The PyramidData struct containing payout details
-    function _processFeePayouts(PyramidData calldata data) internal {
+    function _processTokenPayouts(PyramidData calldata data) internal {
+        if (data.price == 0) return;
+
         uint256 totalReferrals;
 
         if (data.recipients.length > 0) {
-            // max basis points is 10k (100%)
             uint16 maxBps = 10_000;
-            uint256 contractBalance = address(this).balance;
             for (uint256 i = 0; i < data.recipients.length; ) {
                 if (data.recipients[i].BPS > maxBps) {
                     revert Pyramid__BPSTooHigh();
                 }
 
-                // Calculate the referral amount for each recipient
                 uint256 referralAmount = (data.price * data.recipients[i].BPS) /
                     maxBps;
                 totalReferrals = totalReferrals + referralAmount;
 
-                // Ensure the total payout does not exceed the cube price or contract balance
                 if (totalReferrals > data.price) {
                     revert Pyramid__ExcessiveFeePayout();
                 }
-                if (totalReferrals > contractBalance) {
-                    revert Pyramid__ExceedsContractBalance();
-                }
 
-                // Transfer the referral amount to the recipient
                 address recipient = data.recipients[i].recipient;
                 if (recipient != address(0)) {
-                    // Transfer the referrals amount and user rewards to the ArkadaRewarder
-                    (bool success, ) = payable(recipient).call{
-                        value: referralAmount
-                    }("");
-                    if (!success) {
-                        revert Pyramid__TransferFailed();
-                    }
+                    s_feeToken.safeTransferFrom(msg.sender, recipient, referralAmount);
                     emit FeePayout(recipient, referralAmount);
                 }
                 unchecked {
@@ -349,11 +335,7 @@ contract PyramidEscrowFeeToken is
 
         uint256 treasuryPayout = data.price - totalReferrals;
 
-        // Transfer the remaining amount to the treasury
-        (bool success, ) = payable(s_treasury).call{value: treasuryPayout}("");
-        if (!success) {
-            revert Pyramid__NativePaymentFailed();
-        }
+        s_feeToken.safeTransferFrom(msg.sender, s_treasury, treasuryPayout);
         emit TreasuryPayout(s_treasury, treasuryPayout);
     }
 
@@ -542,11 +524,8 @@ contract PyramidEscrowFeeToken is
      * @inheritdoc IPyramidEscrowBaseFeeToken
      */
     function withdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 withdrawAmount = address(this).balance;
-        (bool success, ) = msg.sender.call{value: withdrawAmount}("");
-        if (!success) {
-            revert Pyramid__WithdrawFailed();
-        }
+        uint256 withdrawAmount = s_feeToken.balanceOf(address(this));
+        s_feeToken.safeTransfer(msg.sender, withdrawAmount);
         emit ContractWithdrawal(withdrawAmount);
     }
 
@@ -565,5 +544,4 @@ contract PyramidEscrowFeeToken is
         return super.supportsInterface(interfaceId);
     }
 
-    receive() external payable {}
 }
