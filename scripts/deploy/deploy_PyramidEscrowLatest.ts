@@ -18,7 +18,7 @@ const func = async (hre: HardhatRuntimeEnvironment) => {
   // ============ initialise params ============
   const TOKEN_NAME = 'Pyramid';
   const TOKEN_SYMBOL = 'PYR';
-  const SIGNING_DOMAIN = 'pyramid';
+  const SIGNING_DOMAIN = 'Pyramid';
   const SIGNATURE_VERSION = '1';
   const ADMIN = deployer; // replace with multisig / ops wallet before mainnet
   // ===========================================

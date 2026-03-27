@@ -129,6 +129,7 @@ const config: HardhatUserConfig = {
       'monad-mainnet': ETHERSCAN_API_KEY ?? '',
       unichain: ETHERSCAN_API_KEY ?? '',
       bsc: ETHERSCAN_API_KEY ?? '',
+      citrea: 'empty',
     },
     customChains: [
       {
@@ -202,6 +203,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.etherscan.io/v2/api?chainid=130',
           browserURL: 'https://uniscan.xyz/',
+        },
+      },
+      {
+        network: 'citrea',
+        chainId: 4114,
+        urls: {
+          apiURL: 'https://citreascan.com/api',
+          browserURL: 'https://citreascan.com',
         },
       },
     ],
