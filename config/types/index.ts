@@ -15,6 +15,7 @@ export type Network =
   | 'somnia'
   | 'unichain'
   | 'abstract'
+  | 'citrea'
   | 'bsc-mainnet'
   | 'tempo'
   | 'hardhat'
