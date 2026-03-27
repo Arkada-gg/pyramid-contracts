@@ -31,4 +31,7 @@ export const ARKADA_MAP_CONTRACT_NAME = 'ArkadaMap';
 export const PYRAMID_ESCROW_FEE_TOKEN_DEPLOY_TAG = 'PyramidEscrowFeeToken';
 export const PYRAMID_ESCROW_FEE_TOKEN_CONTRACT_NAME = 'PyramidEscrowFeeToken';
 
+export const PYRAMID_ESCROW_LATEST_DEPLOY_TAG = 'PyramidEscrowLatest';
+export const PYRAMID_ESCROW_LATEST_CONTRACT_NAME = 'PyramidEscrowLatest';
+
 export const POST_DEPLOY_TAG = 'POST_DEPLOY';

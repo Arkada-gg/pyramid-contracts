@@ -134,6 +134,11 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
     pyramidEscrowMulti: '',
   },
+  citrea: {
+    pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',
+    globalEscrow: '0x26189A7C19C99119E2B6c027de6a9EB75d0Bc051',
+    escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
+  },
 
   sepolia: undefined,
   hardhat: undefined,

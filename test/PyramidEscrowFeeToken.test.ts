@@ -157,7 +157,7 @@ async function deployFeeToken() {
   };
 }
 
-describe.only('PyramidEscrowFeeToken', () => {
+describe('PyramidEscrowFeeToken', () => {
   describe('Deployment', () => {
     it('Should set the right admin role', async () => {
       const { pyramidContract, owner } = await loadFixture(deployFeeToken);
