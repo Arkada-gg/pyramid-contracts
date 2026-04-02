@@ -168,7 +168,7 @@ function buildMintData(
   };
 }
 
-describe.only('PyramidEscrowLatest', () => {
+describe('PyramidEscrowLatest', () => {
   describe('Deployment', () => {
     it('Should set the right admin role', async () => {
       const { pyramidContract, owner } = await loadFixture(deployLatest);
