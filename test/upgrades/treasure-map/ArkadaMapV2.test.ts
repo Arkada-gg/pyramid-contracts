@@ -72,6 +72,10 @@ const upgradeFixture = async () => {
     chainId,
     verifyingContract: arkadaMapV2.address,
   };
+  console.log(
+    'Map minted topic0: ',
+    arkadaMapV2.interface.getEventTopic('SignatureMinted'),
+  );
 
   return {
     owner,
@@ -91,6 +95,14 @@ const upgradeFixture = async () => {
 describe('UPGRADE: ArkadaMap V1 -> V2', () => {
   it('deployment', async () => {
     await loadFixture(upgradeFixture);
+  });
+
+  it('should revert when initializeV2 is called a second time', async () => {
+    const { arkadaMapV2, owner } = await loadFixture(upgradeFixture);
+
+    await expect(
+      arkadaMapV2.connect(owner).initializeV2(),
+    ).to.be.revertedWithCustomError(arkadaMapV2, 'InvalidInitialization');
   });
 
   it('should preserve V1 state after upgrade', async () => {

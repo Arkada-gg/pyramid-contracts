@@ -23,7 +23,8 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     globalEscrow: '0x971E77D2823A8311923a69d62021E3311502C7Be',
     pyramidEscrowMulti: '0x467D58B7198ab3F6976F53a9b1d96991B2EE7a29',
     // pyramidEscrowMulti: '0xe8F84D11a97D0e9Fb51DAE5a0f42857745e30634', // dev
-    arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
+    // arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
+    arkadaMap: '0x9a1D1B8eB209e16AaF3F56A7a0ea9B36E07B5cae',
   },
   tempo: {
     pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',
@@ -138,6 +139,11 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     pyramid: '0x587E81F7fe9729BA6130090f76fECDc602950398',
     globalEscrow: '0x26189A7C19C99119E2B6c027de6a9EB75d0Bc051',
     escrowFactory: '0x0A0AA8F43701E796Cc346f6DB5c6A102172ea098',
+  },
+  ink: {
+    pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',
+    globalEscrow: '0x26189A7C19C99119E2B6c027de6a9EB75d0Bc051',
+    escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
   },
 
   sepolia: undefined,

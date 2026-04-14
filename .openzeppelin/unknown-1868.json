@@ -2762,6 +2762,81 @@
           }
         }
       }
+    },
+    "8d7ba4d9c510b0e464200e4aac60371eb083f1951920c4d03df66d4499e9db34": {
+      "address": "0xb52B8797bBE2A84aC8Cdf77484f94B37Dd4C524d",
+      "txHash": "0xa5205a2395dc5a00b626f2a12cb65f7507152640f72d766ba5a7809c23d9f3c0",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "ArkadaMapV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapV2.sol:58"
+          },
+          {
+            "label": "isWhitelisted",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "ArkadaMapV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapV2.sol:61"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "ArkadaMapV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapV2.sol:65"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ArkadaMapV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapV2.sol:71"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
     }
   }
 }

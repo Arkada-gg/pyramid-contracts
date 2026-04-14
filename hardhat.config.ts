@@ -64,6 +64,7 @@ const config: HardhatUserConfig = {
       arbitrum: DEPLOYER,
       hyperevm: DEPLOYER,
       plume: DEPLOYER,
+      ink: DEPLOYER,
       somnia: DEPLOYER,
       abstract: DEPLOYER,
       'megaeth-testnet': DEPLOYER,
@@ -91,6 +92,7 @@ const config: HardhatUserConfig = {
     plume: getNetworkConfig('plume'),
     somnia: getNetworkConfig('somnia'),
     citrea: getNetworkConfig('citrea'),
+    ink: getNetworkConfig('ink'),
     abstract: getNetworkConfig('abstract'),
     'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
     'pharos-testnet': getNetworkConfig('pharos-testnet'),
@@ -130,6 +132,7 @@ const config: HardhatUserConfig = {
       unichain: ETHERSCAN_API_KEY ?? '',
       bsc: ETHERSCAN_API_KEY ?? '',
       citrea: 'empty',
+      ink: 'empty',
     },
     customChains: [
       {
@@ -211,6 +214,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://citreascan.com/api',
           browserURL: 'https://citreascan.com',
+        },
+      },
+      {
+        network: 'ink',
+        chainId: 57073,
+        urls: {
+          apiURL: 'https://explorer.inkonchain.com/api',
+          browserURL: 'https://explorer.inkonchain.com/',
         },
       },
     ],

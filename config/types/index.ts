@@ -18,6 +18,7 @@ export type Network =
   | 'citrea'
   | 'bsc-mainnet'
   | 'tempo'
+  | 'ink'
   | 'hardhat'
   | 'localhost';
 export type RpcUrl =
