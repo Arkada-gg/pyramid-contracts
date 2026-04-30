@@ -9,6 +9,7 @@ export interface ArkadaAddresses {
   escrowFactory?: string;
   globalEscrow?: string;
   arkadaMap?: string;
+  arkadaMapBoost?: string;
 }
 
 export const arkadaAddressesPerNetwork: ConfigPerNetwork<
@@ -23,8 +24,9 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     globalEscrow: '0x971E77D2823A8311923a69d62021E3311502C7Be',
     pyramidEscrowMulti: '0x467D58B7198ab3F6976F53a9b1d96991B2EE7a29',
     // pyramidEscrowMulti: '0xe8F84D11a97D0e9Fb51DAE5a0f42857745e30634', // dev
-    // arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
-    arkadaMap: '0x9a1D1B8eB209e16AaF3F56A7a0ea9B36E07B5cae',
+    arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
+    // arkadaMap: '0x9a1D1B8eB209e16AaF3F56A7a0ea9B36E07B5cae',
+    arkadaMapBoost: '0x7F0353c080e2797F0766FdcD73787234bB04ACBE',
   },
   tempo: {
     pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',

@@ -2837,6 +2837,97 @@
           }
         }
       }
+    },
+    "0c56c9a7d300cf4c3cdf4cea7151759ec95f808d5a021eafde81208b3217ed31": {
+      "address": "0x4C09b318A4c9854cCD105b63c9d86eb5d9310270",
+      "txHash": "0x8228cd05ac0b33ee56aedb6814951796c138df526f8bbacd933150d7a24be237",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "ArkadaMapBoostV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapBoostV2.sol:29"
+          },
+          {
+            "label": "s_baseURI",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_string_storage",
+            "contract": "ArkadaMapBoostV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapBoostV2.sol:30"
+          },
+          {
+            "label": "mintPrice",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "ArkadaMapBoostV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapBoostV2.sol:32"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bool",
+            "contract": "ArkadaMapBoostV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapBoostV2.sol:33"
+          },
+          {
+            "label": "treasury",
+            "offset": 1,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "ArkadaMapBoostV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapBoostV2.sol:34"
+          },
+          {
+            "label": "isActivated",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "ArkadaMapBoostV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapBoostV2.sol:36"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ArkadaMapBoostV2",
+            "src": "contracts/upgrades/treasure-map/ArkadaMapBoostV2.sol:41"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
     }
   }
 }
