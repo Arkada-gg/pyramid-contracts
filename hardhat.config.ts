@@ -70,6 +70,7 @@ const config: HardhatUserConfig = {
       'megaeth-testnet': DEPLOYER,
       'pharos-testnet': DEPLOYER,
       unichain: DEPLOYER,
+      pharos: DEPLOYER,
       tempo: DEPLOYER,
       citrea: DEPLOYER,
       'bsc-mainnet': DEPLOYER,
@@ -93,6 +94,7 @@ const config: HardhatUserConfig = {
     somnia: getNetworkConfig('somnia'),
     citrea: getNetworkConfig('citrea'),
     ink: getNetworkConfig('ink'),
+    pharos: getNetworkConfig('pharos'),
     abstract: getNetworkConfig('abstract'),
     'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
     'pharos-testnet': getNetworkConfig('pharos-testnet'),
@@ -133,6 +135,7 @@ const config: HardhatUserConfig = {
       bsc: ETHERSCAN_API_KEY ?? '',
       citrea: 'empty',
       ink: 'empty',
+      pharos: 'empty',
     },
     customChains: [
       {
@@ -174,6 +177,15 @@ const config: HardhatUserConfig = {
           apiURL:
             'https://api.socialscan.io/pharos-testnet/v1/explorer/command_api/contract',
           browserURL: 'https://pharos-testnet.socialscan.io/',
+        },
+      },
+      {
+        network: 'pharos',
+        chainId: 1672,
+        urls: {
+          apiURL:
+            'https://api.socialscan.io/pharos-mainnet/v1/explorer/command_api/contract',
+          browserURL: 'https://www.pharosscan.xyz/',
         },
       },
       {

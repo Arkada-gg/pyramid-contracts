@@ -90,6 +90,14 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     globalEscrow: '0x1AE93e93A8B421725F114a27c82237BEF4ada624',
     pyramidEscrowMulti: '',
   },
+  pharos: {
+    arkadaRewarder: '',
+    pyramid: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
+    arena: '',
+    escrowFactory: '0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989',
+    globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
+    pyramidEscrowMulti: '',
+  },
   plume: {
     arkadaRewarder: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
     pyramid: '0xF668DDa15336129BC9977e36d60c14220cdc63Ec',

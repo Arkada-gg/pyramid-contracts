@@ -11,6 +11,7 @@ export type Network =
   | 'hyperevm'
   | 'megaeth-testnet'
   | 'pharos-testnet'
+  | 'pharos'
   | 'plume'
   | 'somnia'
   | 'unichain'
