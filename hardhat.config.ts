@@ -125,7 +125,7 @@ const config: HardhatUserConfig = {
     apiKey: {
       soneium: ETHERSCAN_API_KEY_SONEIUM ?? '',
       sonic: ETHERSCAN_API_KEY_SONIC ?? '',
-      base: ETHERSCAN_API_KEY_BASE ?? '',
+      base: ETHERSCAN_API_KEY || ETHERSCAN_API_KEY_BASE || '',
       arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
       'pharos-testnet': ETHERSCAN_API_KEY_ARBITRUM ?? '',
       abstract: ETHERSCAN_API_KEY_ABSTRACT ?? '',
@@ -158,7 +158,7 @@ const config: HardhatUserConfig = {
         network: 'base',
         chainId: 8453,
         urls: {
-          apiURL: 'https://api.basescan.org/api/',
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=8453',
           browserURL: 'https://basescan.org',
         },
       },

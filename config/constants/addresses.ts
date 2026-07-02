@@ -26,7 +26,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     // pyramidEscrowMulti: '0xe8F84D11a97D0e9Fb51DAE5a0f42857745e30634', // dev
     arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
     // arkadaMap: '0x9a1D1B8eB209e16AaF3F56A7a0ea9B36E07B5cae',
-    arkadaMapBoost: '0x7F0353c080e2797F0766FdcD73787234bB04ACBE',
+    arkadaMapBoost: '0xb5bdBd49978f0ad8dCACcB0EFC86540aC76a494C',
   },
   tempo: {
     pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',
