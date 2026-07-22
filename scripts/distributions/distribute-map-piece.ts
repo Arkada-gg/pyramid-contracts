@@ -4,72 +4,93 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 import { getCurrentAddresses } from '../../config/constants/addresses';
 
-const ARKADA_MAP_BOOST_V2_CONTRACT_NAME = 'ArkadaMapBoostV2';
+const ARKADA_MAP_CONTRACT_NAME = 'ArkadaMap';
 
-const RECIPIENTS = [
-  '0x69ac7188ecb2e00b50e6e408c877acaba2b9b848',
-  '0x5ba5e30b05aa61cc6114292c1abaf9929d591965',
-  '0x58acd9be6b1284b5362aa340242f540f3b33df3a',
-  '0x2d832b4e4b39208109f4a6ffafeaaf4d6c63b57f',
-  '0x288a4e70eba5d4f92e28f8ccc561e9fc947304a1',
-  '0x22d2c9e7c66178e33898febf14ab4b33135d0abc',
-  '0x155a53d0c1b8b4aa0ae77116f968bca8c8e7230d',
-  '0x0057be07beef5d9b4beb9e2d147906e83d1915c8',
-  '0xfb44496ef7ce7dc94da1ec9f45115c80bba1778d',
-  '0xf801a1c2f1be24a0278dd3a8c0b3ff3d965d9d21',
-  '0xf61771b1808bf37b0d0a02d52b896c9decf2ed9e',
-  '0xf614ddc260c8e72efd5aec92e3a4e3ecc4c2a116',
-  '0xf572d207af78a35b0c773684c9c98e5c9b9b0ca9',
-  '0xf1a3262e48eff92d41c1cb8708fc2c5f592d9e76',
-  '0xeeecdf9946583e1624244df5fc399121dfb4604e',
-  '0xee83ae872f88554a00fc9fae7052823cb4c07f80',
-  '0xed80d5a03e833d05bf190e116f22e5e447b8e39a',
-  '0xec48ec785b6bb8f298fe4f4a7868ac4f679e4c39',
-  '0xeab804590011d0650fcb6c4da1870c6e9ca062d1',
-  '0xea7ced71d6c91bea15860e9d83c5e850864e4433',
-  '0xe961066d859d4922b51269801cd26a2351c4f1e3',
-  '0xe507efaf7c2f73cbb486e9e1c690b225b265dfb9',
-  '0xe4775ec96b072f77d613b6a9442dbba98237bc5b',
-  '0xe431119b2248c43f48b09e93e931b90d7fb2eed0',
-  '0xe3dd67e7a2579e0369ae0d449ef7e4a396000752',
-  '0xddda78690198398ea24c32faba940ed9582d3681',
-  '0xdd65c5e9d1d4124a4730a9bad9ba5784f9b1d1ec',
-  '0xd78d0cc81356b39bbe04377e4a6060de410b7ce0',
-  '0xd563e6a26a1d097da7d980bbe076c567f7fea62b',
-  '0xd4bc689aca0a4a0a80f6c144f0030378c2652621',
+/**
+ * Получатель частей карты (один адрес).
+ */
+const RECIPIENT = '0x69E4e6Df0f5ca236855a97268Ce0e62a2cF5AB76';
+
+/**
+ * Список частей карты (tokenId 0..11) и их количество для минта получателю.
+ * Пример: раздать по одной штуке частей 0, 3 и 7.
+ */
+const PIECES: { tokenId: number; amount: number }[] = [
+  { tokenId: 0, amount: 1 },
+  { tokenId: 1, amount: 1 },
+  { tokenId: 2, amount: 1 },
+  { tokenId: 3, amount: 1 },
+  { tokenId: 7, amount: 1 },
+  { tokenId: 9, amount: 1 },
+  { tokenId: 10, amount: 1 },
+  { tokenId: 11, amount: 1 },
 ];
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const addresses = getCurrentAddresses(hre);
-  const { deployer } = await hre.getNamedAccounts();
-  console.log('deployer', { deployer });
 
-  const owner = await hre.ethers.getSigner(deployer);
-
-  const proxyAddress = addresses?.arkadaMapBoost ?? '';
-  if (!proxyAddress) {
-    throw new Error('arkadaMapBoost address not configured for this network');
+  // Операторский ключ (с MINTER_ROLE) берём из env, а не из named accounts.
+  const operatorKey = process.env.PRIVATE_KEY_DEPLOYER;
+  if (!operatorKey) {
+    throw new Error('PRIVATE_KEY_DEPLOYER is not set in env');
   }
 
-  const boostContract = await hre.ethers.getContractAt(
-    ARKADA_MAP_BOOST_V2_CONTRACT_NAME,
+  const operator = new hre.ethers.Wallet(operatorKey, hre.ethers.provider);
+  console.log('operator', { operator: operator.address });
+
+  const proxyAddress = addresses?.arkadaMap ?? '';
+  if (!proxyAddress) {
+    throw new Error('arkadaMap address not configured for this network');
+  }
+
+  if (RECIPIENT === hre.ethers.ZeroAddress) {
+    throw new Error('RECIPIENT is not set');
+  }
+
+  const mapContract = await hre.ethers.getContractAt(
+    ARKADA_MAP_CONTRACT_NAME,
     proxyAddress,
-    owner,
+    operator,
   );
 
-  console.log(`Distributing MapBoost to ${RECIPIENTS.length} recipients...`);
+  // Проверяем, что операторский ключ действительно имеет MINTER_ROLE.
+  const minterRole = await mapContract.MINTER_ROLE();
+  const hasRole = await mapContract.hasRole(minterRole, operator.address);
+  if (!hasRole) {
+    throw new Error(
+      `Operator ${operator.address} does not have MINTER_ROLE on ${proxyAddress}`,
+    );
+  }
 
-  for (let i = 0; i < RECIPIENTS.length; i++) {
-    const recipient = RECIPIENTS[i];
-    console.log(`[${i + 1}/${RECIPIENTS.length}] Minting to ${recipient}...`);
+  console.log(
+    `Distributing ${PIECES.length} map piece(s) to ${RECIPIENT} from operator ${operator.address}...`,
+  );
 
-    const tx = await boostContract.adminMint(recipient);
+  for (let i = 0; i < PIECES.length; i++) {
+    const { tokenId, amount } = PIECES[i];
+
+    if (tokenId < 0 || tokenId >= 12) {
+      throw new Error(`Invalid tokenId ${tokenId} (must be 0..11)`);
+    }
+    if (amount <= 0) {
+      throw new Error(`Invalid amount ${amount} for tokenId ${tokenId}`);
+    }
+
+    console.log(
+      `[${i + 1}/${
+        PIECES.length
+      }] Minting tokenId ${tokenId} x${amount} to ${RECIPIENT}...`,
+    );
+
+    const tx = await mapContract.mint(RECIPIENT, tokenId, amount);
     await tx.wait();
 
     console.log(`  ✓ TX: ${tx.hash}`);
   }
 
-  console.log(`Done. Distributed MapBoost to ${RECIPIENTS.length} addresses.`);
+  console.log(
+    `Done. Distributed ${PIECES.length} map piece(s) to ${RECIPIENT}.`,
+  );
 };
 
 func(hre).then(console.log).catch(console.error);

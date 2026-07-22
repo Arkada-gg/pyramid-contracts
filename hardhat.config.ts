@@ -67,6 +67,7 @@ const config: HardhatUserConfig = {
       ink: DEPLOYER,
       somnia: DEPLOYER,
       abstract: DEPLOYER,
+      robinhood: DEPLOYER,
       'megaeth-testnet': DEPLOYER,
       'pharos-testnet': DEPLOYER,
       unichain: DEPLOYER,
@@ -94,6 +95,7 @@ const config: HardhatUserConfig = {
     somnia: getNetworkConfig('somnia'),
     citrea: getNetworkConfig('citrea'),
     ink: getNetworkConfig('ink'),
+    robinhood: getNetworkConfig('robinhood'),
     pharos: getNetworkConfig('pharos'),
     abstract: getNetworkConfig('abstract'),
     'megaeth-testnet': getNetworkConfig('megaeth-testnet'),
@@ -129,6 +131,7 @@ const config: HardhatUserConfig = {
       arbitrum: ETHERSCAN_API_KEY_ARBITRUM ?? '',
       'pharos-testnet': ETHERSCAN_API_KEY_ARBITRUM ?? '',
       abstract: ETHERSCAN_API_KEY_ABSTRACT ?? '',
+      robinhood: ETHERSCAN_API_KEY_ABSTRACT ?? '',
       monadtestnet: ETHERSCAN_API_KEY ?? '',
       'monad-mainnet': ETHERSCAN_API_KEY ?? '',
       unichain: ETHERSCAN_API_KEY ?? '',
@@ -194,6 +197,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: 'https://api.abscan.org/api',
           browserURL: 'https://abscan.org/',
+        },
+      },
+      {
+        network: 'robinhood',
+        chainId: 4663,
+        urls: {
+          apiURL: 'https://robinhoodchain.blockscout.com/api',
+          browserURL: 'https://robinhoodchain.blockscout.com',
         },
       },
       {

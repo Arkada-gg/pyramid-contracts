@@ -12,6 +12,7 @@ export type Network =
   | 'megaeth-testnet'
   | 'pharos-testnet'
   | 'pharos'
+  | 'robinhood'
   | 'plume'
   | 'somnia'
   | 'unichain'

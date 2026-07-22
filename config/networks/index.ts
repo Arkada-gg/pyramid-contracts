@@ -13,9 +13,7 @@ const {
 } = ENV;
 
 export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
-  soneium: ALCHEMY_KEY
-    ? `https://soneium-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
-    : `https://rpc.soneium.org/`,
+  soneium: `https://rpc.soneium.org/`,
   sonic: ALCHEMY_KEY
     ? `https://sonic-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://rpc.soniclabs.com`,
@@ -32,6 +30,7 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   plume: 'https://rpc.plume.org',
   somnia: 'https://dream-rpc.somnia.network/',
   tempo: `https://tempo-mainnet.drpc.org`,
+  robinhood: `https://rpc.mainnet.chain.robinhood.com`,
   abstract: 'https://api.mainnet.abs.xyz',
   citrea: `https://rpc.mainnet.citrea.xyz`,
   ink: `https://ink.drpc.org`,
@@ -68,6 +67,7 @@ export const gasPrices: ConfigPerNetwork<number | 'auto' | undefined> = {
   'pharos-testnet': 'auto',
   'monad-mainnet': 'auto',
   unichain: 'auto',
+  robinhood: 'auto',
   pharos: 'auto',
   'bsc-mainnet': 'auto',
   sepolia: 'auto',
@@ -87,6 +87,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   somnia: 50312,
   pharos: 1672,
   abstract: 2741,
+  robinhood: 4663,
   tempo: 4217,
   ink: 57073,
   'megaeth-testnet': 6342,
@@ -109,6 +110,7 @@ export const mnemonics: ConfigPerNetwork<string | undefined> = {
   hyperevm: MNEMONIC_PROD,
   pharos: MNEMONIC_PROD,
   plume: MNEMONIC_PROD,
+  robinhood: MNEMONIC_PROD,
   tempo: MNEMONIC_PROD,
   somnia: MNEMONIC_PROD,
   abstract: MNEMONIC_PROD,
@@ -128,6 +130,7 @@ export const gases: ConfigPerNetwork<number | undefined> = {
   sonic: undefined,
   base: undefined,
   monadtestnet: undefined,
+  robinhood: undefined,
   arbitrum: undefined,
   hyperevm: undefined,
   plume: undefined,
@@ -154,6 +157,7 @@ export const timeouts: ConfigPerNetwork<number | undefined> = {
   monadtestnet: undefined,
   arbitrum: undefined,
   citrea: undefined,
+  robinhood: undefined,
   hyperevm: undefined,
   pharos: undefined,
   ink: undefined,
@@ -175,6 +179,7 @@ export const blockGasLimits: ConfigPerNetwork<number | undefined> = {
   soneium: undefined,
   sonic: undefined,
   base: undefined,
+  robinhood: undefined,
   pharos: undefined,
   citrea: undefined,
   monadtestnet: undefined,
@@ -207,6 +212,7 @@ export const initialBasesFeePerGas: ConfigPerNetwork<number | undefined> = {
   somnia: undefined,
   tempo: undefined,
   pharos: undefined,
+  robinhood: undefined,
   citrea: undefined,
   abstract: undefined,
   'megaeth-testnet': undefined,

@@ -26,7 +26,7 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     // pyramidEscrowMulti: '0xe8F84D11a97D0e9Fb51DAE5a0f42857745e30634', // dev
     arkadaMap: '0x005b96FE2e267bb0e668BdE007C9207ca1e3aD85',
     // arkadaMap: '0x9a1D1B8eB209e16AaF3F56A7a0ea9B36E07B5cae',
-    arkadaMapBoost: '0xb5bdBd49978f0ad8dCACcB0EFC86540aC76a494C',
+    arkadaMapBoost: '0x7F0353c080e2797F0766FdcD73787234bB04ACBE',
   },
   tempo: {
     pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',
@@ -154,6 +154,11 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     pyramid: '0x2AA3CF1839FA7273B9981c807FAc4246767d8031',
     globalEscrow: '0x26189A7C19C99119E2B6c027de6a9EB75d0Bc051',
     escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
+  },
+  robinhood: {
+    pyramid: '0x3db744585f892dc77750b2f4376B4Fc1Dd66d510',
+    globalEscrow: '0x4DF24Ab367C801187929FEb2841853DBa40208B0',
+    escrowFactory: '0x6cCDBf30F8944edCB7495E43A875Ec4Ce1802989',
   },
 
   sepolia: undefined,
