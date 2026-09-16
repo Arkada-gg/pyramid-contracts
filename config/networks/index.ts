@@ -24,16 +24,16 @@ export const rpcUrls: ConfigPerNetwork<RpcUrl> = {
   arbitrum: ALCHEMY_KEY
     ? `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     : `https://arbitrum-one-rpc.publicnode.com`,
-  hyperevm: 'https://rpc.hyperliquid.xyz/evm',
+  hyperevm: 'https://rpc.hypurrscan.io',
   'megaeth-testnet': `https://carrot.megaeth.com/rpc`,
   'pharos-testnet': 'https://testnet.dplabs-internal.com/',
   plume: 'https://rpc.plume.org',
-  somnia: 'https://dream-rpc.somnia.network/',
+  somnia: 'https://api.infra.mainnet.somnia.network',
   tempo: `https://tempo-mainnet.drpc.org`,
   robinhood: `https://rpc.mainnet.chain.robinhood.com`,
   abstract: 'https://api.mainnet.abs.xyz',
   citrea: `https://rpc.mainnet.citrea.xyz`,
-  ink: `https://ink.drpc.org`,
+  ink: `https://rpc-gel.inkonchain.com`,
   pharos: `https://infra.originstake.com/pharos/evm`,
   'monad-mainnet': ALCHEMY_KEY
     ? `https://monad-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
@@ -84,7 +84,7 @@ export const chainIds: ConfigPerNetwork<number> = {
   hyperevm: 999,
   plume: 98866,
   citrea: 4114,
-  somnia: 50312,
+  somnia: 5031,
   pharos: 1672,
   abstract: 2741,
   robinhood: 4663,

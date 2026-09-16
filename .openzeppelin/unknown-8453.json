@@ -54,6 +54,16 @@
       "address": "0xAF1eeA37C239AE88105cA9658378D75aeaf2e482",
       "txHash": "0x97902e4c59a9e2e7cc2d42ebf9cb4aadce82ab42cacf5104ec216d3494855807",
       "kind": "transparent"
+    },
+    {
+      "address": "0xB099B5728c20DFB923910Fe346eA8A47548ce00c",
+      "txHash": "0x3a7750344b4ee17a016e4276c87380e638ab549d22f337cc861ee2a4e978ddc3",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xb8EEE0fa14Cc5c41a7272C74b46DdcE959a6A6F8",
+      "txHash": "0xe236f735ff1e62ee6fb0018fab0fcf97adfa5dcc8a7200aa0dbd21c6916f4dd0",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -2058,6 +2068,101 @@
           "t_mapping(t_bytes32,t_uint256)": {
             "label": "mapping(bytes32 => uint256)",
             "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "99c24df4cca94282690dbbf2991c02a73314e5defd3d10de085808ddd6fef2f5": {
+      "address": "0x9B61bA4AeCb306B4C6c71933EaDbAB7cEe26E23C",
+      "txHash": "0x9a14ae6c6e3e0e01ee6edce5f70ee88343663cfc730565b7945b1a4e547e738f",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "name",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_string_storage",
+            "contract": "ArkadaCompanyPass",
+            "src": "contracts/ArkadaCompanyPass.sol:31"
+          },
+          {
+            "label": "symbol",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_string_storage",
+            "contract": "ArkadaCompanyPass",
+            "src": "contracts/ArkadaCompanyPass.sol:32"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bool",
+            "contract": "ArkadaCompanyPass",
+            "src": "contracts/ArkadaCompanyPass.sol:34"
+          },
+          {
+            "label": "s_treasury",
+            "offset": 1,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "ArkadaCompanyPass",
+            "src": "contracts/ArkadaCompanyPass.sol:35"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "ArkadaCompanyPass",
+            "src": "contracts/ArkadaCompanyPass.sol:37"
+          },
+          {
+            "label": "s_passURIs",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "ArkadaCompanyPass",
+            "src": "contracts/ArkadaCompanyPass.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ArkadaCompanyPass",
+            "src": "contracts/ArkadaCompanyPass.sol:51"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
           },
           "t_mapping(t_uint256,t_bool)": {
             "label": "mapping(uint256 => bool)",

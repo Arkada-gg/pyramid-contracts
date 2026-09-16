@@ -62,7 +62,7 @@ const func = async (hre: HardhatRuntimeEnvironment) => {
   const { ethers } = hre;
   const { parseEther, formatEther } = ethers.utils;
 
-  const csvPath = process.env.CSV || path.join(__dirname, '06.26.csv');
+  const csvPath = process.env.CSV || path.join(__dirname, '08.31.csv');
   const dryRun = false;
 
   const rewarderAddress =

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx hardhat:*)",
+      "Bash(npx tsc:*)",
+      "Bash(wc -l /Users/ilyataldykin/Documents/Work/Development/arkada/arkada-pyramid/test/*.test.ts)",
+      "Bash(cross-env COVERAGE=true npx hardhat coverage --solcoverjs ./.solcover.json --testfiles \"test/PyramidEscrowLatest.test.ts\")",
+      "Bash(COVERAGE=true npx hardhat coverage --solcoverjs ./.solcover.json --testfiles \"test/PyramidEscrowLatest.test.ts\")"
+    ]
+  }
+}

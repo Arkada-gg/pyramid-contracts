@@ -34,4 +34,7 @@ export const PYRAMID_ESCROW_FEE_TOKEN_CONTRACT_NAME = 'PyramidEscrowFeeToken';
 export const PYRAMID_ESCROW_LATEST_DEPLOY_TAG = 'PyramidEscrowLatest';
 export const PYRAMID_ESCROW_LATEST_CONTRACT_NAME = 'PyramidEscrowLatest';
 
+export const ARKADA_COMPANY_PASS_DEPLOY_TAG = 'ArkadaCompanyPass';
+export const ARKADA_COMPANY_PASS_CONTRACT_NAME = 'ArkadaCompanyPass';
+
 export const POST_DEPLOY_TAG = 'POST_DEPLOY';
