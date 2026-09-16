@@ -19,7 +19,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   // initialise params <=========
   const WHITELISTED_TOKENS: string[] = [];
   // const ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74'; // Set admin address here
-  const ADMIN = '0xd0623f1fC15d9cb59D0dc81f3498F30bcaE6B97C'; // Set admin address here
+  const ADMIN = '0xEc38A8ff6Ae438F3b3a585cc4E617135c94af229'; // Set admin address here
   const TREASURY = '0x2b412bfeaefaefc03134ff62d86ca5bb3359f68a';
   // =====================
 

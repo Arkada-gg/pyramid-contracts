@@ -33,6 +33,16 @@ export const arkadaAddressesPerNetwork: ConfigPerNetwork<
     globalEscrow: '0x26189A7C19C99119E2B6c027de6a9EB75d0Bc051',
     escrowFactory: '0x6F6310e20503620CaBA906371dcfBCff511b38A9',
   },
+  arc: {
+    pyramid: '0x543470005a2d65f19Aa3edE0665eE009C768460E',
+    globalEscrow: '0xA23F60C37aa78E988F0F0B4eD58DD6bE4864d702',
+    escrowFactory: '0x77a560Ff0a6A830fd52A48875A544D112559549B',
+  },
+  'arc-testnet': {
+    pyramid: '',
+    globalEscrow: '',
+    escrowFactory: '',
+  },
   sonic: {
     arkadaRewarder: '0xC062fB89Ed30AB70BEf17779A430CE81ccbB8617',
     pyramid: '0xE99F2AEfff9CCff34832747479Bd84658495F50A',

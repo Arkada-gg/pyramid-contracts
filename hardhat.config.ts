@@ -73,6 +73,8 @@ const config: HardhatUserConfig = {
       unichain: DEPLOYER,
       pharos: DEPLOYER,
       tempo: DEPLOYER,
+      arc: DEPLOYER,
+      'arc-testnet': DEPLOYER,
       citrea: DEPLOYER,
       'bsc-mainnet': DEPLOYER,
     },
@@ -90,6 +92,8 @@ const config: HardhatUserConfig = {
     'monad-mainnet': getNetworkConfig('monad-mainnet'),
     arbitrum: getNetworkConfig('arbitrum'),
     tempo: getNetworkConfig('tempo'),
+    arc: getNetworkConfig('arc'),
+    'arc-testnet': getNetworkConfig('arc-testnet'),
     hyperevm: getNetworkConfig('hyperevm'),
     plume: getNetworkConfig('plume'),
     somnia: getNetworkConfig('somnia'),
@@ -139,6 +143,7 @@ const config: HardhatUserConfig = {
       citrea: 'empty',
       ink: 'empty',
       pharos: 'empty',
+      'arc': 'empty'
     },
     customChains: [
       {
@@ -247,6 +252,14 @@ const config: HardhatUserConfig = {
           browserURL: 'https://explorer.inkonchain.com/',
         },
       },
+      {
+        network: "arc",
+        chainId: 5042,
+        urls: {
+          apiURL: "https://explorer.arc.io/api",
+          browserURL: "https://explorer.arc.io"
+        }
+      }
     ],
   },
   paths: {

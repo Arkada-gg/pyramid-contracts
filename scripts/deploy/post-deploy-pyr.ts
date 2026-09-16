@@ -14,7 +14,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   // pre-requisites
   const TREASURY_ADDRESS = '0x2b412BfEaEfaeFC03134fF62D86CA5bB3359F68a';
-  const SIGNER_ADDRESS = '0xDE91c31f1b9c3dc4270cADaec8ab4C4C5aCAD93f';
+  const SIGNER_ADDRESS = '0x009B1D2b092d957e514E423C98a9c2AEBd252BfD';
   // const NEW_ADMIN = '0x4a665E6785556624324637695C4A20465D5D7b74';
   const NEW_ADMIN = undefined;
 

@@ -1,0 +1,231 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xBa773c80e0531803c70Ab0b09AaCaC7d66fa28Bd",
+    "txHash": "0x4580124029e1d086fe826678eb32f87a35f46f357a29b47ce2fa3652a56b86f3"
+  },
+  "proxies": [
+    {
+      "address": "0x543470005a2d65f19Aa3edE0665eE009C768460E",
+      "txHash": "0x31f5019caa441721a91faf5ef9d945a2cffd4f594919ba34c6dcf0e9bbcc0524",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xA23F60C37aa78E988F0F0B4eD58DD6bE4864d702",
+      "txHash": "0x83e0da349183c352bd358fbb051d7b1d0469217a952d026ba6685e6d9ee151d1",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x77a560Ff0a6A830fd52A48875A544D112559549B",
+      "txHash": "0x5e6793248e42a8b3de7c3f0160caeb303295d08d647a20b0d6e6b3151adba691",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "c83bbc268eb97c03d94d7ac13d3c52de9d0e7604b007e11e8716b098af50cb4a": {
+      "address": "0x7b4Fe473d2a4c4c896503c3CfB4Cb469589ed438",
+      "txHash": "0xca93cfdd98ebdc42b17d8f620702b28c3b8547ad3ebd92382a559f2a5640bb96",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "s_nextTokenId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:46"
+          },
+          {
+            "label": "s_isMintingActive",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bool",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:47"
+          },
+          {
+            "label": "s_questIssueNumbers",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:68"
+          },
+          {
+            "label": "s_tokenURIs",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:69"
+          },
+          {
+            "label": "s_nonces",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_uint256,t_bool)",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:70"
+          },
+          {
+            "label": "s_quests_ids",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:72"
+          },
+          {
+            "label": "s_treasury",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:74"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "PyramidEscrowLatest",
+            "src": "contracts/PyramidEscrowLatest.sol:79"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "ae8ba06959b0d5b1fa03ce5be2e0ec85b97a498a063f6950243c7abb1e58b9b6": {
+      "address": "0xfd25739bd5c7DC6964F35590346f19f8A442C47e",
+      "txHash": "0x0760872e1a259c294a8856cd5cc533af2e70d231aa168deaaf9eb659e6409d69",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "i_treasury",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "GlobalEscrow",
+            "src": "contracts/escrow/GlobalEscrow.sol:62"
+          },
+          {
+            "label": "s_whitelistedTokens",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "GlobalEscrow",
+            "src": "contracts/escrow/GlobalEscrow.sol:67"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "4dd70b97d2a1262cb83c7a4ee8d869517b14fb5787e0da89ab423d54e4b21854": {
+      "address": "0x98760f65Cb0a72B52DF69DA6bA6b4846B605b5C9",
+      "txHash": "0x9dd50318c509df97dd835dac11e8eeb5ec00e7cf918d978404c0ecda2d7006d4",
+      "layout": {
+        "solcVersion": "0.8.22",
+        "storage": [
+          {
+            "label": "i_pyramid",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(PyramidEscrow)22519",
+            "contract": "Factory",
+            "src": "contracts/escrow/Factory.sol:19"
+          },
+          {
+            "label": "s_escrows",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "Factory",
+            "src": "contracts/escrow/Factory.sol:20"
+          },
+          {
+            "label": "s_escrow_admin",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_bytes32,t_address)",
+            "contract": "Factory",
+            "src": "contracts/escrow/Factory.sol:21"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(PyramidEscrow)22519": {
+            "label": "contract PyramidEscrow",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_bytes32,t_address)": {
+            "label": "mapping(bytes32 => address)",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    }
+  }
+}

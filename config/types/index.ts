@@ -20,6 +20,8 @@ export type Network =
   | 'citrea'
   | 'bsc-mainnet'
   | 'tempo'
+  | 'arc'
+  | 'arc-testnet'
   | 'ink'
   | 'hardhat'
   | 'localhost';
